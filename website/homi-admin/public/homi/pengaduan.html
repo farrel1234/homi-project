@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HOMI • Kelola Pengaduan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    ::-webkit-scrollbar{ width:10px }
+    ::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:8px }
+    .card{ border:1px solid #c7d7e2; border-radius:14px; background:#fff }
+    .brand-blue{ color:#2F7FA3 }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="min-h-screen grid grid-cols-[260px_1fr]">
+    <aside class="bg-white border-r border-slate-200 flex flex-col">
+      <div class="p-6 flex items-center gap-3 border-b">
+        <div class="w-10 h-10 rounded-full bg-emerald-50 grid place-items-center"><span class="text-2xl">🏠</span></div>
+        <div>
+          <p class="font-semibold text-slate-900">HOMI Admin</p>
+          <p class="text-xs text-slate-500 -mt-0.5">Hawai Garden</p>
+        </div>
+      </div>
+      <div class="p-6 flex items-center gap-3">
+        <img class="w-12 h-12 rounded-full object-cover" src="https://i.pravatar.cc/100?img=47" alt="avatar"/>
+        <div>
+          <p class="font-medium">Lily Tatum</p>
+          <p class="text-xs text-slate-500">Admin</p>
+        </div>
+      </div>
+      <nav class="px-3 space-y-1 text-sm">
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="dashboard.html">🏠 Dashboard</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="pengumuman.html">📣 Pengumuman</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="warga.html">👤 Data Warga</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="pengajuan.html">📝 Pengajuan</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-800" href="pengaduan.html">🛠️ Pengaduan</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="../laravel/resources/views/pembayaran/index.blade.php">💳 Pembayaran</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="riwayat.html">🗂️ Riwayat</a>
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100" href="login.html">🔑 Login</a>
+      </nav>
+      <div class="mt-auto p-4 text-xs text-slate-400">v0.3 • Prototype</div>
+    </aside>
+
+    <main class="overflow-auto">
+      <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6">
+        <div class="flex items-center gap-3 text-slate-500">
+          <span class="text-slate-400">/</span>
+          <span class="text-slate-700 font-medium">Kelola Pengaduan</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <input class="pl-3 pr-10 py-2 rounded-lg border w-72" placeholder="Cari warga, tiket, pembayaran..." />
+            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">/</span>
+          </div>
+          <button class="p-2 rounded-full hover:bg-slate-100" title="Notifikasi">🔔</button>
+          <button class="p-2 rounded-full hover:bg-slate-100" title="Pengaturan">⚙️</button>
+          <a class="p-2 rounded-full hover:bg-slate-100" title="Keluar" href="login.html">⏻</a>
+        </div>
+      </header>
+
+      <section class="p-6 space-y-6">
+        
+<div class="card p-4">
+  <div class="flex items-center gap-3 mb-4">
+    <select class="border rounded px-3 py-2"><option>Semua Kategori</option><option>Keamanan</option><option>Kebersihan</option></select>
+    <select class="border rounded px-3 py-2"><option>Semua Status</option><option>Menunggu</option><option>Proses</option><option>Selesai</option></select>
+  </div>
+  <div class="overflow-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-100 text-slate-600">
+        <tr><th class="text-left p-2">Pelapor</th><th class="text-left p-2">Kategori</th><th class="text-left p-2">Status</th><th class="text-left p-2">SLA Due</th></tr>
+      </thead>
+      <tbody class="divide-y">
+        <tr><td class="p-2">Sinta</td><td class="p-2">Kebersihan</td><td class="p-2">Menunggu</td><td class="p-2">+1 hari</td></tr>
+        <tr><td class="p-2">Eko</td><td class="p-2">Keamanan</td><td class="p-2">Proses</td><td class="p-2">Hari ini</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>
