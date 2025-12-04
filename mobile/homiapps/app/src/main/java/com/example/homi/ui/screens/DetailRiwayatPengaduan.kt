@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,84 +42,105 @@ fun DetailRiwayatPengaduan(
     tempat: String = "di depan lapangan voli",
     perihal: String =
         "Sampah Berserakan di Jalan, lingkungan menjadi kotor, bau dan banyak lalat.",
-    @DrawableRes headerImage: Int = R.drawable.sampah
+    @DrawableRes headerImage: Int = R.drawable.sampah,
+    onBack: (() -> Unit)? = null     // ⬅️ Tambahkan callback back
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        /* Header image — tinggi dibuat besar agar menutup area atas */
-        Image(
-            painter = painterResource(headerImage),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-        )
-        Spacer(Modifier.height(-960.dp))
-        /* Panel putih melengkung menimpa gambar */
-        Surface(
-            color = Color.White,
-            shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
+
+    Box(Modifier.fillMaxSize()) {
+
+        /* ===== LAYER UTAMA (layout milik kamu, tidak diubah) ===== */
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .offset(y = (-92).dp)
+                .background(Color.White)
         ) {
-            Column(
+
+            Image(
+                painter = painterResource(headerImage),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .height(260.dp)
+            )
+
+            Spacer(Modifier.height(-960.dp))
+
+            Surface(
+                color = Color.White,
+                shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(y = (-92).dp)
             ) {
-                Text(
-                    text = "Riwayat Pengaduan",
-                    fontFamily = PoppinsSemi,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 22.sp,
-                    color = OrangeTitle,
-                    textAlign = TextAlign.Center,
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp, top = 6.dp)
-                )
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(2.dp, BlueBorder),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(0.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Riwayat Pengaduan",
+                        fontFamily = PoppinsSemi,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 22.sp,
+                        color = OrangeTitle,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp, top = 6.dp)
+                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(2.dp, BlueBorder),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(0.dp)
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
 
-                        FieldLabel("Nama Pelapor")
-                        ValueText(nama)
-                        DividerLine()
-                        Spacer(Modifier.height(10.dp))
-                        FieldLabel("Tanggal")
-                        ValueText(tanggal)
-                        DividerLine()
-                        Spacer(Modifier.height(5.dp))
-                        FieldLabel("Tempat")
-                        ValueText(tempat)
-                        DividerLine()
-                        Spacer(Modifier.height(5.dp))
-                        FieldLabel("Perihal")
-                        ValueParagraph(perihal)
-                        DividerLine()
-                        Spacer(Modifier.height(135.dp))
+                            FieldLabel("Nama Pelapor")
+                            ValueText(nama)
+                            DividerLine()
+                            Spacer(Modifier.height(10.dp))
+
+                            FieldLabel("Tanggal")
+                            ValueText(tanggal)
+                            DividerLine()
+                            Spacer(Modifier.height(5.dp))
+
+                            FieldLabel("Tempat")
+                            ValueText(tempat)
+                            DividerLine()
+                            Spacer(Modifier.height(5.dp))
+
+                            FieldLabel("Perihal")
+                            ValueParagraph(perihal)
+                            DividerLine()
+
+                            Spacer(Modifier.height(135.dp))
+                        }
                     }
-                }
 
-                Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(20.dp))
+                }
             }
         }
+
+        /* ===== ICON PANAH KEMBALI (Overlay, tidak merusak layout) ===== */
+        Image(
+            painter = painterResource(id = R.drawable.panahkembali),
+            contentDescription = "Kembali",
+            modifier = Modifier
+                .padding(top = 25.dp, start = 20.dp)
+                .size(32.dp)
+                .align(Alignment.TopStart)
+                .clickable(enabled = onBack != null) { onBack?.invoke() }
+        )
     }
 }
 
 /* ===== Subcomponents ===== */
-
 @Composable
 private fun FieldLabel(text: String) {
     Text(
@@ -164,9 +186,11 @@ private fun DividerLine() {
     Spacer(Modifier.height(14.dp))
 }
 
-/* ===== Preview (untuk Interactive Mode) ===== */
+/* ===== Preview ===== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewDetailRiwayatPengaduan() {
-    MaterialTheme { DetailRiwayatPengaduan() }
+    MaterialTheme {
+        DetailRiwayatPengaduan()
+    }
 }

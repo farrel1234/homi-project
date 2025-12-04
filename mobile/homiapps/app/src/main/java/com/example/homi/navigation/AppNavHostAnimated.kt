@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -23,7 +25,10 @@ import com.example.homi.ui.screens.DashboardScreen
 import com.example.homi.ui.screens.DetailPengumumanScreen
 import com.example.homi.ui.screens.PembayaranIuranScreen
 import com.example.homi.ui.screens.FormAjuan1
-import com.example.homi.ui.screens.FormPengaduanScreen   // ⬅️ IMPORT BARU
+import com.example.homi.ui.screens.FormPengaduanScreen
+import com.example.homi.ui.screens.DetailRiwayatPengaduan
+import com.example.homi.ui.screens.RiwayatDiterimaScreen
+import com.example.homi.ui.screens.StatusPengajuan
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -95,7 +100,7 @@ fun AppNavHostAnimated() {
             )
         }
 
-        // =================== AUTH (frontend only) ===================
+        // =================== AUTH ===================
 
         composable(
             route = Routes.Login,
@@ -148,11 +153,9 @@ fun AppNavHostAnimated() {
         ) {
             DashboardScreen(
                 onPengajuan = {
-                    // ke Form Pengajuan Layanan
                     navController.navigate(Routes.FormAjuan1)
                 },
                 onPengaduan = {
-                    // ke Form Pengaduan Masalah
                     navController.navigate(Routes.FormPengaduan)
                 },
                 onPembayaran = {
@@ -160,6 +163,12 @@ fun AppNavHostAnimated() {
                 },
                 onDetailPengumumanClicked = {
                     navController.navigate(Routes.DetailPengumuman)
+                },
+                onRiwayatItemClick = {
+                    navController.navigate(Routes.DetailRiwayatPengaduan)
+                },
+                onRiwayatPengajuanItemClick = { status ->
+                    navController.navigate("${Routes.DetailRiwayatPengajuan}/${status.name}")
                 }
             )
         }
@@ -204,7 +213,6 @@ fun AppNavHostAnimated() {
             FormAjuan1(
                 onBack = { navController.popBackStack() },
                 onKonfirmasi = {
-                    // sementara: balik ke beranda
                     navController.popBackStack()
                 }
             )
@@ -220,9 +228,43 @@ fun AppNavHostAnimated() {
             FormPengaduanScreen(
                 onBack = { navController.popBackStack() },
                 onKonfirmasi = { _, _, _, _ ->
-                    // setelah submit popup beres, balik 1 step
                     navController.popBackStack()
                 }
+            )
+        }
+
+        // =================== DETAIL RIWAYAT PENGADUAN ===================
+
+        composable(
+            route = Routes.DetailRiwayatPengaduan,
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) {
+            DetailRiwayatPengaduan(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // =================== DETAIL RIWAYAT PENGAJUAN ===================
+        // route: detail_riwayat_pengajuan/{status}
+        composable(
+            route = Routes.DetailRiwayatPengajuan + "/{status}",
+            arguments = listOf(
+                navArgument("status") { type = NavType.StringType }
+            ),
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) { backStackEntry ->
+            val statusArg = backStackEntry.arguments?.getString("status")
+            val status = if (statusArg == StatusPengajuan.DITOLAK.name) {
+                StatusPengajuan.DITOLAK
+            } else {
+                StatusPengajuan.DITERIMA
+            }
+
+            RiwayatDiterimaScreen(
+                status = status,
+                onBack = { navController.popBackStack() }
             )
         }
     }
