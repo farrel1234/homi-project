@@ -22,7 +22,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,10 +63,14 @@ fun DashboardScreen(
     onPengaduan: (() -> Unit)? = null,
     onPembayaran: (() -> Unit)? = null,
     onDetailPengumumanClicked: (() -> Unit)? = null,
-    // klik salah satu item RIWAYAT PENGADUAN
+    // klik salah satu item riwayat pengaduan
     onRiwayatItemClick: (() -> Unit)? = null,
-    // klik salah satu item RIWAYAT PENGAJUAN (kita kirim status)
+    // klik salah satu item riwayat pengajuan (kita kirim status)
     onRiwayatPengajuanItemClick: ((StatusPengajuan) -> Unit)? = null,
+    // 🔹 baru: dari Akun → ke screen Ubah Kata Sandi
+    onUbahKataSandi: (() -> Unit)? = null,
+    // 🔹 kalau user konfirmasi Keluar dari popup akun
+    onKeluarConfirmed: (() -> Unit)? = null,
 ) {
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
 
@@ -79,7 +82,7 @@ fun DashboardScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(1f)       // ambil sisa tinggi, biar bottom nav selalu di bawah
         ) {
             when (currentTab) {
                 BottomTab.BERANDA -> BerandaSection(
@@ -99,12 +102,10 @@ fun DashboardScreen(
                 )
 
                 BottomTab.AKUN -> AkunScreen(
-                    onUbahKataSandi = { /* TODO */ },
-                    onProsesPengajuan = { /* TODO */ },
-                    onLaporkanMasalah = { /* TODO */ },
-                    onKeluarConfirmed = {
-                        // TODO: kalau mau, bisa navigate ke Login via NavHost
-                    }
+                    onUbahKataSandi = onUbahKataSandi,
+                    onProsesPengajuan = { /* TODO nanti */ },
+                    onLaporkanMasalah = { /* TODO nanti */ },
+                    onKeluarConfirmed = { onKeluarConfirmed?.invoke() }
                 )
             }
         }
@@ -587,7 +588,6 @@ private fun BottomNavBar(
     }
 }
 
-/* ===== Preview ===== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewDashboardBaru() {

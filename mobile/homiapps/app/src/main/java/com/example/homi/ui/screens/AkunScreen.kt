@@ -24,11 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.homi.R
+import kotlinx.coroutines.delay
 
 /* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
 private val AccentOrange = Color(0xFFFF9966)
-private val DangerRed    = Color(0xFFDC2626)
+private val DangerRed    = Color(0xFFF7A477)
 private val DividerLine  = Color(0xFFE0E0E0)
 private val TextPrimary  = Color(0xFF0E0E0E)
 private val OutlineBlue  = Color(0xFF4D8FB0)
@@ -52,6 +53,7 @@ fun AkunScreen(
 ) {
     var showRename by rememberSaveable { mutableStateOf(initialShowRename) }
     var showLogout by rememberSaveable { mutableStateOf(initialShowLogout) }
+    var showRenameSuccess by rememberSaveable { mutableStateOf(false) }
     var namaBaru   by rememberSaveable { mutableStateOf("") }
 
     Box(Modifier.fillMaxSize()) {
@@ -146,8 +148,12 @@ fun AkunScreen(
                     onNamaChange = { namaBaru = it },
                     onBatal = { showRename = false },
                     onSimpan = {
-                        onNamaDisimpan?.invoke(namaBaru.trim())
-                        showRename = false
+                        val trimmed = namaBaru.trim()
+                        if (trimmed.isNotEmpty()) {
+                            onNamaDisimpan?.invoke(trimmed)
+                            showRename = false
+                            showRenameSuccess = true   // tampilkan popup sukses
+                        }
                     }
                 )
             }
@@ -163,6 +169,15 @@ fun AkunScreen(
                         showLogout = false
                         onKeluarConfirmed?.invoke()
                     }
+                )
+            }
+        }
+
+        /* ===== POPUP: Berhasil Ubah Nama (auto-close 2 detik) ===== */
+        if (showRenameSuccess) {
+            DimOverlay {
+                RenameSuccessPopup(
+                    onTimeout = { showRenameSuccess = false }
                 )
             }
         }
@@ -233,7 +248,12 @@ private fun RenamePopupCard(
                 onValueChange = onNamaChange,
                 singleLine = true,
                 placeholder = {
-                    Text("Masukkan nama baru…", fontFamily = PoppinsReg, fontSize = 12.sp, color = HintColor)
+                    Text(
+                        "Masukkan nama baru…",
+                        fontFamily = PoppinsReg,
+                        fontSize = 12.sp,
+                        color = HintColor
+                    )
                 },
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -361,6 +381,80 @@ private fun LogoutPopupCard(
     }
 }
 
+/* ===== Popup: Berhasil Ubah Nama (pakai image) ===== */
+@Composable
+private fun RenameSuccessPopup(
+    onTimeout: () -> Unit
+) {
+    // Auto close setelah 2 detik
+    LaunchedEffect(Unit) {
+        delay(2000)
+        onTimeout()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.82f)
+            .wrapContentHeight()
+            .zIndex(2f)
+    ) {
+
+        /* ================= LINGKARAN + ICON LONCENG ================= */
+        Box(
+            modifier = Modifier
+                .size(78.dp)
+                .align(Alignment.TopCenter)
+                .offset(y = 20.dp)
+                .clip(CircleShape)
+                .background(BlueMain),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.notif),
+                contentDescription = "Berhasil",
+                modifier = Modifier.size(40.dp)
+            )
+        }
+
+        /* ====================== CARD UTAMA ======================= */
+        Card(
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = CardDefaults.outlinedCardBorder().copy(
+                width = 2.dp,
+                brush = androidx.compose.ui.graphics.SolidColor(OutlineBlue)
+            ),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = 60.dp)
+        ) {
+
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                // Ilustrasi sukses
+                Image(
+                    painter = painterResource(R.drawable.bahagia),
+                    contentDescription = "Nama berhasil diganti",
+                    modifier = Modifier
+                        .size(150.dp)
+                        .padding(bottom = 12.dp)
+                )
+
+                Text(
+                    text = "Nama Pengguna Berhasil\nDi Ganti !",
+                    fontFamily = PoppinsSemi,
+                    fontSize = 16.sp,
+                    color = TextPrimary,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
 /* ===== Components ===== */
 @Composable
 private fun MenuRow(title: String, onClick: (() -> Unit)? = null) {
@@ -379,7 +473,7 @@ private fun MenuRow(title: String, onClick: (() -> Unit)? = null) {
             color = TextPrimary
         )
         Image(
-            painter = painterResource(R.drawable.panah),
+            painter = painterResource(R.drawable.panahkembali),
             contentDescription = null,
             modifier = Modifier.size(16.dp)
         )
@@ -390,7 +484,7 @@ private fun MenuRow(title: String, onClick: (() -> Unit)? = null) {
 @Composable
 private fun PreviewAkunWithPopups() {
     MaterialTheme {
-        // previewkan kedua popup dengan mudah
+        // previewkan popup ubah nama
         AkunScreen(initialShowRename = true, initialShowLogout = false)
     }
 }

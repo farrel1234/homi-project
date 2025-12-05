@@ -21,7 +21,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,11 +40,15 @@ private val AccentOrange = Color(0xFFFFA06B)
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 
+/**
+ * Halaman Ubah Kata Sandi
+ * (nama composable: UbahKataSandiPage supaya tidak bentrok)
+ */
 @Composable
-fun UbahKataSandiScreen(
+fun UbahKataSandiPage(
     onBack: (() -> Unit)? = null,
     onSelesai: (() -> Unit)? = null,
-    onLupaKataSandi: (() -> Unit)? = null,           // <— callback lupa kata sandi
+    onLupaKataSandi: (() -> Unit)? = null,
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
     @DrawableRes successImage: Int = R.drawable.bahagia,
     @DrawableRes bellIcon: Int = R.drawable.notif
@@ -133,7 +136,6 @@ fun UbahKataSandiScreen(
                         onToggleVisible = { showConfirm = !showConfirm }
                     )
 
-                    // —— Lupa kata sandi? (kanan bawah)
                     Spacer(Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -162,7 +164,6 @@ fun UbahKataSandiScreen(
                     Spacer(Modifier.height(20.dp))
                     Button(
                         onClick = {
-                            // Validasi sederhana
                             when {
                                 oldPass.isBlank() || newPass.isBlank() || confirmPass.isBlank() ->
                                     errorText = "Semua kolom wajib diisi."
@@ -193,7 +194,7 @@ fun UbahKataSandiScreen(
             }
         }
 
-        /* POPUP SUKSES — dibuat lebih panjang */
+        /* Popup sukses */
         if (showPopup) {
             SuccessPopup(
                 successImage = successImage,
@@ -234,8 +235,9 @@ private fun PasswordField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        visualTransformation = if (visible) androidx.compose.ui.text.input.VisualTransformation.None
-        else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+        visualTransformation =
+            if (visible) androidx.compose.ui.text.input.VisualTransformation.None
+            else androidx.compose.ui.text.input.PasswordVisualTransformation(),
         trailingIcon = {
             IconButton(onClick = onToggleVisible) {
                 Icon(
@@ -245,7 +247,11 @@ private fun PasswordField(
             }
         },
         shape = RoundedCornerShape(10.dp),
-        textStyle = LocalTextStyle.current.copy(fontFamily = PoppinsReg, fontSize = 14.sp, color = TextDark),
+        textStyle = LocalTextStyle.current.copy(
+            fontFamily = PoppinsReg,
+            fontSize = 14.sp,
+            color = TextDark
+        ),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = FieldBg,
             unfocusedContainerColor = FieldBg,
@@ -258,7 +264,7 @@ private fun PasswordField(
     )
 }
 
-/* Popup sukses: kartu lebih tinggi (minHeight 420.dp) + badge lonceng */
+/* Popup sukses: kartu tinggi + badge lonceng */
 @Composable
 private fun SuccessPopup(
     @DrawableRes successImage: Int,
@@ -266,7 +272,6 @@ private fun SuccessPopup(
     message: String,
     onFinished: () -> Unit
 ) {
-    // auto close 2.5s
     LaunchedEffect(Unit) {
         delay(2500)
         onFinished()
@@ -279,7 +284,7 @@ private fun SuccessPopup(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { /* block */ },
+            ) { },
         contentAlignment = Alignment.Center
     ) {
         Box(contentAlignment = Alignment.TopCenter) {
@@ -295,8 +300,8 @@ private fun SuccessPopup(
                 modifier = Modifier
                     .fillMaxWidth(0.86f)
                     .widthIn(max = 360.dp)
-                    .padding(top = 44.dp)            // ruang untuk badge
-                    .defaultMinSize(minHeight = 420.dp) // <<< lebih panjang
+                    .padding(top = 44.dp)
+                    .defaultMinSize(minHeight = 420.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -308,7 +313,7 @@ private fun SuccessPopup(
                         painter = painterResource(successImage),
                         contentDescription = "Sukses",
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.size(200.dp) // gambar lebih besar
+                        modifier = Modifier.size(200.dp)
                     )
                     Spacer(Modifier.height(18.dp))
                     Text(
@@ -323,7 +328,7 @@ private fun SuccessPopup(
                 }
             }
 
-            // Badge lonceng di atas kartu
+            // Badge lonceng
             Box(
                 modifier = Modifier
                     .offset(y = (-22).dp)
@@ -373,9 +378,9 @@ private fun SuccessPopup(
     }
 }
 
-/* Preview */
+/* Preview – jangan dihapus */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewUbahKataSandi() {
-    MaterialTheme { UbahKataSandiScreen() }
+    MaterialTheme { UbahKataSandiPage() }
 }

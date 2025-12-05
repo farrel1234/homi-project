@@ -7,8 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -28,7 +26,7 @@ import com.example.homi.ui.screens.FormAjuan1
 import com.example.homi.ui.screens.FormPengaduanScreen
 import com.example.homi.ui.screens.DetailRiwayatPengaduan
 import com.example.homi.ui.screens.RiwayatDiterimaScreen
-import com.example.homi.ui.screens.StatusPengajuan
+import com.example.homi.ui.screens.UbahKataSandiPage   // ⬅️ NAMA BARU
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -167,8 +165,16 @@ fun AppNavHostAnimated() {
                 onRiwayatItemClick = {
                     navController.navigate(Routes.DetailRiwayatPengaduan)
                 },
-                onRiwayatPengajuanItemClick = { status ->
-                    navController.navigate("${Routes.DetailRiwayatPengajuan}/${status.name}")
+                onRiwayatPengajuanItemClick = {
+                    navController.navigate(Routes.DetailRiwayatPengajuan)
+                },
+                onUbahKataSandi = {
+                    navController.navigate(Routes.UbahKataSandi)
+                },
+                onKeluarConfirmed = {
+                    navController.navigate(Routes.Login) {
+                        popUpTo(Routes.Beranda) { inclusive = true }
+                    }
                 }
             )
         }
@@ -246,25 +252,30 @@ fun AppNavHostAnimated() {
         }
 
         // =================== DETAIL RIWAYAT PENGAJUAN ===================
-        // route: detail_riwayat_pengajuan/{status}
+
         composable(
-            route = Routes.DetailRiwayatPengajuan + "/{status}",
-            arguments = listOf(
-                navArgument("status") { type = NavType.StringType }
-            ),
+            route = Routes.DetailRiwayatPengajuan,
             enterTransition = { fadeIn(tween(220)) },
             exitTransition = { fadeOut(tween(180)) }
-        ) { backStackEntry ->
-            val statusArg = backStackEntry.arguments?.getString("status")
-            val status = if (statusArg == StatusPengajuan.DITOLAK.name) {
-                StatusPengajuan.DITOLAK
-            } else {
-                StatusPengajuan.DITERIMA
-            }
-
+        ) {
             RiwayatDiterimaScreen(
-                status = status,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        // =================== UBAH KATA SANDI ===================
+
+        composable(
+            route = Routes.UbahKataSandi,
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) {
+            UbahKataSandiPage(                          // ⬅️ PAKAI NAMA BARU
+                onBack = { navController.popBackStack() },
+                onSelesai = { navController.popBackStack() },
+                onLupaKataSandi = {
+                    // flow lupa sandi nanti taruh di sini
+                }
             )
         }
     }
