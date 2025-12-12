@@ -26,7 +26,10 @@ import com.example.homi.ui.screens.FormAjuan1
 import com.example.homi.ui.screens.FormPengaduanScreen
 import com.example.homi.ui.screens.DetailRiwayatPengaduan
 import com.example.homi.ui.screens.RiwayatDiterimaScreen
-import com.example.homi.ui.screens.UbahKataSandiPage   // ⬅️ NAMA BARU
+import com.example.homi.ui.screens.UbahKataSandiScreen
+import com.example.homi.ui.screens.LupaKataSandiEmailScreen
+import com.example.homi.ui.screens.ProsesPengajuanScreen
+import com.example.homi.ui.screens.LaporkanMasalahScreen
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -37,6 +40,7 @@ fun AppNavHostAnimated() {
         navController = navController,
         startDestination = Routes.Splash
     ) {
+
         // =================== SPLASH & INTRO ===================
 
         composable(
@@ -115,7 +119,9 @@ fun AppNavHostAnimated() {
                 onRegisterClicked = {
                     navController.navigate(Routes.Daftar)
                 },
-                onForgotPasswordClicked = { }
+                onForgotPasswordClicked = {
+                    navController.navigate(Routes.LupaKataSandi)
+                }
             )
         }
 
@@ -142,6 +148,19 @@ fun AppNavHostAnimated() {
             KonfirmasiDaftarScreen(navController = navController)
         }
 
+        composable(
+            route = Routes.LupaKataSandi,
+            enterTransition = { fadeIn(tween(250)) },
+            exitTransition = { fadeOut(tween(200)) }
+        ) {
+            LupaKataSandiEmailScreen(
+                onBack = { navController.popBackStack() },
+                onOtpSent = { _ ->
+                    navController.popBackStack(Routes.Login, inclusive = false)
+                }
+            )
+        }
+
         // =================== BERANDA & FITUR ===================
 
         composable(
@@ -150,27 +169,26 @@ fun AppNavHostAnimated() {
             exitTransition = { fadeOut(tween(180)) }
         ) {
             DashboardScreen(
-                onPengajuan = {
-                    navController.navigate(Routes.FormAjuan1)
-                },
-                onPengaduan = {
-                    navController.navigate(Routes.FormPengaduan)
-                },
-                onPembayaran = {
-                    navController.navigate(Routes.Pembayaran)
-                },
-                onDetailPengumumanClicked = {
-                    navController.navigate(Routes.DetailPengumuman)
-                },
-                onRiwayatItemClick = {
-                    navController.navigate(Routes.DetailRiwayatPengaduan)
-                },
-                onRiwayatPengajuanItemClick = {
+                onPengajuan = { navController.navigate(Routes.FormAjuan1) },
+                onPengaduan = { navController.navigate(Routes.FormPengaduan) },
+                onPembayaran = { navController.navigate(Routes.Pembayaran) },
+                onDetailPengumumanClicked = { navController.navigate(Routes.DetailPengumuman) },
+                onRiwayatItemClick = { navController.navigate(Routes.DetailRiwayatPengaduan) },
+
+                // kalau DashboardScreen kamu sudah tipe (StatusPengajuan) -> Unit,
+                // pastikan navnya sesuai (kalau tidak pakai argumen, ganti jadi ignore)
+                onRiwayatPengajuanItemClick = { _ ->
                     navController.navigate(Routes.DetailRiwayatPengajuan)
                 },
-                onUbahKataSandi = {
-                    navController.navigate(Routes.UbahKataSandi)
-                },
+
+                onUbahKataSandi = { navController.navigate(Routes.UbahKataSandi) },
+
+                // ✅ INI YANG PENTING: tombol Laporkan Masalah di Akun (tab) jadi bisa navigate
+                onLaporkanMasalah = { navController.navigate(Routes.LaporkanMasalah) },
+
+                // (opsional) kalau tombol "Proses Pengajuan" di akun mau ke screen ini
+                onProsesPengajuan = { navController.navigate(Routes.ProsesPengajuan) },
+
                 onKeluarConfirmed = {
                     navController.navigate(Routes.Login) {
                         popUpTo(Routes.Beranda) { inclusive = true }
@@ -204,12 +222,10 @@ fun AppNavHostAnimated() {
             enterTransition = { fadeIn(tween(220)) },
             exitTransition = { fadeOut(tween(180)) }
         ) {
-            PembayaranIuranScreen(
-                onBack = { navController.popBackStack() }
-            )
+            PembayaranIuranScreen(onBack = { navController.popBackStack() })
         }
 
-        // =================== FORM PENGAJUAN LAYANAN ===================
+        // =================== FORM PENGAJUAN ===================
 
         composable(
             route = Routes.FormAjuan1,
@@ -219,8 +235,19 @@ fun AppNavHostAnimated() {
             FormAjuan1(
                 onBack = { navController.popBackStack() },
                 onKonfirmasi = {
-                    navController.popBackStack()
+                    navController.navigate(Routes.ProsesPengajuan) { launchSingleTop = true }
                 }
+            )
+        }
+
+        composable(
+            route = Routes.ProsesPengajuan,
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) {
+            ProsesPengajuanScreen(
+                onBack = { navController.popBackStack() },
+                onWhatsappClick = { /* TODO */ }
             )
         }
 
@@ -233,33 +260,41 @@ fun AppNavHostAnimated() {
         ) {
             FormPengaduanScreen(
                 onBack = { navController.popBackStack() },
-                onKonfirmasi = { _, _, _, _ ->
-                    navController.popBackStack()
-                }
+                onKonfirmasi = { _, _, _, _ -> navController.popBackStack() }
             )
         }
 
-        // =================== DETAIL RIWAYAT PENGADUAN ===================
+        // =================== RIWAYAT ===================
 
         composable(
             route = Routes.DetailRiwayatPengaduan,
             enterTransition = { fadeIn(tween(220)) },
             exitTransition = { fadeOut(tween(180)) }
         ) {
-            DetailRiwayatPengaduan(
-                onBack = { navController.popBackStack() }
-            )
+            DetailRiwayatPengaduan(onBack = { navController.popBackStack() })
         }
-
-        // =================== DETAIL RIWAYAT PENGAJUAN ===================
 
         composable(
             route = Routes.DetailRiwayatPengajuan,
             enterTransition = { fadeIn(tween(220)) },
             exitTransition = { fadeOut(tween(180)) }
         ) {
-            RiwayatDiterimaScreen(
-                onBack = { navController.popBackStack() }
+            RiwayatDiterimaScreen(onBack = { navController.popBackStack() })
+        }
+
+        // =================== LAPORKAN MASALAH ===================
+
+        composable(
+            route = Routes.LaporkanMasalah,
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) {
+            LaporkanMasalahScreen(
+                onBack = { navController.popBackStack() },
+                onGoAkun = {
+                    // balik ke Dashboard (tab akun tetap ada di Dashboard)
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -270,12 +305,10 @@ fun AppNavHostAnimated() {
             enterTransition = { fadeIn(tween(220)) },
             exitTransition = { fadeOut(tween(180)) }
         ) {
-            UbahKataSandiPage(                          // ⬅️ PAKAI NAMA BARU
+            UbahKataSandiScreen(
                 onBack = { navController.popBackStack() },
                 onSelesai = { navController.popBackStack() },
-                onLupaKataSandi = {
-                    // flow lupa sandi nanti taruh di sini
-                }
+                onLupaKataSandi = { navController.navigate(Routes.LupaKataSandi) }
             )
         }
     }

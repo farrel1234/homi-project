@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
 import kotlinx.coroutines.delay
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.layout.statusBarsPadding
 
 /* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
@@ -40,15 +43,11 @@ private val AccentOrange = Color(0xFFFFA06B)
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 
-/**
- * Halaman Ubah Kata Sandi
- * (nama composable: UbahKataSandiPage supaya tidak bentrok)
- */
 @Composable
-fun UbahKataSandiPage(
+fun UbahKataSandiScreen(
     onBack: (() -> Unit)? = null,
     onSelesai: (() -> Unit)? = null,
-    onLupaKataSandi: (() -> Unit)? = null,
+    onLupaKataSandi: (() -> Unit)? = null,           // ke layar lupa sandi
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
     @DrawableRes successImage: Int = R.drawable.bahagia,
     @DrawableRes bellIcon: Int = R.drawable.notif
@@ -136,6 +135,7 @@ fun UbahKataSandiPage(
                         onToggleVisible = { showConfirm = !showConfirm }
                     )
 
+                    // —— Lupa kata sandi? (kanan bawah)
                     Spacer(Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -147,7 +147,9 @@ fun UbahKataSandiPage(
                             fontSize = 12.sp,
                             color = Color(0xFF6B7280),
                             textDecoration = TextDecoration.Underline,
-                            modifier = Modifier.clickable { onLupaKataSandi?.invoke() }
+                            modifier = Modifier.clickable {
+                                onLupaKataSandi?.invoke()
+                            }
                         )
                     }
 
@@ -194,7 +196,7 @@ fun UbahKataSandiPage(
             }
         }
 
-        /* Popup sukses */
+        /* POPUP SUKSES */
         if (showPopup) {
             SuccessPopup(
                 successImage = successImage,
@@ -202,7 +204,9 @@ fun UbahKataSandiPage(
                 message = "Kata Sandi Berhasil\nDi Ganti !",
                 onFinished = {
                     showPopup = false
-                    oldPass = ""; newPass = ""; confirmPass = ""
+                    oldPass = ""
+                    newPass = ""
+                    confirmPass = ""
                     onSelesai?.invoke()
                 }
             )
@@ -235,9 +239,10 @@ private fun PasswordField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        visualTransformation =
-            if (visible) androidx.compose.ui.text.input.VisualTransformation.None
-            else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+        visualTransformation = if (visible)
+            VisualTransformation.None
+        else
+            PasswordVisualTransformation(),
         trailingIcon = {
             IconButton(onClick = onToggleVisible) {
                 Icon(
@@ -259,7 +264,9 @@ private fun PasswordField(
             unfocusedIndicatorColor = BlueBorder,
             cursorColor = BlueBorder
         ),
-        placeholder = { Text("••••••", color = HintGray, fontFamily = PoppinsReg) },
+        placeholder = {
+            Text("••••••", color = HintGray, fontFamily = PoppinsReg)
+        },
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -273,7 +280,7 @@ private fun SuccessPopup(
     onFinished: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(2500)
+        delay(2000) // 2 detik
         onFinished()
     }
 
@@ -328,7 +335,7 @@ private fun SuccessPopup(
                 }
             }
 
-            // Badge lonceng
+            // Badge lonceng di atas kartu
             Box(
                 modifier = Modifier
                     .offset(y = (-22).dp)
@@ -369,7 +376,12 @@ private fun SuccessPopup(
                                 .background(Color(0xFFFF9966)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("1", color = Color.White, fontFamily = PoppinsSemi, fontSize = 10.sp)
+                            Text(
+                                "1",
+                                color = Color.White,
+                                fontFamily = PoppinsSemi,
+                                fontSize = 10.sp
+                            )
                         }
                     }
                 }
@@ -378,9 +390,11 @@ private fun SuccessPopup(
     }
 }
 
-/* Preview – jangan dihapus */
+/* Preview */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewUbahKataSandi() {
-    MaterialTheme { UbahKataSandiPage() }
+    MaterialTheme {
+        UbahKataSandiScreen()
+    }
 }

@@ -4,18 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,7 +63,6 @@ fun LoginScreen(
                     .padding(bottom = 16.dp)
             )
 
-            // Username / Email
             OutlinedTextField(
                 value = identifier,
                 onValueChange = { identifier = it },
@@ -92,7 +81,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -107,10 +95,13 @@ fun LoginScreen(
                     cursorColor = Color(0xFF256D85)
                 ),
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
                 trailingIcon = {
-                    androidx.compose.material3.IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        androidx.compose.material3.Icon(
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
                             painter = painterResource(
                                 id = if (passwordVisible) R.drawable.show else R.drawable.hide
                             ),
@@ -124,7 +115,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(6.dp))
 
-            // Lupa kata sandi
+            // 🔹 TEKS LUPA KATA SANDI? → callback
             Text(
                 text = "Lupa kata sandi?",
                 fontSize = 12.sp,
@@ -137,7 +128,6 @@ fun LoginScreen(
                     .clickable { onForgotPasswordClicked() }
             )
 
-            // Error text (kalau ada)
             errorText?.let {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -151,10 +141,8 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Tombol Konfirmasi Login
             Button(
                 onClick = {
-                    // Validasi simple di frontend
                     if (identifier.isBlank() || password.isBlank()) {
                         errorText = "Isi username/email dan password dulu."
                     } else if (password.length < 6) {
@@ -182,7 +170,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Link ke daftar
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()

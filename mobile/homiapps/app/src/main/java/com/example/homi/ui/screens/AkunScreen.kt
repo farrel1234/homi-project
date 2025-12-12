@@ -128,7 +128,7 @@ fun AkunScreen(
                     MenuRow("Ubah Kata Sandi", onClick = onUbahKataSandi)
                     Divider(color = DividerLine, thickness = 1.dp)
 
-                    MenuRow("Proses Pengajuan Layanan", onClick = onProsesPengajuan)
+                    MenuRow("Proses Pengajuan Layanan dan Laporan", onClick = onProsesPengajuan)
                     Divider(color = DividerLine, thickness = 1.dp)
 
                     MenuRow("Laporkan Masalah", onClick = onLaporkanMasalah)

@@ -52,7 +52,8 @@ data class RiwayatPengaduanItem(
     val nama: String,
     val tanggal: String,
     val tempat: String,
-    val perihal: String
+    val perihal: String,
+    val status: StatusPengajuan          // 🔹 status diterima / ditolak
 )
 
 /* ====== Model Pengajuan ====== */
@@ -262,6 +263,9 @@ private fun RiwayatPengaduanCard(
                 bold = true,
                 color = BlueText
             )
+            Spacer(Modifier.height(8.dp))
+            // 🔹 Status diterima / ditolak
+            RowStatus(status = item.status)
         }
     }
 }
@@ -408,7 +412,6 @@ private fun RowStatus(status: StatusPengajuan) {
 
 /* =======================================================
  *  DETAIL RIWAYAT PENGAJUAN (DITERIMA / DITOLAK)
- *  + ICON PANAHKEMBALI YANG BALIK KE HALAMAN RIWAYAT PENGAJUAN
  * ======================================================= */
 
 @Composable
@@ -435,18 +438,18 @@ fun RiwayatDiterimaScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // ===== ICON PANAH KEMBALI DI POJOK KIRI ATAS =====
+        // Icon back
         IconButton(
             onClick = { onBack() },
             modifier = Modifier
                 .padding(top = 32.dp, start = 16.dp)
-                .size(48.dp)                      // 🔹 area klik + background lebih besar
+                .size(48.dp)
                 .align(Alignment.TopStart)
         ) {
             Image(
                 painter = painterResource(R.drawable.panahkembali),
                 contentDescription = "Kembali",
-                modifier = Modifier.size(28.dp)   // 🔹 ikon di dalamnya lebih besar
+                modifier = Modifier.size(28.dp)
             )
         }
 
@@ -456,7 +459,7 @@ fun RiwayatDiterimaScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            /* ===== Header ===== */
+            /* Header */
             Spacer(Modifier.height(8.dp))
             Text(
                 text = if (isDiterima) "Pengajuan Diterima" else "Pengajuan Ditolak",
@@ -484,7 +487,7 @@ fun RiwayatDiterimaScreen(
                     .padding(horizontal = 20.dp)
             )
 
-            /* ===== Panel putih isi ===== */
+            /* Panel putih isi */
             Spacer(Modifier.height(28.dp))
             Surface(
                 color = Color.White,
@@ -500,7 +503,7 @@ fun RiwayatDiterimaScreen(
                         .padding(horizontal = 20.dp, vertical = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Jenis Pengajuan
+                    // Jenis pengajuan
                     Text(
                         text = "Jenis Pengajuan:",
                         fontFamily = PoppinsReg,
@@ -516,7 +519,7 @@ fun RiwayatDiterimaScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Card isi dengan border biru
+                    // Card detail
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -582,19 +585,22 @@ private fun dummyPengaduanItems() = listOf(
         nama = "Lily",
         tanggal = "1 Oktober 2025",
         tempat = "di depan lapangan voli",
-        perihal = "Sampah berserakan di jalan"
+        perihal = "Sampah berserakan di jalan",
+        status = StatusPengajuan.DITERIMA
     ),
     RiwayatPengaduanItem(
         nama = "Lily",
         tanggal = "3 Oktober 2025",
         tempat = "di belakang Blok AA1",
-        perihal = "Lampu jalan mati"
+        perihal = "Lampu jalan mati",
+        status = StatusPengajuan.DITOLAK
     ),
     RiwayatPengaduanItem(
         nama = "Lily",
         tanggal = "5 Oktober 2025",
         tempat = "area taman bermain",
-        perihal = "Selokan tersumbat"
+        perihal = "Selokan tersumbat",
+        status = StatusPengajuan.DITERIMA
     )
 )
 

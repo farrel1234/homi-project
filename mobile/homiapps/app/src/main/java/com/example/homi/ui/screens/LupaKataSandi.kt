@@ -26,12 +26,12 @@ import com.example.homi.R
 import kotlinx.coroutines.delay
 
 /* ===== Theme tokens (selaras layar lain) ===== */
-private val BlueMain     = Color(0xFF2F7FA3)
+private val BlueMain     = Color(0xD72F7FA3)
 private val FieldBg      = Color(0xFFF1F2F4)
 private val FieldBorder  = Color(0xFF4D8FB0)
 private val TextDark     = Color(0xFF0E0E0E)
 private val HintGray     = Color(0xFF9AA4AF)
-private val AccentOrange = Color(0xFFFFA06B)
+private val AccentOrange = Color(0xFFF7A477)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
@@ -41,7 +41,7 @@ fun LupaKataSandiEmailScreen(
     onBack: (() -> Unit)? = null,
     onOtpSent: (email: String) -> Unit = { _ -> },
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
-    @DrawableRes illustrationRes: Int = R.drawable.amplop,
+    @DrawableRes illustrationRes: Int = R.drawable.surat,   // surat.png
     @DrawableRes bellIcon: Int = R.drawable.notif
 ) {
     var email by remember { mutableStateOf("") }
@@ -96,7 +96,7 @@ fun LupaKataSandiEmailScreen(
                     .padding(horizontal = 20.dp, vertical = 18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(58.dp))
                 Image(
                     painter = painterResource(illustrationRes),
                     contentDescription = null,
@@ -104,7 +104,7 @@ fun LupaKataSandiEmailScreen(
                     modifier = Modifier.size(220.dp)
                 )
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(40.dp))
                 Text(
                     text = "Masukkan alamat Email Anda",
                     fontFamily = PoppinsSemi,
@@ -114,14 +114,24 @@ fun LupaKataSandiEmailScreen(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(25.dp))
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     singleLine = true,
-                    placeholder = { Text("nama@email.com", fontFamily = PoppinsReg, color = HintGray) },
+                    placeholder = {
+                        Text(
+                            "nama@email.com",
+                            fontFamily = PoppinsReg,
+                            color = HintGray
+                        )
+                    },
                     shape = RoundedCornerShape(10.dp),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = PoppinsReg, fontSize = 14.sp, color = TextDark),
+                    textStyle = LocalTextStyle.current.copy(
+                        fontFamily = PoppinsReg,
+                        fontSize = 14.sp,
+                        color = TextDark
+                    ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = FieldBorder,
                         unfocusedBorderColor = FieldBorder,
@@ -134,7 +144,7 @@ fun LupaKataSandiEmailScreen(
                         .heightIn(min = 52.dp)
                 )
 
-                Spacer(Modifier.height(26.dp))
+                Spacer(Modifier.height(46.dp))
                 Button(
                     onClick = { showPopup = true },
                     enabled = isValid,
@@ -144,10 +154,16 @@ fun LupaKataSandiEmailScreen(
                     ),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(0.7f)   // lebih kecil, center
                         .height(48.dp)
+                        .align(Alignment.CenterHorizontally)
                 ) {
-                    Text("Selanjutnya", fontFamily = PoppinsSemi, color = Color.White, fontSize = 15.sp)
+                    Text(
+                        "Selanjutnya",
+                        fontFamily = PoppinsSemi,
+                        color = Color.White,
+                        fontSize = 15.sp
+                    )
                 }
             }
         }
@@ -160,7 +176,7 @@ fun LupaKataSandiEmailScreen(
             message = "Berhasil Mengirim Kode OTP\nke Email Anda !",
             onFinished = {
                 showPopup = false
-                onOtpSent(email.trim()) // lanjut ke layar OTP
+                onOtpSent(email.trim())
             }
         )
     }
@@ -174,9 +190,9 @@ private fun OtpSentPopup(
     message: String,
     onFinished: () -> Unit
 ) {
-    // auto-dismiss 2.5s
+    // auto-dismiss 2 detik
     LaunchedEffect(Unit) {
-        delay(2500)
+        delay(2000)
         onFinished()
     }
 
@@ -190,7 +206,6 @@ private fun OtpSentPopup(
             ) { /* block click to behind */ },
         contentAlignment = Alignment.Center
     ) {
-        // wrapper agar badge overlap di atas kartu
         Box(contentAlignment = Alignment.TopCenter) {
             // card utama
             Card(
@@ -258,7 +273,6 @@ private fun OtpSentPopup(
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.size(28.dp)
                     )
-                    // titik/badge kecil 1 di pojok
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -275,7 +289,12 @@ private fun OtpSentPopup(
                                 .background(AccentOrange),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("1", color = Color.White, fontFamily = PoppinsSemi, fontSize = 10.sp)
+                            Text(
+                                "1",
+                                color = Color.White,
+                                fontFamily = PoppinsSemi,
+                                fontSize = 10.sp
+                            )
                         }
                     }
                 }

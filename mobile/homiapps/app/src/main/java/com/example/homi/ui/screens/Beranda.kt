@@ -37,7 +37,6 @@ private val AccentOrange = Color(0xFFE26A2C)
 
 private val BlueBorder   = Color(0xFF2F7FA3)
 private val TextPrimary  = Color(0xFF0E0E0E)
-private val TextMuted    = Color(0xFF8A8A8A)
 private val LineGray     = Color(0xFFE6E6E6)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
@@ -63,26 +62,34 @@ fun DashboardScreen(
     onPengaduan: (() -> Unit)? = null,
     onPembayaran: (() -> Unit)? = null,
     onDetailPengumumanClicked: (() -> Unit)? = null,
+
     // klik salah satu item riwayat pengaduan
     onRiwayatItemClick: (() -> Unit)? = null,
     // klik salah satu item riwayat pengajuan (kita kirim status)
     onRiwayatPengajuanItemClick: ((StatusPengajuan) -> Unit)? = null,
-    // 🔹 baru: dari Akun → ke screen Ubah Kata Sandi
+
+    // 🔹 dari Akun → ke screen Ubah Kata Sandi
     onUbahKataSandi: (() -> Unit)? = null,
+
+    // ✅ NEW: dari Akun → ke screen Laporkan Masalah
+    onLaporkanMasalah: (() -> Unit)? = null,
+
     // 🔹 kalau user konfirmasi Keluar dari popup akun
     onKeluarConfirmed: (() -> Unit)? = null,
+
+    // (opsional) kalau mau buka Proses Pengajuan dari Akun
+    onProsesPengajuan: (() -> Unit)? = null,
 ) {
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
-        // ===== AREA KONTEN (BERANDA / DIREKTORI / RIWAYAT / AKUN) =====
+        // ===== AREA KONTEN =====
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)       // ambil sisa tinggi, biar bottom nav selalu di bawah
+                .weight(1f)
         ) {
             when (currentTab) {
                 BottomTab.BERANDA -> BerandaSection(
@@ -103,14 +110,15 @@ fun DashboardScreen(
 
                 BottomTab.AKUN -> AkunScreen(
                     onUbahKataSandi = onUbahKataSandi,
-                    onProsesPengajuan = { /* TODO nanti */ },
-                    onLaporkanMasalah = { /* TODO nanti */ },
+                    onProsesPengajuan = onProsesPengajuan,
+                    // ✅ ini yang bikin tombol "Laporkan Masalah" bisa ditekan
+                    onLaporkanMasalah = onLaporkanMasalah,
                     onKeluarConfirmed = { onKeluarConfirmed?.invoke() }
                 )
             }
         }
 
-        // ===== BOTTOM NAV SELALU DI BAWAH =====
+        // ===== BOTTOM NAV =====
         BottomNavBar(
             currentTab = currentTab,
             onTabSelected = { selected -> currentTab = selected }
@@ -133,7 +141,6 @@ private fun BerandaSection(
             .background(BlueMain)
             .statusBarsPadding()
     ) {
-        // HEADER ATAS
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -173,7 +180,6 @@ private fun BerandaSection(
 
         Spacer(Modifier.height(10.dp))
 
-        // AREA KONTEN PUTIH
         Card(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
@@ -195,7 +201,6 @@ private fun BerandaSection(
 
                 Spacer(Modifier.height(10.dp))
 
-                // KARTU PENGUMUMAN
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -241,7 +246,6 @@ private fun BerandaSection(
 
                 Spacer(Modifier.height(18.dp))
 
-                // 3 MENU UTAMA
                 MenuButton(
                     icon = R.drawable.icon_pengajuan,
                     title = "Pengajuan Layanan",
@@ -323,7 +327,6 @@ private fun DirektoriSection() {
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Box "Cari"
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -369,7 +372,6 @@ private fun DirektoriTable(
                 .fillMaxWidth()
                 .border(1.dp, LineGray, RoundedCornerShape(8.dp))
         ) {
-            // Header tabel
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -559,9 +561,7 @@ private fun BottomNavBar(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(
-                                if (selected) AccentOrange else Color.Transparent
-                            )
+                            .background(if (selected) AccentOrange else Color.Transparent)
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
