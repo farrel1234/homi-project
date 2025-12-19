@@ -44,7 +44,8 @@ private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 private val SuezOne     = FontFamily(Font(R.font.suez_one_regular))
 
 /* ===== Bottom nav model ===== */
-private enum class BottomTab { BERANDA, DIREKTORI, RIWAYAT, AKUN }
+// ✅ DIUBAH: jangan private, biar NavHost bisa akses BottomTab.AKUN dll
+enum class BottomTab { BERANDA, DIREKTORI, RIWAYAT, AKUN }
 
 private data class BottomNavItem(
     val tab: BottomTab,
@@ -58,29 +59,26 @@ private data class BottomNavItem(
  */
 @Composable
 fun DashboardScreen(
+    startTab: BottomTab = BottomTab.BERANDA, // ✅ TAMBAHAN: start di tab tertentu (misal AKUN)
     onPengajuan: (() -> Unit)? = null,
     onPengaduan: (() -> Unit)? = null,
     onPembayaran: (() -> Unit)? = null,
     onDetailPengumumanClicked: (() -> Unit)? = null,
 
-    // klik salah satu item riwayat pengaduan
     onRiwayatItemClick: (() -> Unit)? = null,
-    // klik salah satu item riwayat pengajuan (kita kirim status)
     onRiwayatPengajuanItemClick: ((StatusPengajuan) -> Unit)? = null,
 
-    // 🔹 dari Akun → ke screen Ubah Kata Sandi
     onUbahKataSandi: (() -> Unit)? = null,
-
-    // ✅ NEW: dari Akun → ke screen Laporkan Masalah
     onLaporkanMasalah: (() -> Unit)? = null,
-
-    // 🔹 kalau user konfirmasi Keluar dari popup akun
     onKeluarConfirmed: (() -> Unit)? = null,
-
-    // (opsional) kalau mau buka Proses Pengajuan dari Akun
     onProsesPengajuan: (() -> Unit)? = null,
 ) {
-    var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
+    var currentTab by rememberSaveable { mutableStateOf(startTab) }
+
+    // ✅ kalau route datang dengan tab baru, ikuti tab itu
+    LaunchedEffect(startTab) {
+        currentTab = startTab
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -111,7 +109,6 @@ fun DashboardScreen(
                 BottomTab.AKUN -> AkunScreen(
                     onUbahKataSandi = onUbahKataSandi,
                     onProsesPengajuan = onProsesPengajuan,
-                    // ✅ ini yang bikin tombol "Laporkan Masalah" bisa ditekan
                     onLaporkanMasalah = onLaporkanMasalah,
                     onKeluarConfirmed = { onKeluarConfirmed?.invoke() }
                 )
@@ -513,25 +510,25 @@ private fun BottomNavBar(
         BottomNavItem(
             tab = BottomTab.BERANDA,
             label = "Beranda",
-            iconSelected   = R.drawable.homeoren,
+            iconSelected = R.drawable.homeoren,
             iconUnselected = R.drawable.icon_home
         ),
         BottomNavItem(
             tab = BottomTab.DIREKTORI,
             label = "Direktori",
-            iconSelected   = R.drawable.direktorioren,
+            iconSelected = R.drawable.direktorioren,
             iconUnselected = R.drawable.icon_direktori
         ),
         BottomNavItem(
             tab = BottomTab.RIWAYAT,
             label = "Riwayat",
-            iconSelected   = R.drawable.riwayatoren,
+            iconSelected = R.drawable.riwayatoren,
             iconUnselected = R.drawable.icon_riwayat
         ),
         BottomNavItem(
             tab = BottomTab.AKUN,
             label = "Akun",
-            iconSelected   = R.drawable.akunoren,
+            iconSelected = R.drawable.akunoren,
             iconUnselected = R.drawable.icon_akun
         )
     )
