@@ -1,3 +1,4 @@
+// File: Routes.kt
 package com.example.homi.navigation
 
 object Routes {
@@ -9,6 +10,7 @@ object Routes {
     const val Login = "login"
     const val Daftar = "daftar"
     const val Konfirmasi = "konfirmasi"
+    const val LupaKataSandi = "lupa_kata_sandi"
 
     const val Beranda = "beranda"
     const val DetailPengumuman = "detail_pengumuman"
@@ -17,14 +19,13 @@ object Routes {
     const val FormAjuan1 = "form_ajuan_1"
     const val ProsesPengajuan = "proses_pengajuan"
 
+    // ✅ ini yang dipakai di alur pengaduan
     const val FormPengaduan = "form_pengaduan"
+    const val PengaduanWarga = "pengaduan_warga"
+
     const val DetailRiwayatPengaduan = "detail_riwayat_pengaduan"
     const val DetailRiwayatPengajuan = "detail_riwayat_pengajuan"
-
     const val UbahKataSandi = "ubah_kata_sandi"
-    const val LupaKataSandi = "lupa_kata_sandi" // 1 aja, jangan dobel
-
-    // ✅ NEW
-    const val Akun = "akun"
     const val LaporkanMasalah = "laporkan_masalah"
+    const val ListProsesPengaduan = "list_proses_pengaduan"
 }

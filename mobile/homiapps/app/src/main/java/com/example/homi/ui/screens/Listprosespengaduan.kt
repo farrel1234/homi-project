@@ -2,8 +2,8 @@
 package com.example.homi.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -58,13 +59,10 @@ private data class ProsesPengajuanItem(
     val status: StatusProses
 )
 
-/* =======================================================
- *  SCREEN: PROSES PENGAJUAN + PENGADUAN (LIST ONLY)
- *  - Tidak bisa diklik
- *  - Hanya tampilan status
- * ======================================================= */
 @Composable
-fun ListProsesPengaduanScreen() {
+fun ListProsesPengaduanScreen(
+    onBack: () -> Unit = {}
+) {
     var selectedTab by rememberSaveable { mutableStateOf(ProsesTab.PENGAJUAN) }
 
     val pengaduanItems = remember { dummyProsesPengaduan() }
@@ -78,15 +76,39 @@ fun ListProsesPengaduanScreen() {
     ) {
         /* Header */
         Spacer(Modifier.height(12.dp))
-        Text(
-            text = "Proses Pengajuan\n dan Pengaduan",
-            fontFamily = PoppinsSemi,
-            fontSize = 22.sp,
-            color = Color.White,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            lineHeight = 26.sp
-        )
+
+        // ✅ Box untuk menaruh panah kiri tanpa menggeser judul (judul tetap center)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .size(44.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.panahkembali),
+                    contentDescription = "Kembali",
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+
+            Text(
+                text = "Proses Pengajuan\n dan Pengaduan",
+                fontFamily = PoppinsSemi,
+                fontSize = 22.sp,
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 44.dp), // ruang biar tidak ketabrak tombol back
+                textAlign = TextAlign.Center,
+                lineHeight = 26.sp
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
         Text(
             text = "Anda dapat melihat proses pengajuan dan pengaduan\n" +
@@ -377,5 +399,5 @@ private fun dummyProsesPengajuan() = listOf(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewListProsesPengaduanScreen() {
-    MaterialTheme { ListProsesPengaduanScreen() }
+    MaterialTheme { ListProsesPengaduanScreen(onBack = {}) }
 }
