@@ -1,9 +1,10 @@
 package com.example.homi.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -11,10 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -26,25 +24,54 @@ import com.example.homi.R
 
 @Composable
 fun DetailPengumumanScreen() {
-    val poppins = FontFamily(Font(R.font.poppins_semibold))
-    val inter = FontFamily(Font(R.font.inter_variablefont_opsz_wght))
+    val poppins = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
+    val poppinsReg = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
+    val inter = try { FontFamily(Font(R.font.inter_variablefont_opsz_wght)) } catch (_: Exception) { FontFamily.Default }
+
+    val headerBlue = Color(0xFF2F79A0)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFEFEFEF))
     ) {
-        // Header image
-        Image(
-            painter = painterResource(id = R.drawable.img_pengumuman),
-            contentDescription = "Header Image",
-            contentScale = ContentScale.Crop,
+        // ✅ GANTI HEADER IMAGE → HEADER TEXT (BIRU)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp)
-        )
+                .background(headerBlue),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Detail Pengumuman",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = poppins,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
 
-        // Konten putih rounded di bawah gambar
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Ini adalah halaman isi dari pengumuman yang\nada di halaman beranda",
+                    fontSize = 12.sp,
+                    fontFamily = poppinsReg,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 16.sp
+                )
+            }
+        }
+
+        // ❗BAGIAN BAWAH TETAP (card putih rounded)
         Card(
             modifier = Modifier
                 .fillMaxSize()
@@ -52,9 +79,11 @@ fun DetailPengumumanScreen() {
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
+            // ✅ BIAR BISA SCROLL KALAU TEKS PANJANG
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 15.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.Start
             ) {
@@ -141,6 +170,8 @@ fun DetailPengumumanScreen() {
                     fontFamily = inter,
                     color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.height(30.dp))
             }
         }
     }
