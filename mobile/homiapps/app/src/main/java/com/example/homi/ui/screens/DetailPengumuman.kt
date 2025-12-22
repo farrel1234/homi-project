@@ -3,6 +3,8 @@ package com.example.homi.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -11,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -22,29 +23,49 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.homi.R
+import com.example.homi.data.model.AnnouncementDto
 
 @Composable
-fun DetailPengumumanScreen() {
+fun DetailPengumumanScreen(
+    announcement: AnnouncementDto,
+    onBack: (() -> Unit)? = null
+) {
     val poppins = FontFamily(Font(R.font.poppins_semibold))
     val inter = FontFamily(Font(R.font.inter_variablefont_opsz_wght))
+
+    val imageUrl = announcement.imageUrl
+        ?.replace("127.0.0.1", "10.0.2.2")
+        ?.replace("localhost", "10.0.2.2")
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFEFEFEF))
     ) {
-        // Header image
-        Image(
-            painter = painterResource(id = R.drawable.img_pengumuman),
-            contentDescription = "Header Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-        )
+        // ===== Header image (PASTI di dalam Column, jangan di luar) =====
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Header Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.img_pengumuman),
+                contentDescription = "Header Image (fallback)",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+            )
+        }
 
-        // Konten putih rounded di bawah gambar
+        // ===== Konten putih rounded =====
         Card(
             modifier = Modifier
                 .fillMaxSize()
@@ -54,10 +75,22 @@ fun DetailPengumumanScreen() {
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 15.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.Start
             ) {
+                // tombol back (simple)
+                if (onBack != null) {
+                    Text(
+                        text = "Kembali",
+                        fontSize = 12.sp,
+                        color = Color(0xFF2F7FA3),
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                    )
+                }
+
                 Text(
                     text = "Pengumuman",
                     fontSize = 20.sp,
@@ -68,9 +101,10 @@ fun DetailPengumumanScreen() {
                     textAlign = TextAlign.Center
                 )
 
+                // tanggal/published (opsional)
                 Text(
-                    text = "Nomor: 15/PER-HWG/IX/2025",
-                    fontSize = 12.sp,
+                    text = announcement.publishedAt ?: announcement.createdAt ?: "",
+                    fontSize = 10.sp,
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -79,68 +113,24 @@ fun DetailPengumumanScreen() {
                 )
 
                 Text(
-                    text = "Perihal: Kegiatan Gotong Royong Warga\n",
+                    text = announcement.title,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     fontFamily = inter,
                     color = Color.Black
                 )
 
-                Text(
-                    text = "Kepada Yth.\nSeluruh Warga Perumahan Hawaii Garden\ndi Tempat\n",
-                    fontSize = 14.sp,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Dengan hormat,\n" +
-                            "Dalam rangka menjaga kebersihan dan kenyamanan lingkungan bersama, kami selaku pengurus lingkungan Perumahan Hawaii Garden mengundang seluruh warga untuk berpartisipasi dalam kegiatan Gotong Royong yang akan dilaksanakan pada:",
+                    text = announcement.content,
                     fontSize = 14.sp,
                     fontFamily = inter,
                     color = Color.Black,
                     lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "• Hari/Tanggal : Jumat, 3 September 2025\n" +
-                            "• Waktu : Pukul 07.00 WIB – selesai\n" +
-                            "• Tempat : Area Masjid Perumahan Hawaii Garden\n" +
-                            "• Peserta : Seluruh Warga Perumahan Hawaii Garden\n",
-                    fontSize = 14.sp,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
-
-                Text(
-                    text = "Adapun kegiatan ini bertujuan untuk mempererat tali silaturahmi antarwarga serta menciptakan lingkungan yang bersih, asri, dan nyaman.\n",
-                    fontSize = 14.sp,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
-
-                Text(
-                    text = "Diharapkan kepada seluruh warga untuk membawa perlengkapan kerja baik seperti sapu, cangkul, dan alat kebersihan lainnya.\n",
-                    fontSize = 14.sp,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
-
-                Text(
-                    text = "Demikian pengumuman ini kami sampaikan. Atas perhatian dan partisipasinya, kami ucapkan terima kasih.\n",
-                    fontSize = 14.sp,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
-
-                Text(
-                    text = "Hormat kami,\nPengurus Lingkungan Perumahan Hawaii Garden\n(ttd)\nKetua RW/RT",
-                    fontSize = 14.sp,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
@@ -149,5 +139,18 @@ fun DetailPengumumanScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewDetailPengumuman() {
-    MaterialTheme { DetailPengumumanScreen() }
+    val dummy = AnnouncementDto(
+        id = 1,
+        title = "Kegiatan Gotong Royong Warga",
+        content = "Ini isi pengumuman dari API.\n\nSilakan warga hadir sesuai jadwal.",
+        imageUrl = "http://10.0.2.2:8000/storage/announcements/dummy.png",
+        publishedAt = "2025-12-17 14:35"
+    )
+
+    MaterialTheme {
+        DetailPengumumanScreen(
+            announcement = dummy,
+            onBack = {}
+        )
+    }
 }

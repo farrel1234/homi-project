@@ -30,6 +30,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.homi.ui.viewmodel.AnnouncementViewModel
+import com.example.homi.ui.viewmodel.AnnouncementViewModelFactory
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import com.example.homi.data.model.AnnouncementDto
+import coil.compose.AsyncImage
+
+
 /* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
 private val BlueButton   = Color(0xFF4F8EA9)
@@ -58,10 +70,12 @@ private data class BottomNavItem(
  */
 @Composable
 fun DashboardScreen(
+    annVm: AnnouncementViewModel,
     onPengajuan: (() -> Unit)? = null,
     onPengaduan: (() -> Unit)? = null,
     onPembayaran: (() -> Unit)? = null,
-    onDetailPengumumanClicked: (() -> Unit)? = null,
+    onDetailPengumumanClicked: ((Long) -> Unit)? = null,
+
 
     // klik salah satu item riwayat pengaduan
     onRiwayatItemClick: (() -> Unit)? = null,
@@ -82,6 +96,16 @@ fun DashboardScreen(
 ) {
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
 
+    val annState by annVm.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        annVm.loadList()
+    }
+
+    val latest = annState.list.firstOrNull()
+
+
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -93,11 +117,13 @@ fun DashboardScreen(
         ) {
             when (currentTab) {
                 BottomTab.BERANDA -> BerandaSection(
+                    item = latest,
                     onPengajuan = onPengajuan,
                     onPengaduan = onPengaduan,
                     onPembayaran = onPembayaran,
                     onDetailPengumumanClicked = onDetailPengumumanClicked
                 )
+
 
                 BottomTab.DIREKTORI -> DirektoriSection()
 
@@ -130,10 +156,11 @@ fun DashboardScreen(
 
 @Composable
 private fun BerandaSection(
+    item: AnnouncementDto?,
     onPengajuan: (() -> Unit)?,
     onPengaduan: (() -> Unit)?,
     onPembayaran: (() -> Unit)?,
-    onDetailPengumumanClicked: (() -> Unit)?
+    onDetailPengumumanClicked: ((Long) -> Unit)?
 ) {
     Column(
         modifier = Modifier
@@ -154,29 +181,21 @@ private fun BerandaSection(
                     .size(80.dp)
                     .clip(CircleShape)
             )
+
             Spacer(Modifier.width(12.dp))
+
             Column {
-                Text(
-                    "Hai, Lily",
-                    fontFamily = PoppinsSemi,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
-                Text(
-                    "Selamat Datang di Homi",
-                    fontFamily = PoppinsSemi,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
+                Text("Hai, Lily", fontFamily = PoppinsSemi, fontSize = 20.sp, color = Color.White)
+                Text("Selamat Datang di Homi", fontFamily = PoppinsSemi, fontSize = 20.sp, color = Color.White)
                 Text(
                     "Menghubungkan Warga, Membangun Kebersamaan",
-                    fontFamily = PoppinsReg,
-                    fontSize = 12.sp,
-                    color = Color.White
+                    fontFamily = PoppinsReg, fontSize = 12.sp, color = Color.White
                 )
             }
+
             Spacer(Modifier.weight(1f))
         }
+
 
         Spacer(Modifier.height(10.dp))
 
@@ -201,25 +220,40 @@ private fun BerandaSection(
 
                 Spacer(Modifier.height(10.dp))
 
+                val imageUrl = item?.imageUrl
+                    ?.replace("127.0.0.1", "10.0.2.2")
+                    ?.replace("localhost", "10.0.2.2")
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp)
                         .clip(RoundedCornerShape(16.dp))
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.img_pengumuman),
-                        contentDescription = "Kegiatan Gotong Royong",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    if (!imageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = item?.title ?: "Pengumuman",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.img_pengumuman),
+                            contentDescription = "Kegiatan Gotong Royong",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+
                     Box(
                         modifier = Modifier
                             .matchParentSize()
                             .background(Color.Black.copy(alpha = 0.30f))
                     )
+
                     Text(
-                        text = "Kegiatan Gotong Royong",
+                        text = item?.title ?: "Pengumuman terbaru belum tersedia",
                         fontFamily = SuezOne,
                         color = Color.White,
                         fontSize = 18.sp,
@@ -229,10 +263,11 @@ private fun BerandaSection(
                             .align(Alignment.TopCenter)
                             .padding(top = 10.dp)
                             .fillMaxWidth()
-                            .clickable(enabled = onDetailPengumumanClicked != null) {
-                                onDetailPengumumanClicked?.invoke()
+                            .clickable(enabled = item != null && onDetailPengumumanClicked != null) {
+                                item?.let { onDetailPengumumanClicked?.invoke(it.id) }
                             }
                     )
+
                     Text(
                         text = "Jumat/3 Sep 25\nArea Masjid,\nSemua Warga\nPerumahan Hawai Garden",
                         fontFamily = PoppinsReg,
@@ -243,6 +278,7 @@ private fun BerandaSection(
                             .padding(12.dp)
                     )
                 }
+
 
                 Spacer(Modifier.height(18.dp))
 
@@ -592,6 +628,17 @@ private fun BottomNavBar(
 @Composable
 private fun PreviewDashboardBaru() {
     MaterialTheme {
-        DashboardScreen()
+        BerandaSection(
+            item = AnnouncementDto(
+                id = 7,
+                title = "Pengumuman Contoh",
+                content = "Isi pengumuman…",
+                imageUrl = "http://10.0.2.2:8000/storage/announcements/dummy.png"
+            ),
+            onPengajuan = {},
+            onPengaduan = {},
+            onPembayaran = {},
+            onDetailPengumumanClicked = {}
+        )
     }
 }

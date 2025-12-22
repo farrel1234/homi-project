@@ -11,7 +11,9 @@ object Routes {
     const val Konfirmasi = "konfirmasi"
 
     const val Beranda = "beranda"
-    const val DetailPengumuman = "detail_pengumuman"
+    const val DetailPengumuman = "detail_pengumuman/{id}"
+    fun detailPengumuman(id: Long) = "detail_pengumuman/$id"
+
     const val Pembayaran = "pembayaran"
 
     const val FormAjuan1 = "form_ajuan_1"

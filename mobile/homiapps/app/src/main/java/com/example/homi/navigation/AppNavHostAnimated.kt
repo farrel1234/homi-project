@@ -6,7 +6,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -31,9 +43,19 @@ import com.example.homi.ui.screens.LupaKataSandiEmailScreen
 import com.example.homi.ui.screens.ProsesPengajuanScreen
 import com.example.homi.ui.screens.LaporkanMasalahScreen
 
+import com.example.homi.data.local.TokenStore
+
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.homi.ui.viewmodel.AuthViewModel
+import com.example.homi.ui.viewmodel.AuthViewModelFactory
+import com.example.homi.data.model.AnnouncementDto
+import com.example.homi.ui.viewmodel.AnnouncementViewModel
+import com.example.homi.ui.viewmodel.AnnouncementViewModelFactory
+
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AppNavHostAnimated() {
+fun AppNavHostAnimated(tokenStore: TokenStore) {
     val navController = rememberAnimatedNavController()
 
     AnimatedNavHost(
@@ -104,26 +126,25 @@ fun AppNavHostAnimated() {
 
         // =================== AUTH ===================
 
-        composable(
-            route = Routes.Login,
-            enterTransition = { fadeIn(tween(300)) },
-            exitTransition = { fadeOut(tween(220)) }
-        ) {
+        composable(route = Routes.Login) {
+
+            val authVm: AuthViewModel = viewModel(
+                factory = AuthViewModelFactory(tokenStore)
+            )
+
             LoginScreen(
+                vm = authVm,
                 onLoginSuccess = {
                     navController.navigate(Routes.Beranda) {
                         popUpTo(Routes.Login) { inclusive = true }
                         launchSingleTop = true
                     }
                 },
-                onRegisterClicked = {
-                    navController.navigate(Routes.Daftar)
-                },
-                onForgotPasswordClicked = {
-                    navController.navigate(Routes.LupaKataSandi)
-                }
+                onRegisterClicked = { navController.navigate(Routes.Daftar) },
+                onForgotPasswordClicked = { navController.navigate(Routes.LupaKataSandi) }
             )
         }
+
 
         composable(
             route = Routes.Daftar,
@@ -168,11 +189,22 @@ fun AppNavHostAnimated() {
             enterTransition = { fadeIn(tween(220)) },
             exitTransition = { fadeOut(tween(180)) }
         ) {
+
+
+            val annVm: AnnouncementViewModel = viewModel(
+                factory = AnnouncementViewModelFactory(tokenStore)
+            )
+
+
             DashboardScreen(
+                annVm = annVm,
                 onPengajuan = { navController.navigate(Routes.FormAjuan1) },
                 onPengaduan = { navController.navigate(Routes.FormPengaduan) },
                 onPembayaran = { navController.navigate(Routes.Pembayaran) },
-                onDetailPengumumanClicked = { navController.navigate(Routes.DetailPengumuman) },
+
+                onDetailPengumumanClicked = { id ->
+                    navController.navigate(Routes.detailPengumuman(id))
+                },
                 onRiwayatItemClick = { navController.navigate(Routes.DetailRiwayatPengaduan) },
 
                 // kalau DashboardScreen kamu sudah tipe (StatusPengajuan) -> Unit,
@@ -199,23 +231,35 @@ fun AppNavHostAnimated() {
 
         composable(
             route = Routes.DetailPengumuman,
-            enterTransition = {
-                slideInVertically(
-                    animationSpec = tween(320),
-                    initialOffsetY = { fullHeight -> fullHeight / 3 }
-                ) + fadeIn(animationSpec = tween(320))
-            },
-            exitTransition = { fadeOut(animationSpec = tween(200)) },
-            popEnterTransition = { fadeIn(animationSpec = tween(220)) },
-            popExitTransition = {
-                slideOutVertically(
-                    animationSpec = tween(260),
-                    targetOffsetY = { fullHeight -> fullHeight / 3 }
-                ) + fadeOut(animationSpec = tween(260))
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: return@composable
+
+            // pakai VM yang sama (factory tokenStore)
+            val annVm: AnnouncementViewModel = viewModel(
+                factory = AnnouncementViewModelFactory(tokenStore)
+            )
+
+            // load detail pas masuk screen
+            LaunchedEffect(id) { annVm.loadDetail(id) }
+
+            val state by annVm.state.collectAsState()
+            val data = state.detail
+
+            if (data != null) {
+                DetailPengumumanScreen(
+                    announcement = data,
+                    onBack = { navController.popBackStack() }
+                )
+            } else {
+                // loading sederhana
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        ) {
-            DetailPengumumanScreen()
         }
+
+
 
         composable(
             route = Routes.Pembayaran,
