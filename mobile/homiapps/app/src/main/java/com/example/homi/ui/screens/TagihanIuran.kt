@@ -1,3 +1,4 @@
+// File: TagihanIuranScreen.kt
 package com.example.homi.ui.screens
 
 import androidx.annotation.DrawableRes
@@ -45,8 +46,10 @@ data class TagihanTahun(val label: String, val items: List<TagihanItem>)
 /* ===== SCREEN ===== */
 @Composable
 fun TagihanIuranScreen(
-    @DrawableRes backIcon: Int = R.drawable.panah,
+    @DrawableRes backIcon: Int = R.drawable.panahkembali,
     onBack: (() -> Unit)? = null,
+
+    // tahun label (contoh: "IPL 2025") + item bulan
     onBayarClick: ((tahun: String, item: TagihanItem) -> Unit)? = null
 ) {
     val data = remember {
@@ -89,10 +92,16 @@ fun TagihanIuranScreen(
         ) {
             IconButton(
                 onClick = { onBack?.invoke() },
-                colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                modifier = Modifier.size(48.dp) // area sentuh
             ) {
-                Icon(painterResource(backIcon), contentDescription = "Kembali")
+                Icon(
+                    painter = painterResource(id = backIcon),
+                    contentDescription = "Kembali",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp) // ikon besar
+                )
             }
+
             Text(
                 text = "Tagihan",
                 fontFamily = PoppinsSemi,
@@ -149,7 +158,9 @@ fun TagihanIuranScreen(
                         TahunSection(
                             tahun = data[idx].label,
                             items = data[idx].items,
-                            onBayarClick = { item -> onBayarClick?.invoke(data[idx].label, item) }
+                            onBayarClick = { item ->
+                                onBayarClick?.invoke(data[idx].label, item)
+                            }
                         )
                     }
                 }

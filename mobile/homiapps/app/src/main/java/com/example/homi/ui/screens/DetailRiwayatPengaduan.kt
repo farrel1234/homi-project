@@ -1,10 +1,9 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.homi.ui.screens
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -24,123 +22,187 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.statusBarsPadding
 import com.example.homi.R
 
 /* ===== Tokens ===== */
-private val BlueMain    = Color(0xFF000000)
+private val BlueHeader  = Color(0xFF2F79A0)
 private val BlueBorder  = Color(0xFF2F7FA3)
 private val OrangeTitle = Color(0xFFE69B73)
 private val TextDark    = Color(0xFF0E0E0E)
+private val TextMuted   = Color(0xFF6B7280)
 
-private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
-private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
+private val PoppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
+private val PoppinsReg  = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
+private val Inter       = try { FontFamily(Font(R.font.inter_variablefont_opsz_wght)) } catch (_: Exception) { FontFamily.Default }
 
 @Composable
 fun DetailRiwayatPengaduan(
     nama: String = "Lily",
     tanggal: String = "1 Oktober 2025",
     tempat: String = "di depan lapangan voli",
-    perihal: String =
-        "Sampah Berserakan di Jalan, lingkungan menjadi kotor, bau dan banyak lalat.",
-    @DrawableRes headerImage: Int = R.drawable.sampah,
-    onBack: (() -> Unit)? = null     // ⬅️ Tambahkan callback back
+    perihal: String = "Sampah berserakan di jalan, lingkungan menjadi kotor, bau dan banyak lalat.",
+    status: String = "Diproses",
+    kategori: String = "Kebersihan",
+    ticketId: String = "PGD-0021",
+    onBack: (() -> Unit)? = null
 ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
 
-    Box(Modifier.fillMaxSize()) {
-
-        /* ===== LAYER UTAMA (layout milik kamu, tidak diubah) ===== */
-        Column(
+        // ===== HEADER (PASTI KELIATAN) =====
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
+                .fillMaxWidth()
+                .height(240.dp)
+                .background(BlueHeader)
+                .statusBarsPadding()
         ) {
-
-            Image(
-                painter = painterResource(headerImage),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            // Back icon
+            IconButton(
+                onClick = { onBack?.invoke() },
+                enabled = onBack != null,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp)
-            )
+                    .align(Alignment.TopStart)
+                    .padding(start = 10.dp, top = 6.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.panahkembali),
+                    contentDescription = "Kembali",
+                    tint = Color.White
+                )
+            }
 
-            Spacer(Modifier.height(-960.dp))
-
-            Surface(
-                color = Color.White,
-                shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offset(y = (-92).dp)
+                    .padding(horizontal = 22.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Riwayat Pengaduan",
-                        fontFamily = PoppinsSemi,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 22.sp,
-                        color = OrangeTitle,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp, top = 6.dp)
-                    )
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(2.dp, BlueBorder),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(0.dp)
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-
-                            FieldLabel("Nama Pelapor")
-                            ValueText(nama)
-                            DividerLine()
-                            Spacer(Modifier.height(10.dp))
-
-                            FieldLabel("Tanggal")
-                            ValueText(tanggal)
-                            DividerLine()
-                            Spacer(Modifier.height(5.dp))
-
-                            FieldLabel("Tempat")
-                            ValueText(tempat)
-                            DividerLine()
-                            Spacer(Modifier.height(5.dp))
-
-                            FieldLabel("Perihal")
-                            ValueParagraph(perihal)
-                            DividerLine()
-
-                            Spacer(Modifier.height(135.dp))
-                        }
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-                }
+                Text(
+                    text = "Detail Riwayat Pengaduan",
+                    fontFamily = PoppinsSemi,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "Ini adalah halaman detail riwayat pengaduan.\nKamu bisa cek status laporan kamu di sini.",
+                    fontFamily = PoppinsReg,
+                    fontSize = 12.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 16.sp
+                )
             }
         }
 
-        /* ===== ICON PANAH KEMBALI (Overlay, tidak merusak layout) ===== */
-        Image(
-            painter = painterResource(id = R.drawable.panahkembali),
-            contentDescription = "Kembali",
+        // ===== BODY PUTIH (NEMPEL KE HEADER) =====
+        Surface(
+            color = Color.White,
+            shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
             modifier = Modifier
-                .padding(top = 25.dp, start = 20.dp)
-                .size(32.dp)
-                .align(Alignment.TopStart)
-                .clickable(enabled = onBack != null) { onBack?.invoke() }
-        )
+                .fillMaxSize()
+                .offset(y = (-28).dp) // overlap dikit biar kayak desain kamu
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(2.dp, BlueBorder),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(0.dp)
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            StatusChip(status = status)
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = "ID: $ticketId",
+                                fontFamily = Inter,
+                                fontSize = 12.sp,
+                                color = TextMuted
+                            )
+                        }
+
+                        Spacer(Modifier.height(14.dp))
+                        DividerLine()
+
+                        FieldLabel("Nama Pelapor")
+                        ValueText(nama)
+                        DividerLine()
+
+                        FieldLabel("Tanggal")
+                        ValueText(tanggal)
+                        DividerLine()
+
+                        FieldLabel("Kategori")
+                        ValueText(kategori)
+                        DividerLine()
+
+                        FieldLabel("Tempat")
+                        ValueText(tempat)
+                        DividerLine()
+
+                        FieldLabel("Perihal")
+                        ValueParagraph(perihal)
+                        DividerLine()
+
+                        Spacer(Modifier.height(120.dp))
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+            }
+        }
     }
 }
 
 /* ===== Subcomponents ===== */
+
+@Composable
+private fun StatusChip(status: String) {
+    val (bg, fg) = when (status.lowercase()) {
+        "diajukan" -> Color(0xFFF3F4F6) to Color(0xFF374151)
+        "diproses" -> Color(0xFFEFF6FF) to Color(0xFF1D4ED8)
+        "selesai"  -> Color(0xFFECFDF3) to Color(0xFF047857)
+        "ditolak"  -> Color(0xFFFEF2F2) to Color(0xFFB91C1C)
+        else       -> Color(0xFFF3F4F6) to Color(0xFF374151)
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bg)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = status,
+            fontFamily = PoppinsSemi,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = fg
+        )
+    }
+}
+
 @Composable
 private fun FieldLabel(text: String) {
     Text(
@@ -181,16 +243,13 @@ private fun DividerLine() {
             .fillMaxWidth()
             .height(1.dp)
             .clip(RoundedCornerShape(1.dp))
-            .background(BlueMain.copy(alpha = 0.9f))
+            .background(Color.Black.copy(alpha = 0.14f))
     )
     Spacer(Modifier.height(14.dp))
 }
 
-/* ===== Preview ===== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun PreviewDetailRiwayatPengaduan() {
-    MaterialTheme {
-        DetailRiwayatPengaduan()
-    }
+private fun PreviewDetailRiwayatPengaduanFixed() {
+    MaterialTheme { DetailRiwayatPengaduan() }
 }
