@@ -1,3 +1,4 @@
+// File: beranda.kt
 package com.example.homi.ui.screens
 
 import androidx.annotation.DrawableRes
@@ -43,8 +44,7 @@ private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 private val SuezOne     = FontFamily(Font(R.font.suez_one_regular))
 
-/* ===== Bottom nav model ===== */
-// ✅ DIUBAH: jangan private, biar NavHost bisa akses BottomTab.AKUN dll
+// ✅ jangan private (biar bisa dipakai dari NavHost)
 enum class BottomTab { BERANDA, DIREKTORI, RIWAYAT, AKUN }
 
 private data class BottomNavItem(
@@ -54,12 +54,9 @@ private data class BottomNavItem(
     @DrawableRes val iconUnselected: Int
 )
 
-/**
- * Dashboard utama HOMI
- */
 @Composable
 fun DashboardScreen(
-    startTab: BottomTab = BottomTab.BERANDA, // ✅ TAMBAHAN: start di tab tertentu (misal AKUN)
+    startTab: BottomTab = BottomTab.BERANDA,
     onPengajuan: (() -> Unit)? = null,
     onPengaduan: (() -> Unit)? = null,
     onPembayaran: (() -> Unit)? = null,
@@ -75,15 +72,9 @@ fun DashboardScreen(
 ) {
     var currentTab by rememberSaveable { mutableStateOf(startTab) }
 
-    // ✅ kalau route datang dengan tab baru, ikuti tab itu
-    LaunchedEffect(startTab) {
-        currentTab = startTab
-    }
+    LaunchedEffect(startTab) { currentTab = startTab }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // ===== AREA KONTEN =====
+    Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -96,16 +87,11 @@ fun DashboardScreen(
                     onPembayaran = onPembayaran,
                     onDetailPengumumanClicked = onDetailPengumumanClicked
                 )
-
                 BottomTab.DIREKTORI -> DirektoriSection()
-
                 BottomTab.RIWAYAT -> Riwayat1Screen(
                     onItemClick = { onRiwayatItemClick?.invoke() },
-                    onPengajuanItemClick = { status ->
-                        onRiwayatPengajuanItemClick?.invoke(status)
-                    }
+                    onPengajuanItemClick = { status -> onRiwayatPengajuanItemClick?.invoke(status) }
                 )
-
                 BottomTab.AKUN -> AkunScreen(
                     onUbahKataSandi = onUbahKataSandi,
                     onProsesPengajuan = onProsesPengajuan,
@@ -115,7 +101,6 @@ fun DashboardScreen(
             }
         }
 
-        // ===== BOTTOM NAV =====
         BottomNavBar(
             currentTab = currentTab,
             onTabSelected = { selected -> currentTab = selected }
@@ -123,7 +108,7 @@ fun DashboardScreen(
     }
 }
 
-/* ---------- BERANDA ---------- */
+/* ---------- BERANDA (SCROLLABLE) ---------- */
 
 @Composable
 private fun BerandaSection(
@@ -153,18 +138,8 @@ private fun BerandaSection(
             )
             Spacer(Modifier.width(12.dp))
             Column {
-                Text(
-                    "Hai, Lily",
-                    fontFamily = PoppinsSemi,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
-                Text(
-                    "Selamat Datang di Homi",
-                    fontFamily = PoppinsSemi,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
+                Text("Hai, Lily", fontFamily = PoppinsSemi, fontSize = 20.sp, color = Color.White)
+                Text("Selamat Datang di Homi", fontFamily = PoppinsSemi, fontSize = 20.sp, color = Color.White)
                 Text(
                     "Menghubungkan Warga, Membangun Kebersamaan",
                     fontFamily = PoppinsReg,
@@ -175,96 +150,97 @@ private fun BerandaSection(
             Spacer(Modifier.weight(1f))
         }
 
-        Spacer(Modifier.height(10.dp))
-
         Card(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 18.dp)
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(top = 18.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text(
-                    text = "Pengumuman",
-                    fontFamily = PoppinsSemi,
-                    fontSize = 20.sp,
-                    color = AccentOrange,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(Modifier.height(10.dp))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.img_pengumuman),
-                        contentDescription = "Kegiatan Gotong Royong",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(Color.Black.copy(alpha = 0.30f))
-                    )
+                item {
                     Text(
-                        text = "Kegiatan Gotong Royong",
-                        fontFamily = SuezOne,
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Center,
-                        textDecoration = TextDecoration.Underline,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 10.dp)
-                            .fillMaxWidth()
-                            .clickable(enabled = onDetailPengumumanClicked != null) {
-                                onDetailPengumumanClicked?.invoke()
-                            }
-                    )
-                    Text(
-                        text = "Jumat/3 Sep 25\nArea Masjid,\nSemua Warga\nPerumahan Hawai Garden",
-                        fontFamily = PoppinsReg,
-                        fontSize = 12.sp,
-                        color = Color.White,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(12.dp)
+                        text = "Pengumuman",
+                        fontFamily = PoppinsSemi,
+                        fontSize = 20.sp,
+                        color = AccentOrange,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
 
-                Spacer(Modifier.height(18.dp))
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.img_pengumuman),
+                            contentDescription = "Kegiatan Gotong Royong",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(Color.Black.copy(alpha = 0.30f))
+                        )
+                        Text(
+                            text = "Kegiatan Gotong Royong",
+                            fontFamily = SuezOne,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
+                            textDecoration = TextDecoration.Underline,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 10.dp)
+                                .fillMaxWidth()
+                                .clickable(enabled = onDetailPengumumanClicked != null) {
+                                    onDetailPengumumanClicked?.invoke()
+                                }
+                        )
+                        Text(
+                            text = "Jumat/3 Sep 25\nArea Masjid,\nSemua Warga\nPerumahan Hawai Garden",
+                            fontFamily = PoppinsReg,
+                            fontSize = 12.sp,
+                            color = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(12.dp)
+                        )
+                    }
+                }
 
-                MenuButton(
-                    icon = R.drawable.icon_pengajuan,
-                    title = "Pengajuan Layanan",
-                    onClick = onPengajuan,
-                    iconSize = 48.dp
-                )
-                Spacer(Modifier.height(14.dp))
-                MenuButton(
-                    icon = R.drawable.icon_pengaduan,
-                    title = "Pengaduan Warga",
-                    onClick = onPengaduan,
-                    iconSize = 48.dp
-                )
-                Spacer(Modifier.height(14.dp))
-                MenuButton(
-                    icon = R.drawable.icon_pembayaran,
-                    title = "Pembayaran Iuran",
-                    onClick = onPembayaran,
-                    iconSize = 48.dp
-                )
+                item {
+                    MenuButton(
+                        icon = R.drawable.icon_pengajuan,
+                        title = "Pengajuan Layanan",
+                        onClick = onPengajuan
+                    )
+                }
 
-                Spacer(Modifier.height(24.dp))
+                item {
+                    MenuButton(
+                        icon = R.drawable.icon_pengaduan,
+                        title = "Pengaduan Warga",
+                        onClick = onPengaduan
+                    )
+                }
+
+                item {
+                    MenuButton(
+                        icon = R.drawable.icon_pembayaran,
+                        title = "Pembayaran Iuran",
+                        onClick = onPembayaran
+                    )
+                }
             }
         }
     }
@@ -333,10 +309,7 @@ private fun DirektoriSection() {
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = "🔍 Cari",
                             fontFamily = PoppinsSemi,
@@ -347,7 +320,6 @@ private fun DirektoriSection() {
                 }
 
                 Spacer(Modifier.height(16.dp))
-
                 DirektoriTable(data = sampleDirektori)
             }
         }
@@ -355,9 +327,7 @@ private fun DirektoriSection() {
 }
 
 @Composable
-private fun DirektoriTable(
-    data: List<Pair<String, String>>
-) {
+private fun DirektoriTable(data: List<Pair<String, String>>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -418,10 +388,7 @@ private fun DirektoriTable(
 }
 
 @Composable
-private fun TableRow(
-    nama: String,
-    alamat: String
-) {
+private fun TableRow(nama: String, alamat: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -466,37 +433,44 @@ private val sampleDirektori = listOf(
     "Muhammad Wawan" to "Blok AA1 No 10",
 )
 
-/* ===== Menu card biru ===== */
+/* ===== Menu card biru (lebih simetris) ===== */
 @Composable
 private fun MenuButton(
     @DrawableRes icon: Int,
     title: String,
-    onClick: (() -> Unit)? = null,
-    iconSize: Dp = 48.dp
+    onClick: (() -> Unit)? = null
 ) {
     val shape = RoundedCornerShape(16.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .height(76.dp)
             .clip(shape)
             .background(BlueButton)
             .clickable(enabled = onClick != null) { onClick?.invoke() }
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(icon),
-            contentDescription = title,
-            modifier = Modifier.size(iconSize)
-        )
-        Spacer(Modifier.width(14.dp))
+        // slot icon fixed biar sejajar/simetris
+        Box(
+            modifier = Modifier.size(56.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(icon),
+                contentDescription = title,
+                modifier = Modifier.size(48.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+        Spacer(Modifier.width(12.dp))
         Text(
             text = title,
             fontFamily = PoppinsSemi,
             color = Color.White,
             fontSize = 16.sp
         )
+        Spacer(Modifier.weight(1f))
     }
 }
 
@@ -507,37 +481,13 @@ private fun BottomNavBar(
     onTabSelected: (BottomTab) -> Unit
 ) {
     val items = listOf(
-        BottomNavItem(
-            tab = BottomTab.BERANDA,
-            label = "Beranda",
-            iconSelected = R.drawable.homeoren,
-            iconUnselected = R.drawable.icon_home
-        ),
-        BottomNavItem(
-            tab = BottomTab.DIREKTORI,
-            label = "Direktori",
-            iconSelected = R.drawable.direktorioren,
-            iconUnselected = R.drawable.icon_direktori
-        ),
-        BottomNavItem(
-            tab = BottomTab.RIWAYAT,
-            label = "Riwayat",
-            iconSelected = R.drawable.riwayatoren,
-            iconUnselected = R.drawable.icon_riwayat
-        ),
-        BottomNavItem(
-            tab = BottomTab.AKUN,
-            label = "Akun",
-            iconSelected = R.drawable.akunoren,
-            iconUnselected = R.drawable.icon_akun
-        )
+        BottomNavItem(BottomTab.BERANDA, "Beranda", R.drawable.homeoren, R.drawable.icon_home),
+        BottomNavItem(BottomTab.DIREKTORI, "Direktori", R.drawable.direktorioren, R.drawable.icon_direktori),
+        BottomNavItem(BottomTab.RIWAYAT, "Riwayat", R.drawable.riwayatoren, R.drawable.icon_riwayat),
+        BottomNavItem(BottomTab.AKUN, "Akun", R.drawable.akunoren, R.drawable.icon_akun)
     )
 
-    Surface(
-        color = Color(0xFFF6F6F6),
-        tonalElevation = 8.dp,
-        shadowElevation = 8.dp
-    ) {
+    Surface(color = Color(0xFFF6F6F6), tonalElevation = 8.dp, shadowElevation = 8.dp) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -588,7 +538,5 @@ private fun BottomNavBar(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewDashboardBaru() {
-    MaterialTheme {
-        DashboardScreen()
-    }
+    MaterialTheme { DashboardScreen() }
 }

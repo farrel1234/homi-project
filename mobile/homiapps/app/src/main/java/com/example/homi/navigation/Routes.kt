@@ -12,25 +12,28 @@ object Routes {
     const val Konfirmasi = "konfirmasi"
     const val LupaKataSandi = "lupa_kata_sandi"
 
+    // Beranda (Dashboard) + shortcut ke tab Akun
     const val Beranda = "beranda"
+    const val BerandaAkun = "beranda_akun"
+
     const val DetailPengumuman = "detail_pengumuman"
     const val Pembayaran = "pembayaran"
 
-    // ===== Pengajuan Surat =====
+    // Pengajuan Surat
     const val FormAjuan1 = "form_ajuan_1"
     const val SuratDomisili = "surat_domisili"
     const val SuratPengantar = "surat_pengantar"
     const val SuratUsaha = "surat_usaha"
     const val SuratKematian = "surat_kematian"
     const val SuratBelumMenikah = "surat_belum_menikah"
+    const val PengajuanSuratStatus = "pengajuan_surat_status"
 
-    const val ProsesPengajuan = "proses_pengajuan"
-
-    // ===== Pengaduan =====
+    // Pengaduan
     const val FormPengaduan = "form_pengaduan"
-    const val PengaduanWarga = "pengaduan_warga"
+    const val PengaduanWarga = "pengaduan_warga" // kalau masih dipakai, aman
+    const val ProsesPengajuan = "proses_pengajuan" // dipakai untuk stepper pengaduan
 
-    // ===== Lainnya =====
+    // Riwayat & lainnya
     const val DetailRiwayatPengaduan = "detail_riwayat_pengaduan"
     const val DetailRiwayatPengajuan = "detail_riwayat_pengajuan"
     const val UbahKataSandi = "ubah_kata_sandi"

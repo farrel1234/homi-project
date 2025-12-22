@@ -1,22 +1,29 @@
+// File: FormPengaduanScreen.kt
 package com.example.homi.ui.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -27,13 +34,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.homi.R
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-/* ===== Theme tokens ===== */
+/* ===== Theme tokens (punyamu) ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
 private val BlueBorder   = Color(0xFF2F7FA3)
 private val BlueText     = Color(0xFF2F7FA3)
@@ -54,8 +63,6 @@ fun FormPengaduanScreen(
     @DrawableRes successImage: Int? = R.drawable.bahagia,
     @DrawableRes bellIcon: Int = R.drawable.notif
 ) {
-    val poppins = FontFamily(Font(R.font.poppins_regular))
-
     var nama by rememberSaveable { mutableStateOf("") }
     var tanggal by rememberSaveable { mutableStateOf("") }
     var tempat by rememberSaveable { mutableStateOf("") }
@@ -63,13 +70,17 @@ fun FormPengaduanScreen(
 
     var showPopup by rememberSaveable { mutableStateOf(false) }
 
+    // scroll + bring into view support
+    val scrollState = rememberScrollState()
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BlueMain)
         ) {
-            /* Top bar */
+
+            /* ===== TOP BAR ===== */
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,42 +121,68 @@ fun FormPengaduanScreen(
                     .padding(horizontal = 24.dp)
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(18.dp))
 
+            /* ===== WHITE CONTENT ===== */
             Card(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
+
+                // ✅ INI KUNCINYA:
+                // - verticalScroll biar bisa geser
+                // - imePadding biar konten naik pas keyboard muncul
+                // - navigationBarsPadding biar aman di bawah
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .imePadding()
+                        .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(Modifier.height(16.dp))
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         border = BorderStroke(2.dp, BlueBorder),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Spacer(Modifier.height(16.dp))
                         Column(modifier = Modifier.padding(16.dp)) {
+
                             FieldLabel("Nama Pelapor")
-                            UnderlineTextField(value = nama, onValueChange = { nama = it })
+                            UnderlineTextFieldBringIntoView(
+                                value = nama,
+                                onValueChange = { nama = it },
+                                singleLine = true
+                            )
                             Spacer(Modifier.height(16.dp))
 
                             FieldLabel("Tanggal")
-                            UnderlineTextField(value = tanggal, onValueChange = { tanggal = it })
+                            UnderlineTextFieldBringIntoView(
+                                value = tanggal,
+                                onValueChange = { tanggal = it },
+                                singleLine = true
+                            )
                             Spacer(Modifier.height(16.dp))
 
                             FieldLabel("Tempat")
-                            UnderlineTextField(value = tempat, onValueChange = { tempat = it })
+                            UnderlineTextFieldBringIntoView(
+                                value = tempat,
+                                onValueChange = { tempat = it },
+                                singleLine = true
+                            )
                             Spacer(Modifier.height(16.dp))
 
                             FieldLabel("Perihal")
-                            UnderlineTextField(value = perihal, onValueChange = { perihal = it })
+                            UnderlineTextFieldBringIntoView(
+                                value = perihal,
+                                onValueChange = { perihal = it },
+                                singleLine = false,
+                                minHeight = 72.dp
+                            )
                             Spacer(Modifier.height(16.dp))
 
                             FieldLabel("Upload Foto")
@@ -154,7 +191,10 @@ fun FormPengaduanScreen(
                                     modifier = Modifier
                                         .size(96.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(UploadBg),
+                                        .background(UploadBg)
+                                        .clickable {
+                                            // TODO: panggil image picker kamu
+                                        },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Image(
@@ -187,19 +227,23 @@ fun FormPengaduanScreen(
                                 Text(
                                     text = "Konfirmasi",
                                     color = Color.White,
-                                    fontFamily = poppins,
+                                    fontFamily = PoppinsReg,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp
                                 )
                             }
-                            Spacer(Modifier.height(24.dp))
+
+                            Spacer(Modifier.height(18.dp))
                         }
                     }
+
+                    // spacer ekstra biar tombol gak mepet bawah
+                    Spacer(Modifier.height(24.dp))
                 }
             }
         }
 
-        /* ===== POPUP FIX CENTER (mirip desain gambar) ===== */
+        /* ===== POPUP ===== */
         if (showPopup) {
             SuccessPopup10s(
                 successImage = successImage,
@@ -227,15 +271,38 @@ private fun FieldLabel(text: String) {
     Spacer(Modifier.height(6.dp))
 }
 
+/**
+ * ✅ TextField underline versi kamu + auto geser saat fokus
+ * Ini yang bikin "pas ngetik ga ketutup keyboard".
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun UnderlineTextField(
+private fun UnderlineTextFieldBringIntoView(
     value: String,
     onValueChange: (String) -> Unit,
+    singleLine: Boolean,
+    minHeight: Dp = 0.dp
 ) {
-    Column(Modifier.fillMaxWidth()) {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .bringIntoViewRequester(bringIntoViewRequester)
+            .onFocusEvent { state ->
+                if (state.isFocused) {
+                    scope.launch {
+                        delay(200)
+                        bringIntoViewRequester.bringIntoView()
+                    }
+                }
+            }
+    ) {
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
+            singleLine = singleLine,
             textStyle = TextStyle(
                 color = TextPrimary,
                 fontFamily = PoppinsReg,
@@ -244,8 +311,10 @@ private fun UnderlineTextField(
             cursorBrush = SolidColor(FieldLine),
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = if (minHeight > 0.dp) minHeight else 0.dp)
                 .padding(bottom = 6.dp)
         )
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -255,7 +324,7 @@ private fun UnderlineTextField(
     }
 }
 
-/* ===== POPUP (benar-benar di tengah, mirip referensi) ===== */
+/* ===== POPUP (punyamu) ===== */
 @Composable
 private fun SuccessPopup10s(
     @DrawableRes successImage: Int? = null,
@@ -263,34 +332,28 @@ private fun SuccessPopup10s(
     message: String,
     onFinished: () -> Unit
 ) {
-    // Auto dismiss 5 detik
     LaunchedEffect(Unit) {
         delay(2_000L)
         onFinished()
     }
 
-    // Overlay gelap transparan
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0x80000000)) // 50% hitam
+            .background(Color(0x80000000))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { /* blok klik belakang */ }
+            ) { }
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-
-            // Wrapper biar bell nempel di bagian atas card
             Box(
                 modifier = Modifier.wrapContentSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
-
-                // CARD PUTIH UTAMA
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     border = BorderStroke(2.dp, BlueBorder),
@@ -299,7 +362,7 @@ private fun SuccessPopup10s(
                     modifier = Modifier
                         .widthIn(max = 320.dp)
                         .fillMaxWidth(0.8f)
-                        .padding(top = 32.dp)      // ruang untuk lingkaran bell
+                        .padding(top = 32.dp)
                         .zIndex(1f)
                 ) {
                     Column(
@@ -308,8 +371,6 @@ private fun SuccessPopup10s(
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
-                        // Gambar orang bahagia
                         successImage?.let {
                             Image(
                                 painter = painterResource(id = it),
@@ -320,7 +381,6 @@ private fun SuccessPopup10s(
                             Spacer(Modifier.height(12.dp))
                         }
 
-                        // Teks pesan
                         Text(
                             text = message,
                             fontFamily = PoppinsSemi,
@@ -333,7 +393,6 @@ private fun SuccessPopup10s(
                     }
                 }
 
-                // LINGKARAN BELL DI ATAS CARD
                 Box(
                     modifier = Modifier
                         .offset(y = (-4).dp)
@@ -341,7 +400,6 @@ private fun SuccessPopup10s(
                         .zIndex(2f),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Lingkaran biru
                     Box(
                         modifier = Modifier
                             .size(64.dp)
@@ -349,7 +407,6 @@ private fun SuccessPopup10s(
                             .background(BlueMain),
                         contentAlignment = Alignment.Center
                     ) {
-                        // Icon bell
                         Image(
                             painter = painterResource(id = bellIcon),
                             contentDescription = "Notifikasi",
@@ -357,7 +414,6 @@ private fun SuccessPopup10s(
                             modifier = Modifier.size(32.dp)
                         )
 
-                        // Badge merah kecil "1"
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)

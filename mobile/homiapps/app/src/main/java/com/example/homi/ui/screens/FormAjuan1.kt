@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
-import com.example.homi.navigation.Routes  // ✅ PAKAI ROUTES GLOBAL
+import com.example.homi.navigation.Routes
 
 private data class SuratChoice(
     val title: String,
@@ -36,7 +36,6 @@ private data class SuratChoice(
 @Composable
 fun FormAjuan1(
     onBack: () -> Unit = {},
-    // ✅ output route agar NavHost gampang
     onKonfirmasi: (String) -> Unit = {}
 ) {
     val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
@@ -82,7 +81,6 @@ fun FormAjuan1(
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Back
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -122,7 +120,6 @@ fun FormAjuan1(
 
         Spacer(Modifier.height(22.dp))
 
-        // Container putih
         Box(
             modifier = Modifier
                 .fillMaxSize()

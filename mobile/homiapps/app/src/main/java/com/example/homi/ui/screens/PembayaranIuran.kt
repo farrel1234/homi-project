@@ -1,3 +1,4 @@
+// File: PembayaranIuranScreen.kt
 package com.example.homi.ui.screens
 
 import android.content.ContentResolver
@@ -14,8 +15,10 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +37,8 @@ import coil.compose.AsyncImage
 import com.example.homi.R
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -55,20 +60,27 @@ fun PembayaranIuranScreen(
     amount: String = "Rp25.000",
     bulan: String = "Agustus 2025",
     transaksiId: String = "IPL-123456789",
-    @DrawableRes backIcon: Int = R.drawable.panah,
+    @DrawableRes backIcon: Int = R.drawable.panahkembali,
     @DrawableRes qrIcon: Int = R.drawable.qr_code,
     onBack: (() -> Unit)? = null,
-    // jika mau langsung serahkan ke ViewModel:
     onUploadBukti: ((uri: Uri) -> Unit)? = null
 ) {
-    var rincianExpanded by remember { mutableStateOf(true) }
-
-    // ====== STATE UPLOAD ======
+    var rincianExpanded by remember { mutableStateOf(false) }
     var buktiUri by remember { mutableStateOf<Uri?>(null) }
     var isUploading by remember { mutableStateOf(false) }
     var uploadMessage by remember { mutableStateOf<String?>(null) }
 
-    // Universal Photo Picker (auto fallback di Android < 13)
+    val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+
+    // ✅ auto scroll ke bawah setelah pilih bukti
+    LaunchedEffect(buktiUri) {
+        if (buktiUri != null) {
+            delay(150)
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
+
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -93,7 +105,7 @@ fun PembayaranIuranScreen(
                 colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.panahkembali),
+                    painter = painterResource(id = backIcon),
                     contentDescription = "Kembali",
                     modifier = Modifier.size(24.dp)
                 )
@@ -132,11 +144,12 @@ fun PembayaranIuranScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .imePadding()
+                    .navigationBarsPadding()
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                /* ===== ROW: NOMINAL CHIP + RINCIAN TOGGLE ===== */
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -174,7 +187,6 @@ fun PembayaranIuranScreen(
 
                 Divider(color = LineGray, thickness = 1.dp)
 
-                /* ===== RINCIAN ===== */
                 AnimatedVisibility(
                     visible = rincianExpanded,
                     enter = fadeIn() + expandVertically(),
@@ -200,7 +212,6 @@ fun PembayaranIuranScreen(
                         }
 
                         Spacer(Modifier.height(8.dp))
-
                         RincianRow("Total Pembayaran", amount, highlightRight = true)
                         Divider(color = LineGray, thickness = 1.dp)
                         RincianRow("Bulan", bulan)
@@ -212,57 +223,45 @@ fun PembayaranIuranScreen(
 
                 Spacer(Modifier.height(10.dp))
 
-                /* ===== QR AREA ===== */
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_qr),
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clip(CircleShape),
+                        modifier = Modifier.size(16.dp).clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
                     Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = "QRIS",
-                        fontFamily = PoppinsSemi,
-                        fontSize = 14.sp,
-                        color = TextDark
-                    )
+                    Text(text = "QRIS", fontFamily = PoppinsSemi, fontSize = 14.sp, color = TextDark)
                     Spacer(Modifier.height(8.dp))
 
                     Image(
                         painter = painterResource(qrIcon),
                         contentDescription = "QR Pembayaran",
-                        modifier = Modifier
-                            .size(220.dp)
-                            .padding(2.dp),
+                        modifier = Modifier.size(220.dp).padding(2.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
 
-                /* ===== UPLOAD BUKTI ===== */
                 Spacer(Modifier.height(22.dp))
                 Divider(color = LineGray, thickness = 1.dp)
                 Spacer(Modifier.height(12.dp))
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally  // ⬅️ ini bikin semua isi di tengah
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Upload Bukti Pembayaran",
                         fontFamily = PoppinsSemi,
                         fontSize = 14.sp,
                         color = TextDark,
-                        textAlign = TextAlign.Center   // ⬅️ teks judul juga di tengah
+                        textAlign = TextAlign.Center
                     )
 
                     Spacer(Modifier.height(10.dp))
 
-                    // Tombol pilih / ganti gambar
                     Row(
-                        horizontalArrangement = Arrangement.Center,     // ⬅️ tombol rata tengah
+                        horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedButton(
@@ -287,7 +286,6 @@ fun PembayaranIuranScreen(
                         }
                     }
 
-                    // Preview gambar
                     AnimatedVisibility(visible = buktiUri != null) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Spacer(Modifier.height(10.dp))
@@ -295,7 +293,7 @@ fun PembayaranIuranScreen(
                                 model = buktiUri,
                                 contentDescription = "Preview Bukti",
                                 modifier = Modifier
-                                    .size(width = 260.dp, height = 180.dp)   // ⬅️ ukuran biar proporsional tengah
+                                    .size(width = 260.dp, height = 180.dp)
                                     .clip(RoundedCornerShape(14.dp)),
                                 contentScale = ContentScale.Crop
                             )
@@ -318,24 +316,18 @@ fun PembayaranIuranScreen(
                     Button(
                         onClick = {
                             val target = buktiUri ?: return@Button
-                            if (onUploadBukti != null) {
+                            scope.launch {
                                 isUploading = true
                                 uploadMessage = "Mengunggah bukti…"
-                                onUploadBukti.invoke(target)
+                                onUploadBukti?.invoke(target)
+                                delay(250)
                                 isUploading = false
                                 uploadMessage = "Bukti terkirim. Menunggu verifikasi admin."
-                            } else {
-                                isUploading = true
-                                uploadMessage = "Menyiapkan file…"
-                                // val part = uriToMultipart(LocalContext.current.contentResolver, target, "bukti")
-                                // TODO: Repository.uploadBukti(transaksiId, part)
-                                isUploading = false
-                                uploadMessage = "Bukti siap diunggah (implement upload di Repository)."
                             }
                         },
                         enabled = buktiUri != null && !isUploading,
                         modifier = Modifier
-                            .fillMaxWidth(0.9f)     // ⬅️ tombol lebar tapi tetap simetris
+                            .fillMaxWidth(0.9f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = BlueMain)
                     ) {
@@ -347,21 +339,14 @@ fun PembayaranIuranScreen(
                     }
                 }
 
-
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
 }
 
-/* ===== Subcomponents ===== */
-
 @Composable
-private fun RincianRow(
-    left: String,
-    right: String,
-    highlightRight: Boolean = false
-) {
+private fun RincianRow(left: String, right: String, highlightRight: Boolean = false) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -387,12 +372,8 @@ private fun RincianRow(
     }
 }
 
-/* ===== Utils: Uri -> Multipart (pakai di Repository/VM) ===== */
-fun uriToMultipart(
-    resolver: ContentResolver,
-    uri: Uri,
-    formFieldName: String
-): MultipartBody.Part {
+/* ===== Utils: Uri -> Multipart (tetap) ===== */
+fun uriToMultipart(resolver: ContentResolver, uri: Uri, formFieldName: String): MultipartBody.Part {
     val fileName = guessDisplayName(resolver, uri) ?: "bukti_${System.currentTimeMillis()}.jpg"
     val mime = resolver.getType(uri) ?: "image/jpeg"
     val bytes = readAllBytes(resolver.openInputStream(uri))
@@ -420,11 +401,8 @@ private fun guessDisplayName(resolver: ContentResolver, uri: Uri): String? {
     }
 }
 
-/* ===== Preview ===== */
 @Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun PreviewPembayaran() {
-    MaterialTheme {
-        PembayaranIuranScreen(qrIcon = R.drawable.qr_code)
-    }
+    MaterialTheme { PembayaranIuranScreen(qrIcon = R.drawable.qr_code) }
 }

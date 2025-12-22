@@ -1,36 +1,42 @@
+// File: FormSuratDomisiliScreen.kt
 @file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.example.homi.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+private val BlueMain = Color(0xFF2F79A0)
+private val BlueBorder = Color(0xFF1C6BA4)
+private val AccentOrange = Color(0xFFFFA06B)
 
 @Composable
 fun FormSuratDomisiliScreen(
@@ -40,242 +46,281 @@ fun FormSuratDomisiliScreen(
     val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
     val poppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
 
-    // State
-    var nama by remember { mutableStateOf("") }
-    var nik by remember { mutableStateOf("") }
-    var ttl by remember { mutableStateOf("") }
-    var alamat by remember { mutableStateOf("") }
-    var blokNo by remember { mutableStateOf("") }
-    var keperluan by remember { mutableStateOf("") }
+    var nama by rememberSaveable { mutableStateOf("") }
+    var nik by rememberSaveable { mutableStateOf("") }
+    var alamat by rememberSaveable { mutableStateOf("") }
+    var blok by rememberSaveable { mutableStateOf("") }
+    var noRumah by rememberSaveable { mutableStateOf("") }
+    var keperluan by rememberSaveable { mutableStateOf("") }
 
-    var showError by remember { mutableStateOf(false) }
+    val canSubmit = nama.isNotBlank() && nik.isNotBlank() && alamat.isNotBlank()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF2F79A0)),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(BlueMain)
+            .statusBarsPadding()
     ) {
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // Back
-        Box(
+        // ===== HEADER (tetap di atas) =====
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = R.drawable.panahkembali),
                 contentDescription = "Kembali",
+                tint = Color.White,
                 modifier = Modifier
                     .size(26.dp)
-                    .align(Alignment.CenterStart)
                     .clickable { onBack() }
             )
+
+            Spacer(Modifier.width(10.dp))
+
+            Text(
+                text = "Surat Domisili",
+                fontFamily = poppinsSemi,
+                fontSize = 20.sp,
+                color = Color.White,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.width(26.dp))
         }
 
-        Spacer(Modifier.height(8.dp))
-
         Text(
-            text = "Formulir Pengajuan",
-            fontFamily = poppinsSemi,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White,
-            fontSize = 22.sp
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "Silahkan mengisi data formulir dibawah ini,\nuntuk melakukan pengajuan layanan:",
+            text = "Isi data di bawah ini. Form akan otomatis naik\nsaat keyboard muncul.",
             fontFamily = poppins,
-            color = Color.White,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
-            modifier = Modifier.padding(horizontal = 32.dp),
-            textAlign = TextAlign.Center
+            fontSize = 12.sp,
+            color = Color.White.copy(alpha = 0.9f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 6.dp)
         )
 
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(10.dp))
 
-        // Container putih
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Color.White,
-                    shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
-                )
-                .padding(horizontal = 22.dp, vertical = 22.dp)
+        // ===== CONTAINER PUTIH =====
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Card(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        BorderStroke(1.dp, Color(0xFF1C6BA4)),
-                        RoundedCornerShape(18.dp)
-                    ),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                Text(
+                    text = "Data Pemohon",
+                    fontFamily = poppinsSemi,
+                    fontSize = 14.sp,
+                    color = BlueBorder
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, BlueBorder),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
-                    // ====== Field kotak seperti gambar ======
-                    FieldBox(
-                        label = "Nama Lengkap",
-                        value = nama,
-                        onChange = { nama = it },
-                        poppins = poppins,
-                        poppinsSemi = poppinsSemi
-                    )
+                    Column(modifier = Modifier.padding(14.dp)) {
 
-                    FieldBox(
-                        label = "NIK",
-                        value = nik,
-                        onChange = { nik = it },
-                        poppins = poppins,
-                        poppinsSemi = poppinsSemi
-                    )
-
-                    FieldBox(
-                        label = "Tempat, Tanggal Lahir",
-                        value = ttl,
-                        onChange = { ttl = it },
-                        poppins = poppins,
-                        poppinsSemi = poppinsSemi
-                    )
-
-                    FieldBox(
-                        label = "Alamat Domisili",
-                        value = alamat,
-                        onChange = { alamat = it },
-                        poppins = poppins,
-                        poppinsSemi = poppinsSemi
-                    )
-
-                    FieldBox(
-                        label = "Blok/No Rumah",
-                        value = blokNo,
-                        onChange = { blokNo = it },
-                        poppins = poppins,
-                        poppinsSemi = poppinsSemi
-                    )
-
-                    FieldBox(
-                        label = "Keperluan",
-                        value = keperluan,
-                        onChange = { keperluan = it },
-                        poppins = poppins,
-                        poppinsSemi = poppinsSemi
-                    )
-
-                    if (showError) {
-                        Text(
-                            text = "Lengkapi semua data yang wajib diisi.",
-                            fontFamily = poppins,
-                            color = Color(0xFFEF4444),
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 8.dp)
+                        FormField(
+                            label = "Nama Lengkap",
+                            placeholder = "Isi Nama Lengkap",
+                            value = nama,
+                            onChange = { nama = it },
+                            poppins = poppins,
+                            poppinsSemi = poppinsSemi,
+                            keyboardType = KeyboardType.Text
                         )
-                    }
 
-                    Spacer(Modifier.height(18.dp))
+                        Spacer(Modifier.height(10.dp))
 
-                    Button(
-                        onClick = {
-                            val valid = nama.isNotBlank() &&
-                                    nik.isNotBlank() &&
-                                    ttl.isNotBlank() &&
-                                    alamat.isNotBlank() &&
-                                    blokNo.isNotBlank() &&
-                                    keperluan.isNotBlank()
+                        FormField(
+                            label = "NIK",
+                            placeholder = "Isi NIK",
+                            value = nik,
+                            onChange = { nik = it },
+                            poppins = poppins,
+                            poppinsSemi = poppinsSemi,
+                            keyboardType = KeyboardType.Number
+                        )
 
-                            if (!valid) {
-                                showError = true
-                                return@Button
-                            }
-                            showError = false
+                        Spacer(Modifier.height(10.dp))
 
-                            onKonfirmasi(
-                                mapOf(
-                                    "nama" to nama.trim(),
-                                    "nik" to nik.trim(),
-                                    "ttl" to ttl.trim(),
-                                    "alamat" to alamat.trim(),
-                                    "blok_no" to blokNo.trim(),
-                                    "keperluan" to keperluan.trim()
+                        FormField(
+                            label = "Alamat",
+                            placeholder = "Isi Alamat",
+                            value = alamat,
+                            onChange = { alamat = it },
+                            poppins = poppins,
+                            poppinsSemi = poppinsSemi,
+                            keyboardType = KeyboardType.Text,
+                            singleLine = false,
+                            minLines = 2
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // ✅ FIX: Blok & No Rumah dibuat 1 kolom (atas-bawah)
+                        FormField(
+                            label = "Blok",
+                            placeholder = "Isi Blok",
+                            value = blok,
+                            onChange = { blok = it },
+                            poppins = poppins,
+                            poppinsSemi = poppinsSemi,
+                            keyboardType = KeyboardType.Text
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        FormField(
+                            label = "No. Rumah",
+                            placeholder = "Isi No. Rumah",
+                            value = noRumah,
+                            onChange = { noRumah = it },
+                            poppins = poppins,
+                            poppinsSemi = poppinsSemi,
+                            keyboardType = KeyboardType.Text
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        FormField(
+                            label = "Keperluan",
+                            placeholder = "Isi Keperluan",
+                            value = keperluan,
+                            onChange = { keperluan = it },
+                            poppins = poppins,
+                            poppinsSemi = poppinsSemi,
+                            keyboardType = KeyboardType.Text,
+                            singleLine = false,
+                            minLines = 2
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                val payload = mapOf(
+                                    "nama" to nama,
+                                    "nik" to nik,
+                                    "alamat" to alamat,
+                                    "blok" to blok,
+                                    "no_rumah" to noRumah,
+                                    "keperluan" to keperluan
                                 )
+                                onKonfirmasi(payload)
+                            },
+                            enabled = canSubmit,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AccentOrange,
+                                disabledContainerColor = AccentOrange.copy(alpha = 0.45f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                        ) {
+                            Text(
+                                text = "Konfirmasi",
+                                fontFamily = poppinsSemi,
+                                color = Color.White,
+                                fontSize = 14.sp
                             )
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA06B)),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp)
-                            .padding(horizontal = 10.dp)
-                    ) {
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
                         Text(
-                            text = "Konfirmasi",
-                            fontFamily = poppinsSemi,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                            fontSize = 14.sp
+                            text = if (canSubmit) "Siap dikonfirmasi." else "Lengkapi minimal: Nama, NIK, Alamat.",
+                            fontFamily = poppins,
+                            fontSize = 12.sp,
+                            color = if (canSubmit) Color(0xFF16A34A) else Color(0xFFEF4444)
                         )
                     }
-
-                    Spacer(Modifier.height(8.dp))
                 }
+
+                Spacer(Modifier.height(22.dp))
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FieldBox(
+private fun FormField(
     label: String,
+    placeholder: String,
     value: String,
     onChange: (String) -> Unit,
     poppins: FontFamily,
-    poppinsSemi: FontFamily
+    poppinsSemi: FontFamily,
+    keyboardType: KeyboardType,
+    singleLine: Boolean = true,
+    minLines: Int = 1
 ) {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
     Text(
         text = label,
         fontFamily = poppinsSemi,
         fontWeight = FontWeight.SemiBold,
-        color = Color(0xFF1C6BA4),
+        color = BlueBorder,
         fontSize = 13.sp,
-        modifier = Modifier.padding(top = 10.dp, bottom = 6.dp)
+        modifier = Modifier.padding(bottom = 6.dp)
     )
 
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
+        placeholder = {
+            Text(
+                text = placeholder,
+                fontFamily = poppins,
+                fontSize = 12.sp,
+                color = Color(0xFF94A3B8)
+            )
+        },
+        singleLine = singleLine,
+        minLines = minLines,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = Modifier
             .fillMaxWidth()
-            .height(46.dp),
-        singleLine = true,
-        textStyle = androidx.compose.ui.text.TextStyle(
-            fontFamily = poppins,
-            fontSize = 13.sp
-        ),
-        shape = RoundedCornerShape(6.dp),
+            .bringIntoViewRequester(bringIntoViewRequester)
+            .onFocusEvent {
+                if (it.isFocused) {
+                    scope.launch {
+                        delay(150)
+                        bringIntoViewRequester.bringIntoView()
+                    }
+                }
+            },
+        shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFFD1D5DB),
-            unfocusedBorderColor = Color(0xFFD1D5DB),
-            focusedContainerColor = Color(0xFFF3F4F6),
-            unfocusedContainerColor = Color(0xFFF3F4F6),
-            cursorColor = Color(0xFF1C6BA4)
+            focusedBorderColor = BlueBorder,
+            unfocusedBorderColor = Color(0xFFE2E8F0),
+            cursorColor = BlueBorder
         )
     )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewFormSuratDomisiliBox() {
+private fun PreviewFormSuratDomisili() {
     MaterialTheme {
         FormSuratDomisiliScreen()
     }
