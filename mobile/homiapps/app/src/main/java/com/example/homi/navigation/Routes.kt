@@ -29,4 +29,14 @@ object Routes {
     // ✅ NEW
     const val Akun = "akun"
     const val LaporkanMasalah = "laporkan_masalah"
+
+    // ✅ TAMBAHAN (biar FormAjuan1 gak error)
+    const val SuratDomisili = "surat_domisili"
+    const val SuratPengantar = "surat_pengantar"
+    const val SuratUsaha = "surat_usaha"
+    const val SuratKematian = "surat_kematian"
+    const val SuratBelumMenikah = "surat_belum_menikah"
+
+    // ✅ kalau kamu pakai screen status surat
+    const val PengajuanSuratStatus = "pengajuan_surat_status"
 }
