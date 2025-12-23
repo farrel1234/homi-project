@@ -2,73 +2,120 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\ResidentProfile;
-
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Kolom yang boleh diisi mass-assignment.
+     * Gabungan dari versi temen + versi kamu.
      */
     protected $fillable = [
-        'name','email','password',
+        // basic identity
+        'username',
+        'name',
+        'full_name',
+        'email',
+        'phone',
+
+        // auth
+        'password',
+        'password_hash',
+
+        // roles
         'role',
+        'role_id',
+        'is_active',
         'is_verified',
-        'otp_code','otp_purpose','otp_expires_at',
-        'reset_token','reset_token_expires_at',
+
+        // otp & reset
+        'otp_code',
+        'otp_purpose',
+        'otp_expires_at',
+        'reset_token',
+        'reset_token_expires_at',
     ];
 
-
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
+     * Kolom yang disembunyikan saat serialize.
      */
     protected $hidden = [
         'password',
+        'password_hash',
         'remember_token',
         'otp_code',
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Cast tipe data.
+     * (Laravel 12 boleh pakai $casts biasa; ini kompatibel.)
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',     // dari versi temen (kalau kolomnya ada, aman)
+        'is_active'         => 'boolean',
+        'is_verified'       => 'boolean',
+        'otp_expires_at'    => 'datetime',
+        'reset_token_expires_at' => 'datetime',
+    ];
+
+    /**
+     * Laravel Auth akan pakai ini untuk cek password.
+     * Kalau `password` kosong tapi `password_hash` ada, tetap bisa login.
+     */
+    public function getAuthPassword()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'otp_expires_at'    => 'datetime',
-            'is_verified'       => 'boolean',
-            'reset_token_expires_at' => 'datetime',
-        ];
+        return $this->password ?: $this->password_hash;
     }
 
+    /**
+     * Kalau set password, simpan ke dua kolom biar kompatibel.
+     */
+    public function setPasswordAttribute($value)
+    {
+        if (!$value) return;
+
+        $hashed = Hash::make($value);
+        $this->attributes['password'] = $hashed;
+        $this->attributes['password_hash'] = $hashed;
+    }
+
+    /**
+     * Relasi: user punya banyak complaints (punya temen).
+     */
     public function complaints()
     {
-    return $this->hasMany(Complaint::class);
+        return $this->hasMany(Complaint::class);
     }
 
+    /**
+     * Admin checker (gabungan):
+     * - Support `role_id` (mis. 1 = admin)
+     * - Support `role` string ('admin')
+     */
     public function isAdmin(): bool
     {
-    return $this->role === 'admin';
+        return ((int)($this->role_id ?? 0) === 1) || (($this->role ?? '') === 'admin');
     }
 
+    /**
+     * Relasi profil resident.
+     * - Kalau project temen pakai ResidentProfile, gunakan itu
+     * - Kalau project kamu pakai Resident, gunakan itu
+     */
     public function residentProfile()
     {
-    return $this->hasOne(ResidentProfile::class);
+        // Jangan import class yang mungkin tidak ada; pakai FQCN string biar aman.
+        if (class_exists(\App\Models\ResidentProfile::class)) {
+            return $this->hasOne(\App\Models\ResidentProfile::class);
+        }
+
+        // fallback ke skema kamu: Resident dengan foreign key user_id
+        return $this->hasOne(\App\Models\Resident::class, 'user_id');
     }
-
 }
-
