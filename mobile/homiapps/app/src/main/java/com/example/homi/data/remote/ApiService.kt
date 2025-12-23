@@ -5,6 +5,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("login")
@@ -17,5 +18,9 @@ interface ApiService {
     // contoh: GET /api/announcements/{id}
     @GET("announcements/{id}")
     suspend fun getAnnouncementDetail(@Path("id") id: Long): AnnouncementDetailResponse
+
+    @GET("directory")
+    suspend fun getDirectory(@Query("q") q: String? = null): DirectoryResponse
+
 
 }

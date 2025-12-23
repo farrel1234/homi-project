@@ -42,6 +42,8 @@ import com.example.homi.ui.screens.UbahKataSandiScreen
 import com.example.homi.ui.screens.LupaKataSandiEmailScreen
 import com.example.homi.ui.screens.ProsesPengajuanScreen
 import com.example.homi.ui.screens.LaporkanMasalahScreen
+import com.example.homi.ui.screens.DirektoriScreen
+
 
 import com.example.homi.data.local.TokenStore
 
@@ -228,6 +230,17 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 }
             )
         }
+
+        composable(
+            route = Routes.Direktori,
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) {
+            DirektoriScreen(onBack = { navController.popBackStack() })
+        }
+
+
+
 
         composable(
             route = Routes.DetailPengumuman,

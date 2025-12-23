@@ -1,7 +1,6 @@
 package com.example.homi.ui.screens
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,20 +9,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -32,8 +24,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
+import com.example.homi.data.local.TokenStore
+import com.example.homi.data.model.DirectoryItem
+import com.example.homi.data.remote.ApiClient
+import kotlinx.coroutines.delay
 
-/* ===== Tokens (konsisten dengan screen lain) ===== */
+/* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
 private val BlueBorder   = Color(0xFF2F7FA3)
 private val AccentOrange = Color(0xFFFF9966)
@@ -44,29 +40,70 @@ private val LineGray     = Color(0xFFE6E6E6)
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 
-/* ===== Model ===== */
-private data class DirektoriItem(
+/* ===== UI Model (untuk tabel kamu) ===== */
+private data class DirektoriItemUi(
     val nama: String,
     val alamat: String
 )
+
+private fun DirectoryItem.toUi(): DirektoriItemUi {
+    val alamat = when {
+        !blokAlamat.isNullOrBlank() -> blokAlamat!!
+        !blok.isNullOrBlank() && !noRumah.isNullOrBlank() -> "Blok $blok No $noRumah"
+        !blok.isNullOrBlank() -> "Blok $blok"
+        else -> "-"
+    }
+    return DirektoriItemUi(
+        nama = name,
+        alamat = alamat
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirektoriScreen(
     onBack: (() -> Unit)? = null,
-    @DrawableRes backIcon: Int = R.drawable.panahkembali // sesuaikan drawable kamu
+    @DrawableRes backIcon: Int = R.drawable.panahkembali
 ) {
+    val context = LocalContext.current
+    val tokenStore = remember { TokenStore(context) }
+    val api = remember { ApiClient.getApi(tokenStore) }
+
     var query by remember { mutableStateOf("") }
 
-    // data dummy (nanti gampang diganti dari API)
-    val data = remember { sampleDirektori }
+    // state API
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var rows by remember { mutableStateOf<List<DirektoriItemUi>>(emptyList()) }
 
-    // filter lokal (search beneran jalan)
-    val filtered = remember(query, data) {
-        val q = query.trim().lowercase()
-        if (q.isEmpty()) data
-        else data.filter {
-            it.nama.lowercase().contains(q) || it.alamat.lowercase().contains(q)
+    // load awal + debounce search (server-side)
+    LaunchedEffect(Unit) {
+        loading = true
+        error = null
+        try {
+            val res = api.getDirectory(null)
+            rows = res.data.map { it.toUi() }
+        } catch (e: Exception) {
+            error = e.message ?: "Gagal memuat direktori"
+        } finally {
+            loading = false
+        }
+    }
+
+    LaunchedEffect(query) {
+        // debounce biar gak spam request
+        delay(400)
+
+        loading = true
+        error = null
+        try {
+            val q = query.trim().ifBlank { null }
+            val res = api.getDirectory(q)
+            rows = res.data.map { it.toUi() }
+        } catch (e: Exception) {
+            error = e.message ?: "Gagal memuat direktori"
+        } finally {
+            loading = false
         }
     }
 
@@ -76,7 +113,6 @@ fun DirektoriScreen(
             .background(BlueMain)
             .statusBarsPadding()
     ) {
-        /* ===== Header ===== */
         Spacer(Modifier.height(8.dp))
 
         Row(
@@ -85,7 +121,6 @@ fun DirektoriScreen(
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back icon (optional)
             Box(
                 modifier = Modifier
                     .size(28.dp)
@@ -99,7 +134,6 @@ fun DirektoriScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    // biar judul tetap center walau tanpa back
                     Spacer(Modifier.size(24.dp))
                 }
             }
@@ -113,7 +147,6 @@ fun DirektoriScreen(
                 textAlign = TextAlign.Center
             )
 
-            // slot kanan biar center bener
             Spacer(Modifier.size(28.dp))
         }
 
@@ -130,7 +163,6 @@ fun DirektoriScreen(
                 .padding(horizontal = 24.dp)
         )
 
-        /* ===== White container ===== */
         Spacer(Modifier.height(18.dp))
         Card(
             modifier = Modifier.fillMaxSize(),
@@ -143,13 +175,19 @@ fun DirektoriScreen(
                     .padding(16.dp)
             ) {
 
-                // 🔍 Search beneran
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
-                    placeholder = { Text("Cari nama / blok / rumah...", fontFamily = PoppinsReg, fontSize = 13.sp, color = TextMuted) },
+                    placeholder = {
+                        Text(
+                            "Cari nama / blok / rumah...",
+                            fontFamily = PoppinsReg,
+                            fontSize = 13.sp,
+                            color = TextMuted
+                        )
+                    },
                     leadingIcon = { Text("🔍", fontSize = 16.sp) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = BlueBorder,
@@ -157,13 +195,14 @@ fun DirektoriScreen(
                         cursorColor = BlueBorder
                     ),
                     modifier = Modifier.fillMaxWidth(),
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = PoppinsReg, fontSize = 13.sp),
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        fontFamily = PoppinsReg,
+                        fontSize = 13.sp
+                    ),
                 )
-
 
                 Spacer(Modifier.height(14.dp))
 
-                // ===== TABEL (Header fixed + list scroll) =====
                 Card(
                     modifier = Modifier.fillMaxSize(),
                     shape = RoundedCornerShape(10.dp),
@@ -209,35 +248,66 @@ fun DirektoriScreen(
                             )
                         }
 
-                        // Rows scroll
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                        ) {
-                            items(filtered) { item ->
-                                TableRow(nama = item.nama, alamat = item.alamat)
+                        // body states (loading/error/empty/list)
+                        when {
+                            loading -> {
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(1.dp)
-                                        .background(LineGray)
-                                )
+                                        .fillMaxSize()
+                                        .padding(18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
                             }
 
-                            // kalau hasil kosong
-                            if (filtered.isEmpty()) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(18.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "Tidak ada hasil untuk \"$query\"",
-                                            fontFamily = PoppinsReg,
-                                            fontSize = 13.sp,
-                                            color = TextMuted
+                            error != null -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Error: ${error!!}",
+                                        fontFamily = PoppinsReg,
+                                        fontSize = 13.sp,
+                                        color = TextMuted,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+
+                            rows.isEmpty() -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (query.isBlank())
+                                            "Direktori kosong"
+                                        else
+                                            "Tidak ada hasil untuk \"$query\"",
+                                        fontFamily = PoppinsReg,
+                                        fontSize = 13.sp,
+                                        color = TextMuted
+                                    )
+                                }
+                            }
+
+                            else -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(rows) { item ->
+                                        TableRow(nama = item.nama, alamat = item.alamat)
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(1.dp)
+                                                .background(LineGray)
                                         )
                                     }
                                 }
@@ -286,18 +356,6 @@ private fun TableRow(
         )
     }
 }
-
-/* ===== Sample data (nanti diganti API) ===== */
-private val sampleDirektori = listOf(
-    DirektoriItem("Awal Abyad", "Blok I No.3"),
-    DirektoriItem("Biswan", "Blok AA1 No 10"),
-    DirektoriItem("Sardinia", "Blok I No.3"),
-    DirektoriItem("Muhammad Iwan", "Blok III0 No 1"),
-    DirektoriItem("Irwansyah", "Blok I No.3"),
-    DirektoriItem("Wawan Gustiar", "Blok AA1 No 10"),
-    DirektoriItem("Irwan Baharuddin", "Blok I No.3"),
-    DirektoriItem("Muhammad Wawan", "Blok AA1 No 10"),
-)
 
 @Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
 @Composable

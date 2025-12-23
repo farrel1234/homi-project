@@ -11,13 +11,16 @@ class AuthInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
 
-        val token = runBlocking { tokenProvider() }
-        val request = if (!token.isNullOrBlank()) {
-            original.newBuilder()
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-        } else original
+        val token = runBlocking { tokenProvider() }?.trim()
 
-        return chain.proceed(request)
+        val builder = original.newBuilder()
+            .header("Accept", "application/json")
+
+        if (!token.isNullOrBlank()) {
+            // kalau tokenStore kamu menyimpan token mentah, ini sudah benar
+            builder.header("Authorization", "Bearer $token")
+        }
+
+        return chain.proceed(builder.build())
     }
 }
