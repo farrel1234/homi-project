@@ -11,16 +11,25 @@ class Announcement extends Model
 
     protected $fillable = [
         'title',
+        'category',
         'content',
-        'published_at',
-        'created_by',
-        'is_pinned',
+        'body',
         'image_path',
+        'published_at',
+        'start_at',
+        'end_at',
+        'created_by',
+        'author_id',
+        'is_pinned',
+        'is_public',
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
+        'start_at'     => 'datetime',
+        'end_at'       => 'datetime',
         'is_pinned'    => 'boolean',
+        'is_public'    => 'boolean',
     ];
 
     protected $appends = ['image_url'];
@@ -32,10 +41,7 @@ class Announcement extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        if (! $this->image_path) {
-            return null;
-        }
-
-        return asset('storage/' . $this->image_path);
+        if (! $this->image_path) return null;
+        return asset('storage/' . ltrim($this->image_path, '/'));
     }
 }

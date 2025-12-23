@@ -6,8 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -30,7 +33,6 @@ import com.example.homi.R
 import kotlinx.coroutines.delay
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.foundation.layout.statusBarsPadding
 
 /* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
@@ -46,8 +48,8 @@ private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 @Composable
 fun UbahKataSandiScreen(
     onBack: (() -> Unit)? = null,
-    onSelesai: (() -> Unit)? = null,
-    onLupaKataSandi: (() -> Unit)? = null,           // ke layar lupa sandi
+    onSelesai: (() -> Unit)? = null,                 // opsional (kalau mau popBack)
+    onLupaKataSandi: (() -> Unit)? = null,           // ✅ akan dipakai setelah sukses simpan
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
     @DrawableRes successImage: Int = R.drawable.bahagia,
     @DrawableRes bellIcon: Int = R.drawable.notif
@@ -107,9 +109,13 @@ fun UbahKataSandiScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .imePadding()
+                        .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 18.dp)
                 ) {
-                    Label("Masukkan kata sandi lama")
+
+                Label("Masukkan kata sandi lama")
                     PasswordField(
                         value = oldPass,
                         onValueChange = { oldPass = it; errorText = null },
@@ -147,9 +153,7 @@ fun UbahKataSandiScreen(
                             fontSize = 12.sp,
                             color = Color(0xFF6B7280),
                             textDecoration = TextDecoration.Underline,
-                            modifier = Modifier.clickable {
-                                onLupaKataSandi?.invoke()
-                            }
+                            modifier = Modifier.clickable { onLupaKataSandi?.invoke() }
                         )
                     }
 
@@ -196,7 +200,7 @@ fun UbahKataSandiScreen(
             }
         }
 
-        /* POPUP SUKSES */
+        /* POPUP SUKSES -> setelah 2 detik pindah ke LupaKataSandiEmailScreen */
         if (showPopup) {
             SuccessPopup(
                 successImage = successImage,
@@ -204,10 +208,20 @@ fun UbahKataSandiScreen(
                 message = "Kata Sandi Berhasil\nDi Ganti !",
                 onFinished = {
                     showPopup = false
+
+                    // reset field (opsional)
                     oldPass = ""
                     newPass = ""
                     confirmPass = ""
-                    onSelesai?.invoke()
+
+                    // ✅ INI YANG KAMU MAU:
+                    // setelah sukses simpan -> pindah ke layar Lupa Kata Sandi (Email)
+                    if (onLupaKataSandi != null) {
+                        onLupaKataSandi.invoke()
+                    } else {
+                        // fallback kalau belum disambung ke NavHost
+                        onSelesai?.invoke()
+                    }
                 }
             )
         }
@@ -239,10 +253,7 @@ private fun PasswordField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        visualTransformation = if (visible)
-            VisualTransformation.None
-        else
-            PasswordVisualTransformation(),
+        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         trailingIcon = {
             IconButton(onClick = onToggleVisible) {
                 Icon(
@@ -271,7 +282,7 @@ private fun PasswordField(
     )
 }
 
-/* Popup sukses: kartu tinggi + badge lonceng */
+/* Popup sukses */
 @Composable
 private fun SuccessPopup(
     @DrawableRes successImage: Int,

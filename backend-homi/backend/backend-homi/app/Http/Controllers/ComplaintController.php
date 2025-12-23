@@ -9,22 +9,12 @@ use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
 {
-    // helper untuk format tanggal: 1 Oktober 2025
     private function formatTanggalIndo(string $tanggal): string
     {
         $months = [
-            1  => 'Januari',
-            2  => 'Februari',
-            3  => 'Maret',
-            4  => 'April',
-            5  => 'Mei',
-            6  => 'Juni',
-            7  => 'Juli',
-            8  => 'Agustus',
-            9  => 'September',
-            10 => 'Oktober',
-            11 => 'November',
-            12 => 'Desember',
+            1  => 'Januari',  2  => 'Februari', 3  => 'Maret',     4  => 'April',
+            5  => 'Mei',      6  => 'Juni',     7  => 'Juli',      8  => 'Agustus',
+            9  => 'September',10 => 'Oktober',  11 => 'November',  12 => 'Desember',
         ];
 
         $date = Carbon::parse($tanggal);
@@ -45,15 +35,15 @@ class ComplaintController extends Controller
             ->get()
             ->map(function (Complaint $c) {
                 return [
-                    'id'          => $c->id,
-                    'nama_pelapor'=> $c->nama_pelapor,
-                    'tanggal'     => $this->formatTanggalIndo($c->tanggal_pengaduan),
-                    'tanggal_iso' => $c->tanggal_pengaduan,
-                    'tempat'      => $c->tempat_kejadian,
-                    'perihal'     => $c->perihal,
-                    'status'      => $c->status,
-                    'foto_url'    => $c->foto_url,
-                    'created_at'  => $c->created_at,
+                    'id'           => $c->id,
+                    'nama_pelapor' => $c->nama_pelapor,
+                    'tanggal'      => $c->tanggal_pengaduan ? $this->formatTanggalIndo($c->tanggal_pengaduan->format('Y-m-d')) : null,
+                    'tanggal_iso'  => $c->tanggal_pengaduan ? $c->tanggal_pengaduan->format('Y-m-d') : null,
+                    'tempat'       => $c->tempat_kejadian,
+                    'perihal'      => $c->perihal,
+                    'status'       => $c->status,     // baru/diproses/selesai
+                    'foto_url'     => $c->foto_url,   // accessor dari model
+                    'created_at'   => $c->created_at,
                 ];
             });
 
@@ -64,23 +54,22 @@ class ComplaintController extends Controller
     }
 
     // GET /api/complaints/{complaint}  -> detail 1 pengaduan
-    public function show(Complaint $complaint): JsonResponse
+    public function show(Request $request, Complaint $complaint): JsonResponse
     {
-        // pastikan hanya pemilik yang boleh lihat
-        if (request()->user()->id !== $complaint->user_id) {
+        if ($request->user()->id !== $complaint->user_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $data = [
-            'id'          => $complaint->id,
-            'nama_pelapor'=> $complaint->nama_pelapor,
-            'tanggal'     => $this->formatTanggalIndo($complaint->tanggal_pengaduan),
-            'tanggal_iso' => $complaint->tanggal_pengaduan,
-            'tempat'      => $complaint->tempat_kejadian,
-            'perihal'     => $complaint->perihal,
-            'status'      => $complaint->status,
-            'foto_url'    => $complaint->foto_url,
-            'created_at'  => $complaint->created_at,
+            'id'           => $complaint->id,
+            'nama_pelapor' => $complaint->nama_pelapor,
+            'tanggal'      => $complaint->tanggal_pengaduan ? $this->formatTanggalIndo($complaint->tanggal_pengaduan->format('Y-m-d')) : null,
+            'tanggal_iso'  => $complaint->tanggal_pengaduan ? $complaint->tanggal_pengaduan->format('Y-m-d') : null,
+            'tempat'       => $complaint->tempat_kejadian,
+            'perihal'      => $complaint->perihal,
+            'status'       => $complaint->status,
+            'foto_url'     => $complaint->foto_url,
+            'created_at'   => $complaint->created_at,
         ];
 
         return response()->json([
@@ -103,15 +92,9 @@ class ComplaintController extends Controller
         // ===== KONVERSI TANGGAL KE Y-m-d =====
         $rawTanggal = trim($request->input('tanggal_pengaduan'));
 
-        $allowedFormats = [
-            'd-m-Y',
-            'j-n-Y',
-            'Y-m-d',
-            'Y-n-j',
-        ];
+        $allowedFormats = ['d-m-Y', 'j-n-Y', 'Y-m-d', 'Y-n-j'];
 
         $tanggal = null;
-
         foreach ($allowedFormats as $format) {
             try {
                 $dt = Carbon::createFromFormat($format, $rawTanggal);
@@ -130,7 +113,6 @@ class ComplaintController extends Controller
 
         // ===== UPLOAD FOTO (opsional) =====
         $fotoPath = null;
-
         if ($request->hasFile('foto')) {
             $fotoPath = $request->file('foto')->store('complaints', 'public');
         }
@@ -142,12 +124,13 @@ class ComplaintController extends Controller
             'tempat_kejadian'   => $validated['tempat_kejadian'],
             'perihal'           => $validated['perihal'],
             'foto_path'         => $fotoPath,
+            'status'            => 'baru',
         ]);
 
         return response()->json([
             'message'  => 'Pengaduan berhasil dikirim',
             'data'     => $complaint,
-            'foto_url' => $fotoPath ? asset('storage/' . $fotoPath) : null,
+            'foto_url' => $complaint->foto_url,
         ], 201);
     }
 }

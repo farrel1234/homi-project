@@ -22,20 +22,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
+import com.example.homi.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
+    vm: AuthViewModel,
     onLoginSuccess: () -> Unit,
     onRegisterClicked: () -> Unit = {},
     onForgotPasswordClicked: () -> Unit = {},
 ) {
     val poppins = FontFamily(Font(R.font.poppins_semibold))
 
-    var identifier by remember { mutableStateOf("") }
+    val state by vm.state.collectAsState()
+
+    var identifier by remember { mutableStateOf("") } // input user
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
+
+    // kalau login sukses dari API -> navigate
+    LaunchedEffect(state.isLoggedIn) {
+        if (state.isLoggedIn) onLoginSuccess()
+    }
+
+    // error dari ViewModel (API error)
+    LaunchedEffect(state.error) {
+        if (state.error != null) errorText = state.error
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -69,6 +83,7 @@ fun LoginScreen(
                 label = { Text("Nama Pengguna / Email", fontFamily = poppins) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
+                enabled = !state.loading,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFF5F5F5),
                     unfocusedContainerColor = Color(0xFFF5F5F5),
@@ -87,6 +102,7 @@ fun LoginScreen(
                 label = { Text("Kata sandi", fontFamily = poppins) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
+                enabled = !state.loading,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFF5F5F5),
                     unfocusedContainerColor = Color(0xFFF5F5F5),
@@ -95,12 +111,12 @@ fun LoginScreen(
                     cursorColor = Color(0xFF256D85)
                 ),
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    IconButton(
+                        enabled = !state.loading,
+                        onClick = { passwordVisible = !passwordVisible }
+                    ) {
                         Icon(
                             painter = painterResource(
                                 id = if (passwordVisible) R.drawable.show else R.drawable.hide
@@ -115,7 +131,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(6.dp))
 
-            // 🔹 TEKS LUPA KATA SANDI? → callback
             Text(
                 text = "Lupa kata sandi?",
                 fontSize = 12.sp,
@@ -125,7 +140,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(end = 4.dp)
-                    .clickable { onForgotPasswordClicked() }
+                    .clickable(enabled = !state.loading) { onForgotPasswordClicked() }
             )
 
             errorText?.let {
@@ -143,15 +158,23 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    if (identifier.isBlank() || password.isBlank()) {
-                        errorText = "Isi username/email dan password dulu."
-                    } else if (password.length < 6) {
-                        errorText = "Password minimal 6 karakter."
-                    } else {
-                        errorText = null
-                        onLoginSuccess()
+                    val email = identifier.trim()
+                    val pass = password.trim()
+
+                    when {
+                        email.isBlank() || pass.isBlank() ->
+                            errorText = "Isi username/email dan password dulu."
+                        pass.length < 6 ->
+                            errorText = "Password minimal 6 karakter."
+                        !email.contains("@") ->
+                            errorText = "Untuk login saat ini, masukkan email yang valid."
+                        else -> {
+                            errorText = null
+                            vm.login(email, pass) // ✅ panggil API
+                        }
                     }
                 },
+                enabled = !state.loading,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA06B)),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
@@ -159,8 +182,16 @@ fun LoginScreen(
                     .height(48.dp)
                     .align(Alignment.CenterHorizontally)
             ) {
+                if (state.loading) {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp),
+                        color = Color.White
+                    )
+                    Spacer(Modifier.width(10.dp))
+                }
                 Text(
-                    text = "Konfirmasi",
+                    text = if (state.loading) "Memproses..." else "Konfirmasi",
                     color = Color.White,
                     fontFamily = poppins,
                     fontWeight = FontWeight.SemiBold,
@@ -188,7 +219,7 @@ fun LoginScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.Blue,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { onRegisterClicked() }
+                    modifier = Modifier.clickable(enabled = !state.loading) { onRegisterClicked() }
                 )
             }
         }
@@ -199,10 +230,7 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     MaterialTheme {
-        LoginScreen(
-            onLoginSuccess = {},
-            onRegisterClicked = {},
-            onForgotPasswordClicked = {}
-        )
+        // Preview tidak pakai VM beneran (biar aman)
+        // Kalau mau preview tetap, bikin dummy wrapper sendiri.
     }
 }

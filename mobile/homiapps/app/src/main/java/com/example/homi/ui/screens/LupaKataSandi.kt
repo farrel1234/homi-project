@@ -41,7 +41,7 @@ fun LupaKataSandiEmailScreen(
     onBack: (() -> Unit)? = null,
     onOtpSent: (email: String) -> Unit = { _ -> },
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
-    @DrawableRes illustrationRes: Int = R.drawable.surat,   // surat.png
+    @DrawableRes illustrationRes: Int = R.drawable.surat,
     @DrawableRes bellIcon: Int = R.drawable.notif
 ) {
     var email by remember { mutableStateOf("") }
@@ -120,11 +120,7 @@ fun LupaKataSandiEmailScreen(
                     onValueChange = { email = it },
                     singleLine = true,
                     placeholder = {
-                        Text(
-                            "nama@email.com",
-                            fontFamily = PoppinsReg,
-                            color = HintGray
-                        )
+                        Text("nama@email.com", fontFamily = PoppinsReg, color = HintGray)
                     },
                     shape = RoundedCornerShape(10.dp),
                     textStyle = LocalTextStyle.current.copy(
@@ -154,7 +150,7 @@ fun LupaKataSandiEmailScreen(
                     ),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
-                        .fillMaxWidth(0.7f)   // lebih kecil, center
+                        .fillMaxWidth(0.7f)
                         .height(48.dp)
                         .align(Alignment.CenterHorizontally)
                 ) {
@@ -176,7 +172,7 @@ fun LupaKataSandiEmailScreen(
             message = "Berhasil Mengirim Kode OTP\nke Email Anda !",
             onFinished = {
                 showPopup = false
-                onOtpSent(email.trim())
+                onOtpSent(email.trim()) // ✅ INI yang memicu pindah ke OTP via NavHost
             }
         )
     }
@@ -190,7 +186,6 @@ private fun OtpSentPopup(
     message: String,
     onFinished: () -> Unit
 ) {
-    // auto-dismiss 2 detik
     LaunchedEffect(Unit) {
         delay(2000)
         onFinished()
@@ -203,11 +198,10 @@ private fun OtpSentPopup(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { /* block click to behind */ },
+            ) { },
         contentAlignment = Alignment.Center
     ) {
         Box(contentAlignment = Alignment.TopCenter) {
-            // card utama
             Card(
                 shape = RoundedCornerShape(22.dp),
                 border = CardDefaults.outlinedCardBorder().copy(
@@ -243,11 +237,10 @@ private fun OtpSentPopup(
                         textAlign = TextAlign.Center,
                         lineHeight = 22.sp
                     )
-                    Spacer(Modifier.height(8.dp))
                 }
             }
 
-            // badge lonceng menempel
+            // badge lonceng
             Box(
                 modifier = Modifier
                     .offset(y = (-20).dp)
@@ -303,11 +296,8 @@ private fun OtpSentPopup(
     }
 }
 
-/* ===== Preview ===== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewLupaKataSandiEmailWithPopup() {
-    MaterialTheme {
-        LupaKataSandiEmailScreen()
-    }
+    MaterialTheme { LupaKataSandiEmailScreen() }
 }

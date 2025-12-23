@@ -2,73 +2,67 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\ResidentProfile;
-
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name','email','password',
-        'role',
-        'is_verified',
+        'username','name','full_name','email','phone',
+        'password','password_hash',
+        'role','role_id','is_active','is_verified',
         'otp_code','otp_purpose','otp_expires_at',
         'reset_token','reset_token_expires_at',
     ];
 
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
-        'password',
-        'remember_token',
-        'otp_code',
+        'password','password_hash','remember_token','otp_code',
+    ];
+
+    protected $casts = [
+        'is_active'   => 'boolean',
+        'is_verified' => 'boolean',
+        'otp_expires_at' => 'datetime',
+        'reset_token_expires_at' => 'datetime',
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Laravel Auth akan pakai ini untuk cek password.
+     * Kalau `password` kosong tapi `password_hash` ada, tetap bisa login.
      */
-    protected function casts(): array
+    public function getAuthPassword()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'otp_expires_at'    => 'datetime',
-            'is_verified'       => 'boolean',
-            'reset_token_expires_at' => 'datetime',
-        ];
+        return $this->password ?: $this->password_hash;
     }
 
-    public function complaints()
+    /**
+     * Kalau set password, simpan ke dua kolom biar kompatibel.
+     */
+    public function setPasswordAttribute($value)
     {
-    return $this->hasMany(Complaint::class);
+        if (!$value) return;
+
+        $hashed = Hash::make($value);
+        $this->attributes['password'] = $hashed;
+        $this->attributes['password_hash'] = $hashed;
     }
 
+    /**
+     * ✅ FIX UTAMA: dipanggil oleh Admin\AuthController
+     */
     public function isAdmin(): bool
     {
-    return $this->role === 'admin';
+        // support dua skema sekaligus: role_id atau role string
+        return ((int)($this->role_id ?? 0) === 1) || (($this->role ?? '') === 'admin');
     }
 
     public function residentProfile()
     {
-    return $this->hasOne(ResidentProfile::class);
+        return $this->hasOne(Resident::class, "user_id");
     }
-
 }
-

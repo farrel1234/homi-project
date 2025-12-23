@@ -64,6 +64,13 @@ dependencies {
     // Gson library (untuk @SerializedName)
     implementation("com.google.code.gson:gson:2.10.1")
 
+    // store tokens
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
 
     // Compose UI
     implementation(libs.androidx.ui)

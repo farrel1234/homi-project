@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -54,9 +55,6 @@ enum class HasilPengajuan { NONE, DITOLAK, DITERIMA, DISELIDIKI }
  * - ANTRIAN
  * - DIPROSES
  * - SELESAI (+ status)
- *
- * DEMO AUTO FLOW:
- * set demoAutoFlow = true -> ANTRIAN -> DIPROSES -> SELESAI otomatis.
  */
 @Composable
 fun ProsesPengajuanScreen(
@@ -74,39 +72,35 @@ fun ProsesPengajuanScreen(
     onBack: (() -> Unit)? = null,
     onWhatsappClick: (() -> Unit)? = null,
 
+    // ✅ NEW: klik download pdf
+    onDownloadPdfClick: (() -> Unit)? = null,
+
     // ✅ demo
     demoAutoFlow: Boolean = false,
-    demoStepDelayMs: Long = 1500L, // jeda tiap step
-    demoLoop: Boolean = false,     // kalau true: balik lagi ke ANTRIAN setelah selesai
+    demoStepDelayMs: Long = 1500L,
+    demoLoop: Boolean = false,
 
-    /* ====== Drawable default (pakai punyamu) ====== */
+    /* ====== Drawable default ====== */
     @DrawableRes icBack: Int = R.drawable.panahkembali,
 
-    // ikon step (kamu punya variasi aktif2 / proses2 / selesai2)
-    @DrawableRes icStepPengajuan1: Int = R.drawable.ic_pengajuan_aktif,   // state ANTRIAN
-    @DrawableRes icStepPengajuan2: Int = R.drawable.ic_pengajuan_aktif2,  // state DIPROSES/SELESAI
-    @DrawableRes icStepProses1: Int = R.drawable.ic_proses,               // state ANTRIAN/SELESAI
-    @DrawableRes icStepProses2: Int = R.drawable.ic_proses2,              // state DIPROSES
-    @DrawableRes icStepSelesai1: Int = R.drawable.ic_selesai,             // state ANTRIAN/DIPROSES
-    @DrawableRes icStepSelesai2: Int = R.drawable.ic_selesai2,            // state SELESAI
+    @DrawableRes icStepPengajuan1: Int = R.drawable.ic_pengajuan_aktif,
+    @DrawableRes icStepPengajuan2: Int = R.drawable.ic_pengajuan_aktif2,
+    @DrawableRes icStepProses1: Int = R.drawable.ic_proses,
+    @DrawableRes icStepProses2: Int = R.drawable.ic_proses2,
+    @DrawableRes icStepSelesai1: Int = R.drawable.ic_selesai,
+    @DrawableRes icStepSelesai2: Int = R.drawable.ic_selesai2,
 
     @DrawableRes icDetailHeader: Int = R.drawable.ic_detail_header,
     @DrawableRes icNama: Int = R.drawable.ic_user,
     @DrawableRes icJenis: Int = R.drawable.ic_doc,
     @DrawableRes icTanggal: Int = R.drawable.ic_calendar
 ) {
-    // ====== state internal untuk demo (biar bisa auto berubah) ======
     var demoState by rememberSaveable { mutableStateOf(state) }
-
-    // Kalau demo tidak aktif: selalu ikut param state
-    // Kalau demo aktif: pakai demoState
     val currentState = if (demoAutoFlow) demoState else state
 
-    // Trigger demo flow
-    LaunchedEffect(demoAutoFlow) {
+    LaunchedEffect(demoAutoFlow, demoLoop, demoStepDelayMs) {
         if (!demoAutoFlow) return@LaunchedEffect
 
-        // mulai dari ANTRIAN setiap demo
         demoState = ProsesPengajuanState.ANTRIAN
         delay(demoStepDelayMs)
 
@@ -130,11 +124,9 @@ fun ProsesPengajuanScreen(
         }
     }
 
-    // warna circle step mengikuti desain kamu
     val step1Circle = when (currentState) {
-        ProsesPengajuanState.ANTRIAN -> Color(0xFFF7A477) // oranye
-        ProsesPengajuanState.DIPROSES,
-        ProsesPengajuanState.SELESAI -> Color.White
+        ProsesPengajuanState.ANTRIAN -> Color(0xFFF7A477)
+        ProsesPengajuanState.DIPROSES, ProsesPengajuanState.SELESAI -> Color.White
     }
     val step2Circle = when (currentState) {
         ProsesPengajuanState.ANTRIAN -> Color.White
@@ -142,8 +134,7 @@ fun ProsesPengajuanScreen(
         ProsesPengajuanState.SELESAI -> Color.White
     }
     val step3Circle = when (currentState) {
-        ProsesPengajuanState.ANTRIAN,
-        ProsesPengajuanState.DIPROSES -> Color.White
+        ProsesPengajuanState.ANTRIAN, ProsesPengajuanState.DIPROSES -> Color.White
         ProsesPengajuanState.SELESAI -> AccentOrange
     }
 
@@ -310,7 +301,6 @@ fun ProsesPengajuanScreen(
                         DividerLine()
                         DetailRow(icon = icTanggal, title = "Tanggal Pengajuan", value = tanggalPengajuan)
 
-                        // ===== STATUS (khusus SELESAI) =====
                         if (currentState == ProsesPengajuanState.SELESAI && hasil != HasilPengajuan.NONE) {
                             DividerLine()
                             Spacer(Modifier.height(8.dp))
@@ -365,7 +355,6 @@ fun ProsesPengajuanScreen(
 
                 Spacer(Modifier.height(10.dp))
 
-                // Catatan kecil (muncul di ANTRIAN & DIPROSES)
                 if (currentState != ProsesPengajuanState.SELESAI) {
                     Text(
                         text = "*Jika Anda keluar dari halaman ini, Anda dapat melihat kembali proses pengajuan di halaman Akun",
@@ -378,22 +367,45 @@ fun ProsesPengajuanScreen(
                     )
                 }
 
-                Spacer(Modifier.height(46.dp))
+                // ✅ biar tombol nempel bawah (seperti gambar)
+                Spacer(modifier = Modifier.weight(1f))
 
-                OutlinedButton(
-                    onClick = { onWhatsappClick?.invoke() },
-                    border = BorderStroke(1.dp, BlueMain),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    Text(
-                        text = "Bantuan Via Whatsapp",
-                        fontFamily = PoppinsSemi,
-                        fontSize = 14.sp,
-                        color = BlueMain
-                    )
+                // ✅ BUTTON SESUAI GAMBAR: muncul saat SELESAI
+                if (currentState == ProsesPengajuanState.SELESAI) {
+                    Button(
+                        onClick = { onDownloadPdfClick?.invoke() },
+                        enabled = onDownloadPdfClick != null,
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentOrange),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = "Download PDF",
+                            fontFamily = PoppinsSemi,
+                            fontSize = 14.sp,
+                            color = Color.White
+                        )
+                    }
+                } else {
+                    // default (sebelumnya)
+                    OutlinedButton(
+                        onClick = { onWhatsappClick?.invoke() },
+                        enabled = onWhatsappClick != null,
+                        border = BorderStroke(1.dp, BlueMain),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Text(
+                            text = "Bantuan Via Whatsapp",
+                            fontFamily = PoppinsSemi,
+                            fontSize = 14.sp,
+                            color = BlueMain
+                        )
+                    }
                 }
             }
         }
@@ -434,7 +446,6 @@ private fun StepItem(
     }
 }
 
-/** garis dinaikkan seperti yang kamu pakai */
 @Composable
 private fun RowScope.StepConnector() {
     Box(
@@ -503,24 +514,13 @@ private fun DetailRow(
 /* ========= PREVIEWS ========= */
 @Preview(showSystemUi = true, showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-private fun Preview_DemoAutoFlow() {
-    MaterialTheme {
-        ProsesPengajuanScreen(
-            demoAutoFlow = true,
-            demoStepDelayMs = 900L,
-            demoLoop = true
-        )
-    }
-}
-
-@Preview(showSystemUi = true, showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-private fun Preview_Selesai_Ditolak() {
+private fun Preview_Selesai_WithDownload() {
     MaterialTheme {
         ProsesPengajuanScreen(
             state = ProsesPengajuanState.SELESAI,
-            hasil = HasilPengajuan.DITOLAK,
-            catatanStatus = "Peminjaman Fasilitas pada tanggal 03 September 2025 telah penuh."
+            hasil = HasilPengajuan.DITERIMA,
+            catatanStatus = "Pengajuan Anda di Terima, Peminjaman Fasilitas akan diberitakan di Dashboard Pengumuman.",
+            onDownloadPdfClick = { }
         )
     }
 }

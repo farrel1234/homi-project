@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('complaints', function (Blueprint $table) {
-            // nullable supaya data lama tidak error
             $table->foreignId('user_id')
                 ->nullable()
                 ->constrained()

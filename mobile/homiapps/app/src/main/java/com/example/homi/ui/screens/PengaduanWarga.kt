@@ -62,9 +62,7 @@ fun PengaduanWargaScreen(
     )
 }
 
-/**
- * Stepper proses pengaduan
- */
+
 @Composable
 fun ProsesPengaduanScreen(
     state: ProsesPengaduanState = ProsesPengaduanState.ANTRIAN,
