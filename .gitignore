@@ -1,1 +1,8 @@
 .idea/
+*.zip
+
+# ignore runtime storage
+storage/
+storage/**
+backend-homi/backend/backend-homi/storage/
+backend-homi/backend/backend-homi/storage/**
