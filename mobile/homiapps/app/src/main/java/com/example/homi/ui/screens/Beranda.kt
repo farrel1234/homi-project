@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import com.example.homi.data.model.AnnouncementDto
 import coil.compose.AsyncImage
+import com.example.homi.data.local.TokenStore
 
 
 /* ===== Tokens ===== */
@@ -70,6 +71,7 @@ private data class BottomNavItem(
  */
 @Composable
 fun DashboardScreen(
+    tokenStore: TokenStore,
     annVm: AnnouncementViewModel,
     onPengajuan: (() -> Unit)? = null,
     onPengaduan: (() -> Unit)? = null,
@@ -95,6 +97,33 @@ fun DashboardScreen(
     onProsesPengajuan: (() -> Unit)? = null,
 ) {
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
+    Scaffold(
+        bottomBar = { BottomNavBar(currentTab, onTabSelected = { currentTab = it }) }
+    ) { padding ->
+
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            when (currentTab) {
+                BottomTab.BERANDA -> {
+                    // konten beranda kamu
+                }
+
+                BottomTab.DIREKTORI -> {
+                    DirektoriScreen(
+                        tokenStore = tokenStore,
+                        onBack = null
+                    )
+                }
+
+                BottomTab.RIWAYAT -> {
+                    // konten riwayat kamu
+                }
+
+                BottomTab.AKUN -> {
+                    // konten akun kamu
+                }
+            }
+        }
+    }
 
     val annState by annVm.state.collectAsState()
 
@@ -124,24 +153,28 @@ fun DashboardScreen(
                     onDetailPengumumanClicked = onDetailPengumumanClicked
                 )
 
-
-                BottomTab.DIREKTORI -> DirektoriSection()
+                BottomTab.DIREKTORI -> {
+                    DirektoriScreen(
+                        tokenStore = tokenStore,
+                        onBack = null
+                    )
+                }
 
                 BottomTab.RIWAYAT -> Riwayat1Screen(
                     onItemClick = { onRiwayatItemClick?.invoke() },
-                    onPengajuanItemClick = { status ->
-                        onRiwayatPengajuanItemClick?.invoke(status)
-                    }
+                    onPengajuanItemClick = { status -> onRiwayatPengajuanItemClick?.invoke(status) }
                 )
 
-                BottomTab.AKUN -> AkunScreen(
-                    onUbahKataSandi = onUbahKataSandi,
-                    onProsesPengajuan = onProsesPengajuan,
-                    // ✅ ini yang bikin tombol "Laporkan Masalah" bisa ditekan
-                    onLaporkanMasalah = onLaporkanMasalah,
-                    onKeluarConfirmed = { onKeluarConfirmed?.invoke() }
-                )
+                BottomTab.AKUN -> {
+                    AkunScreen(
+                        onUbahKataSandi = onUbahKataSandi,
+                        onLaporkanMasalah = onLaporkanMasalah,
+                        onProsesPengajuan = onProsesPengajuan,
+                        onKeluarConfirmed = onKeluarConfirmed
+                    )
+                }
             }
+
         }
 
         // ===== BOTTOM NAV =====
@@ -309,7 +342,7 @@ private fun BerandaSection(
     }
 }
 
-/* ---------- DIREKTORI ---------- */
+
 
 @Composable
 private fun DirektoriSection() {
@@ -387,7 +420,7 @@ private fun DirektoriSection() {
 
                 Spacer(Modifier.height(16.dp))
 
-                DirektoriTable(data = sampleDirektori)
+
             }
         }
     }
@@ -494,16 +527,7 @@ private fun TableRow(
 }
 
 /* Dummy data Direktori */
-private val sampleDirektori = listOf(
-    "Awal Abyad" to "Blok I No.3",
-    "Biswan" to "Blok AA1 No 10",
-    "Sardinia" to "Blok I No.3",
-    "Muhammad Iwan" to "Blok III0 No 1",
-    "Irwansyah" to "Blok I No.3",
-    "Wawan Gustiar" to "Blok AA1 No 10",
-    "Irwan Baharuddin" to "Blok I No.3",
-    "Muhammad Wawan" to "Blok AA1 No 10",
-)
+
 
 /* ===== Menu card biru ===== */
 @Composable

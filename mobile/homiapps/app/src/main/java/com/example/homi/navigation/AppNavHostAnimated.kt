@@ -200,6 +200,7 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
 
             DashboardScreen(
                 annVm = annVm,
+                tokenStore = tokenStore,
                 onPengajuan = { navController.navigate(Routes.FormAjuan1) },
                 onPengaduan = { navController.navigate(Routes.FormPengaduan) },
                 onPembayaran = { navController.navigate(Routes.Pembayaran) },
@@ -234,10 +235,14 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
         composable(
             route = Routes.Direktori,
             enterTransition = { fadeIn(tween(220)) },
-            exitTransition = { fadeOut(tween(180)) }
+            exitTransition = { fadeOut(tween(180)) },
         ) {
-            DirektoriScreen(onBack = { navController.popBackStack() })
+            DirektoriScreen(
+                tokenStore = tokenStore,                 // ✅ WAJIB
+                onBack = { navController.popBackStack() } // ✅ boleh
+            )
         }
+
 
 
 

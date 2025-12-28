@@ -62,11 +62,11 @@ private fun DirectoryItem.toUi(): DirektoriItemUi {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirektoriScreen(
+    tokenStore: TokenStore,
     onBack: (() -> Unit)? = null,
     @DrawableRes backIcon: Int = R.drawable.panahkembali
 ) {
     val context = LocalContext.current
-    val tokenStore = remember { TokenStore(context) }
     val api = remember { ApiClient.getApi(tokenStore) }
 
     var query by remember { mutableStateOf("") }
@@ -82,23 +82,6 @@ fun DirektoriScreen(
         error = null
         try {
             val res = api.getDirectory(null)
-            rows = res.data.map { it.toUi() }
-        } catch (e: Exception) {
-            error = e.message ?: "Gagal memuat direktori"
-        } finally {
-            loading = false
-        }
-    }
-
-    LaunchedEffect(query) {
-        // debounce biar gak spam request
-        delay(400)
-
-        loading = true
-        error = null
-        try {
-            val q = query.trim().ifBlank { null }
-            val res = api.getDirectory(q)
             rows = res.data.map { it.toUi() }
         } catch (e: Exception) {
             error = e.message ?: "Gagal memuat direktori"
@@ -360,5 +343,10 @@ private fun TableRow(
 @Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun PreviewDirektori() {
-    MaterialTheme { DirektoriScreen(onBack = {}) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tokenStore = remember { TokenStore(context) }
+
+    MaterialTheme {
+        DirektoriScreen(tokenStore = tokenStore, onBack = {})
+    }
 }
