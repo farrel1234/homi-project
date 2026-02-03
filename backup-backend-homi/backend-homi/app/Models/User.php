@@ -12,10 +12,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Kolom yang boleh diisi mass-assignment.
-     * Gabungan dari versi temen + versi kamu.
-     */
+   
     protected $fillable = [
         // basic identity
         'username',

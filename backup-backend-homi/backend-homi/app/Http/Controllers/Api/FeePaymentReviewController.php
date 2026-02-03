@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class FeePaymentReviewController extends Controller
 {
-    // ADMIN: list bukti yang pending
     public function pending()
     {
         $data = FeePayment::query()
@@ -21,7 +20,6 @@ class FeePaymentReviewController extends Controller
             ->latest()
             ->paginate(20);
 
-        // tambahin proof_url
         $data->getCollection()->transform(function ($p) {
             $p->proof_url = asset('storage/' . $p->proof_path);
             return $p;
@@ -40,11 +38,13 @@ class FeePaymentReviewController extends Controller
 
         $payment->update([
             'review_status' => 'approved',
-            'reviewed_by' => $request->user()->id,
-            'reviewed_at' => now(),
+            'reviewed_by'   => $request->user()->id,
+            'reviewed_at'   => now(),
         ]);
 
-        $payment->invoice->update(['status' => 'paid']);
+        if ($payment->invoice) {
+            $payment->invoice->update(['status' => 'paid']);
+        }
 
         return response()->json(['message' => 'Payment approved']);
     }
@@ -61,12 +61,14 @@ class FeePaymentReviewController extends Controller
 
         $payment->update([
             'review_status' => 'rejected',
-            'note' => $request->input('reason') ?? $payment->note,
-            'reviewed_by' => $request->user()->id,
-            'reviewed_at' => now(),
+            'note'          => $request->input('reason') ?? $payment->note,
+            'reviewed_by'   => $request->user()->id,
+            'reviewed_at'   => now(),
         ]);
 
-        $payment->invoice->update(['status' => 'rejected']);
+        if ($payment->invoice) {
+            $payment->invoice->update(['status' => 'rejected']);
+        }
 
         return response()->json(['message' => 'Payment rejected']);
     }

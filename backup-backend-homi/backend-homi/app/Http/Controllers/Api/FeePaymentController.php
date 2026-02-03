@@ -6,15 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\FeeInvoice;
 use App\Models\FeePayment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FeePaymentController extends Controller
 {
-    /**
-     * WARGA: upload bukti bayar untuk invoice miliknya
-     * form-data:
-     * - proof_image (file)
-     * - note (optional)
-     */
+/*************  ✨ Windsurf Command 🌟  *************/
     public function pay(Request $request, $invoiceId)
     {
         $request->validate([
@@ -24,59 +20,66 @@ class FeePaymentController extends Controller
 
         $user = $request->user();
 
-        // ambil invoice
-        $invoice = FeeInvoice::findOrFail($invoiceId);
+        $invoice = FeeInvoice::query()->findOrFail($invoiceId);
 
-        // pastikan invoice milik user ini
         if ((int)$invoice->user_id !== (int)$user->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // kalau sudah paid, tidak boleh upload lagi
-        if ($invoice->status === 'paid') {
+        // kalau sudah paid/approved, stop
+        if (in_array(strtolower($invoice->status), ['paid', 'approved'], true)) {
             return response()->json(['message' => 'Invoice already paid'], 422);
         }
 
-        // simpan file
-        $path = $request->file('proof_image')->store('payment_proofs', 'public');
+        // kalau sudah pending, opsional: block biar tidak spam upload
+        if (strtolower($invoice->status) === 'pending') {
+            return response()->json(['message' => 'Invoice already pending review'], 422);
+        }
 
-        $payment = FeePayment::create([
-            'invoice_id'     => $invoice->id,
-            'payer_user_id'  => $user->id,
-            'proof_path'     => $path,
-            'note'           => $request->input('note'),
-            'review_status'  => 'pending',
-        ]);
+        $result = DB::transaction(function () use ($request, $invoice, $user) {
+            $path = $request->file('proof_image')->store('payment_proofs', 'public');
 
-        // update status invoice jadi pending (menunggu admin)
-        $invoice->update(['status' => 'pending']);
+            $payment = FeePayment::query()->create([
+                'invoice_id'    => $invoice->id,
+                'payer_user_id' => $user->id,
+                'proof_path'    => $path,
+                'note'          => $request->input('note'),
+                'review_status' => 'pending',
+            ]);
+
+            // update invoice status (pakai assignment biar aman dari fillable issue)
+            $invoice->status = 'pending';
+            $invoice->save();
+
+            return [
+                'payment' => $payment,
+            ];
+        });
 
         return response()->json([
             'message' => 'Proof uploaded, waiting for admin review',
             'data' => [
-                'payment_id' => $payment->id,
-                'proof_url'  => asset('storage/' . $payment->proof_path),
+                'payment_id' => $result['payment']->id,
+                'proof_url'  => asset('storage/' . $result['payment']->proof_path),
             ],
         ], 201);
     }
+/*******  ed6519d9-06b5-4129-81cc-cb9f1c8cc697  *******/
 
-    /**
-     * WARGA: riwayat pembayaran (paid)
-     */
     public function history(Request $request)
     {
         $user = $request->user();
 
         $items = FeeInvoice::query()
             ->where('user_id', $user->id)
-            ->where('status', 'paid')
+            ->whereIn('status', ['paid', 'approved'])
             ->with('feeType:id,name')
             ->latest()
             ->get()
             ->map(fn ($inv) => [
                 'id'        => $inv->id,
                 'fee_type'  => $inv->feeType?->name,
-                'period'    => $inv->period ? $inv->period->format('Y-m') : null,
+                'period'    => is_string($inv->period) ? substr($inv->period, 0, 7) : ($inv->period?->format('Y-m')),
                 'amount'    => $inv->amount,
                 'status'    => $inv->status,
                 'trx_id'    => $inv->trx_id,

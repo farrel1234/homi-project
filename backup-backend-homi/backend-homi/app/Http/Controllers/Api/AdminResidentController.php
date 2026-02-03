@@ -3,24 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ResidentProfile;
 use App\Models\User;
+use App\Models\ResidentProfile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdminResidentController extends Controller
 {
-    /**
-     * GET /api/admin/residents?q=
-     * List warga + alamat (paginate + search)
-     */
     public function index(Request $request)
     {
         $q = trim($request->query('q', ''));
 
-        $residents = User::query()
-            ->select('id', 'name', 'email', 'role', 'created_at')
-            ->where('role', 'resident')
-            ->with('residentProfile:id,user_id,blok,no_rumah,alamat,is_public,updated_at')
+        $residents = User::where('role', 'resident')
+            ->with('residentProfile')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($w) use ($q) {
                     $w->where('name', 'like', "%{$q}%")
@@ -33,70 +29,23 @@ class AdminResidentController extends Controller
                 });
             })
             ->orderBy('name')
-            ->paginate(20)
-            ->through(function ($u) {
-                $profile = $u->residentProfile;
-
-                return [
-                    'id' => $u->id,
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'role' => $u->role,
-                    'has_profile' => (bool) $profile,
-                    'blok' => $profile?->blok,
-                    'no_rumah' => $profile?->no_rumah,
-                    'alamat' => $profile?->alamat,
-                    'is_public' => $profile?->is_public ?? false,
-                    'blok_alamat' => ($profile?->blok && $profile?->no_rumah)
-                        ? 'Blok '.$profile->blok.' No '.$profile->no_rumah
-                        : ($profile?->alamat ?? null),
-                    'profile_updated_at' => $profile?->updated_at,
-                ];
-            });
+            ->paginate(20);
 
         return response()->json($residents);
     }
 
-    /**
-     * GET /api/admin/residents/{user}
-     * Detail 1 warga
-     */
     public function show(User $user)
     {
-        if ($user->role !== 'resident') {
-            return response()->json(['message' => 'Target harus user resident'], 422);
-        }
-
-        $user->load('residentProfile:id,user_id,blok,no_rumah,alamat,is_public,created_at,updated_at');
-
-        $p = $user->residentProfile;
-
-        return response()->json([
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role,
-            'resident_profile' => $p,
-            'blok_alamat' => ($p?->blok && $p?->no_rumah)
-                ? 'Blok '.$p->blok.' No '.$p->no_rumah
-                : ($p?->alamat ?? null),
-        ]);
+        $user->load('residentProfile');
+        return response()->json($user);
     }
 
-    /**
-     * PUT /api/admin/residents/{user}
-     * Upsert alamat warga
-     */
     public function upsertAddress(Request $request, User $user)
     {
-        if ($user->role !== 'resident') {
-            return response()->json(['message' => 'Target harus user resident'], 422);
-        }
-
         $data = $request->validate([
-            'blok' => 'nullable|string|max:50',
-            'no_rumah' => 'nullable|string|max:50',
-            'alamat' => 'nullable|string|max:255',
+            'blok' => 'nullable|string',
+            'no_rumah' => 'nullable|string',
+            'alamat' => 'nullable|string',
             'is_public' => 'nullable|boolean',
         ]);
 
@@ -106,21 +55,13 @@ class AdminResidentController extends Controller
         );
 
         return response()->json([
-            'message' => 'Alamat warga berhasil disimpan',
-            'data' => $profile
+            'message' => 'Alamat berhasil disimpan',
+            'data' => $profile,
         ]);
     }
 
-    /**
-     * PATCH /api/admin/residents/{user}/visibility
-     * Toggle tampil/tidak di direktori (is_public)
-     */
     public function updateVisibility(Request $request, User $user)
     {
-        if ($user->role !== 'resident') {
-            return response()->json(['message' => 'Target harus user resident'], 422);
-        }
-
         $data = $request->validate([
             'is_public' => 'required|boolean',
         ]);
@@ -130,26 +71,62 @@ class AdminResidentController extends Controller
             ['is_public' => $data['is_public']]
         );
 
-        return response()->json([
-            'message' => 'Visibility direktori berhasil diubah',
-            'data' => $profile
-        ]);
+        return response()->json($profile);
     }
 
-    /**
-     * DELETE /api/admin/residents/{user}/profile
-     * Hapus alamat/profile warga (reset)
-     */
     public function destroyProfile(User $user)
     {
-        if ($user->role !== 'resident') {
-            return response()->json(['message' => 'Target harus user resident'], 422);
+        ResidentProfile::where('user_id', $user->id)->delete();
+        return response()->json(['message' => 'Profile dihapus']);
+    }
+
+    // =============================
+    // CSV IMPORT (ADMIN)
+    // =============================
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:5120',
+        ]);
+
+        $handle = fopen($request->file('file')->getRealPath(), 'r');
+        $header = array_map('strtolower', fgetcsv($handle));
+
+        DB::beginTransaction();
+        try {
+            while (($row = fgetcsv($handle)) !== false) {
+                $data = array_combine($header, $row);
+
+                if (!$data['email'] || !$data['name']) continue;
+
+                $user = User::firstOrCreate(
+                    ['email' => $data['email']],
+                    [
+                        'name' => $data['name'],
+                        'password' => bcrypt(Str::random(10)),
+                        'role' => 'resident',
+                    ]
+                );
+
+                ResidentProfile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'blok' => $data['blok'] ?? null,
+                        'no_rumah' => $data['no_rumah'] ?? null,
+                        'alamat' => $data['alamat'] ?? null,
+                        'is_public' => filter_var($data['is_public'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                    ]
+                );
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
         }
 
-        ResidentProfile::where('user_id', $user->id)->delete();
+        fclose($handle);
 
-        return response()->json([
-            'message' => 'Resident profile berhasil dihapus'
-        ]);
+        return response()->json(['message' => 'Import CSV berhasil']);
     }
 }

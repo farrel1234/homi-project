@@ -7,18 +7,17 @@ use App\Models\RequestType;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceRequestController extends Controller
 {
-    // Dropdown jenis pengajuan
     public function types(): JsonResponse
     {
         return response()->json([
-            'data' => RequestType::where('is_active', true)->get(['id', 'name'])
+            'data' => RequestType::where('is_active', true)->get(['id', 'name', 'letter_type_id'])
         ]);
     }
 
-    // Warga membuat pengajuan
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -27,21 +26,36 @@ class ServiceRequestController extends Controller
             'request_date'    => 'required|date',
             'place'           => 'required|string|max:255',
             'subject'         => 'required|string|max:255',
+
+            // optional sesuai tabel kamu
+            'title'       => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'category'    => 'nullable|string|max:100',
+
+            // ini kunci buat template surat
+            'data_input'  => 'nullable|array',
         ]);
 
-        $requestData = ServiceRequest::create([
-            ...$data,
-            'user_id' => $request->user()->id,
-            'status'  => 'submitted',
+        $sr = ServiceRequest::create([
+            'user_id'         => $request->user()->id,
+            'reporter_name'   => $data['reporter_name'],
+            'request_type_id' => $data['request_type_id'],
+            'request_date'    => $data['request_date'],
+            'place'           => $data['place'],
+            'subject'         => $data['subject'],
+            'title'           => $data['title'] ?? $data['subject'],
+            'description'     => $data['description'] ?? null,
+            'category'        => $data['category'] ?? null,
+            'data_input'      => $data['data_input'] ?? null,
+            'status'          => 'submitted',
         ]);
 
         return response()->json([
             'message' => 'Pengajuan berhasil dikirim',
-            'data'    => $requestData,
+            'data'    => $sr->load('type:id,name'),
         ], 201);
     }
 
-    // Riwayat pengajuan milik warga
     public function index(Request $request): JsonResponse
     {
         $data = ServiceRequest::with('type:id,name')
@@ -52,7 +66,6 @@ class ServiceRequestController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    // Detail pengajuan milik warga
     public function show(Request $request, int $id): JsonResponse
     {
         $data = ServiceRequest::with(['type:id,name', 'verifier:id,name'])
@@ -60,5 +73,24 @@ class ServiceRequestController extends Controller
             ->findOrFail($id);
 
         return response()->json(['data' => $data]);
+    }
+
+    public function downloadPdf(Request $request, int $id)
+    {
+        $sr = ServiceRequest::findOrFail($id);
+
+        $user = $request->user();
+        $isAdmin = ((int)($user->role_id ?? 0) === 1)
+            || in_array(strtolower((string)($user->role ?? '')), ['admin','superadmin'], true);
+
+        if (!$isAdmin && (int)$sr->user_id !== (int)$user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (!$sr->pdf_path || !Storage::disk('public')->exists($sr->pdf_path)) {
+            return response()->json(['message' => 'PDF belum tersedia'], 404);
+        }
+
+        return Storage::disk('public')->download($sr->pdf_path);
     }
 }

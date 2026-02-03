@@ -24,7 +24,14 @@ class Payment extends Model
         'updated_at'  => 'datetime',
     ];
 
+    // Relasi asli (kamu sudah punya)
     public function user()
+    {
+        return $this->belongsTo(User::class, 'payer_user_id');
+    }
+
+    // ✅ Alias biar blade versi baru (yang pakai payer) juga bisa jalan
+    public function payer()
     {
         return $this->belongsTo(User::class, 'payer_user_id');
     }
@@ -40,7 +47,7 @@ class Payment extends Model
     }
 
     // ==========
-    // Bridge fields untuk blade lama
+    // Bridge fields untuk blade lama (boleh tetap)
     // ==========
 
     // amount ada di invoice
@@ -54,7 +61,7 @@ class Payment extends Model
         return $this->invoice?->due_date;
     }
 
-    // mapping status
+    // mapping status untuk UI lama
     public function getStatusAttribute()
     {
         return match ($this->review_status) {
@@ -64,9 +71,10 @@ class Payment extends Model
         };
     }
 
+    // ✅ tanggal dibayar = waktu warga upload bukti (created_at)
     public function getPaidAtAttribute()
     {
-        return $this->reviewed_at;
+        return $this->created_at;
     }
 
     public function getAdminNoteAttribute()

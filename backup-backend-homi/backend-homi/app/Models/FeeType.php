@@ -6,5 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeeType extends Model
 {
-    protected $fillable = ['name','is_active'];
+    protected $table = 'fee_types';
+    protected $guarded = [];
 }

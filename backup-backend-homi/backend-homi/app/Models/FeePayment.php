@@ -6,16 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeePayment extends Model
 {
-    protected $fillable = [
-        'invoice_id','payer_user_id','proof_path','note',
-        'review_status','reviewed_by','reviewed_at'
-    ];
+    protected $table = 'fee_payments';
 
+    // biar create()/update() aman tanpa fillable ribet
+    protected $guarded = [];
+
+    // optional biar reviewed_at kebaca sebagai datetime
     protected $casts = [
         'reviewed_at' => 'datetime',
     ];
 
-    public function invoice() { return $this->belongsTo(FeeInvoice::class, 'invoice_id'); }
-    public function payer() { return $this->belongsTo(User::class, 'payer_user_id'); }
-    public function reviewer() { return $this->belongsTo(User::class, 'reviewed_by'); }
+    public function invoice()
+    {
+        return $this->belongsTo(FeeInvoice::class, 'invoice_id');
+    }
+
+    public function payer()
+    {
+        return $this->belongsTo(User::class, 'payer_user_id');
+    }
+
+    // ✅ INI YANG HILANG → reviewer = admin yang verifikasi
+    public function reviewer()
+    {
+        // kolom yang kamu update di ReviewController adalah reviewed_by
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
 }

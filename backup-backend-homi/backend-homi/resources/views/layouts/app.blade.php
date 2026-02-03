@@ -16,20 +16,16 @@
             --homi-border: #E2E8F0;
         }
 
-        body {
-            background-color: var(--homi-bg);
-        }
+        body { background-color: var(--homi-bg); }
 
-        /* ================= CARD / PANEL GLOBAL ================= */
         .homi-card {
             background: #ffffff;
             border-radius: 14px;
             border: 1px solid var(--homi-border);
-            padding: 1.25rem; /* 5 */
+            padding: 1.25rem;
             box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
         }
 
-        /* ================= TABEL GLOBAL ================= */
         table.homi-table {
             border-collapse: separate;
             border-spacing: 0;
@@ -41,7 +37,7 @@
         }
 
         table.homi-table thead tr {
-            background: #FFF4ED; /* orange muda */
+            background: #FFF4ED;
             color: #374151;
             font-weight: 600;
             font-size: 12px;
@@ -54,291 +50,325 @@
             border-bottom: 1px solid var(--homi-border);
         }
 
-        table.homi-table tbody tr {
-            border-bottom: 1px solid var(--homi-border);
-        }
-
-        table.homi-table tbody tr:last-child {
-            border-bottom: none;
-        }
-
         table.homi-table tbody td {
             padding: 14px 12px;
             font-size: 13px;
             color: #374151;
         }
 
-        table.homi-table tbody tr:hover {
-            background: #FFF7F0; /* hover orange lembut */
-        }
+        table.homi-table tbody tr:hover { background: #FFF7F0; }
 
-        /* ================= TITLE / SUBTITLE DEFAULT ================= */
-        .homi-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .homi-subtitle {
-            font-size: 13px;
-            color: #6B7280;
-        }
+        .homi-title { font-size: 20px; font-weight: 600; color: #111827; }
+        .homi-subtitle { font-size: 13px; color: #6B7280; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
 
-    {{-- NAVBAR ORANYE --}}
-    <header class="bg-[var(--homi-orange)] shadow-sm border-b border-orange-300">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<body class="min-h-screen">
 
-            {{-- Top bar --}}
-            <div class="flex items-center justify-between h-16">
+@php
+    $navItems = [
+        ['label' => 'Dashboard',       'route' => 'admin.dashboard',              'active' => ['admin.dashboard']],
+        ['label' => 'Data Warga',      'route' => 'residents.index',              'active' => ['residents.*']],
+        ['label' => 'Pengumuman',      'route' => 'announcements.index',          'active' => ['announcements.*']],
+        ['label' => 'Pengaduan',       'route' => 'complaints.index',             'active' => ['complaints.*']],
+        ['label' => 'Pengajuan Surat', 'route' => 'service-requests.index',       'active' => ['service-requests.*']],
 
-                {{-- Logo kiri --}}
-                <div class="flex items-center gap-2">
-                    <img src="{{ asset('images/homi-logo.png') }}"
-                         alt="HOMI Logo"
-                         class="w-10 h-10 rounded-full object-cover bg-white">
+        ['label' => 'Pembayaran',      'route' => 'payments.index',               'active' => ['payments.*']],
 
-                    <div class="flex flex-col leading-tight">
-                        <span class="font-semibold text-white">HOMI Admin</span>
-                        <span class="text-xs text-white/80">Layanan Warga Hawai Garden</span>
+        // ✅ sesuai web.php yang bener
+        ['label' => 'Notifikasi',      'route' => 'admin.notifications.index',    'active' => ['admin.notifications.*']],
+        ['label' => 'Tagihan Iuran',   'route' => 'admin.fees.invoices.index',    'active' => ['admin.fees.invoices.*']],
+        ['label' => 'QR Iuran',        'route' => 'admin.fees.qr.index',          'active' => ['admin.fees.qr.*']],
+    ];
+@endphp
+
+<div class="flex min-h-screen">
+
+    {{-- ===== SIDEBAR DESKTOP ===== --}}
+    <aside class="hidden md:flex md:flex-col w-64 bg-[var(--homi-orange)] text-white border-r border-orange-300">
+
+        {{-- Brand --}}
+        <div class="p-4 border-b border-orange-300">
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/homi-logo.png') }}"
+                     alt="HOMI Logo"
+                     class="w-10 h-10 rounded-full object-cover bg-white">
+                <div class="leading-tight">
+                    <div class="font-semibold">HOMI Admin</div>
+                    <div class="text-xs text-white/80">Hawai Garden</div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Nav --}}
+        <nav class="flex-1 p-3 space-y-1">
+            @foreach($navItems as $item)
+                @php
+                    $isActive = false;
+                    foreach (($item['active'] ?? [$item['route']]) as $p) {
+                        if (\Illuminate\Support\Facades\Route::is($p)) { $isActive = true; break; }
+                    }
+
+                    // jangan bikin href '#', karena bikin item terlihat "disabled"
+                    // tapi tetap aman: kalau route belum ada, jatuh ke /admin/dashboard
+                    $href = \Illuminate\Support\Facades\Route::has($item['route'])
+                        ? route($item['route'])
+                        : route('admin.dashboard');
+                @endphp
+
+                <a href="{{ $href }}"
+                   class="block px-3 py-2 rounded-lg font-medium text-sm
+                          {{ $isActive ? 'bg-white text-[var(--homi-orange)]' : 'text-white hover:bg-orange-200/40' }}">
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
+        </nav>
+
+        {{-- User / Logout --}}
+        <div class="p-4 border-t border-orange-300">
+            @auth
+                @php
+                    $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
+                @endphp
+
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white text-[var(--homi-blue)] flex items-center justify-center font-bold uppercase">
+                        {{ strtoupper(substr($displayName, 0, 1)) }}
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-semibold truncate">{{ $displayName }}</div>
+                        <div class="text-[11px] text-white/80 truncate">{{ Auth::user()->email }}</div>
                     </div>
                 </div>
 
-                {{-- Menu Desktop --}}
-                <nav class="hidden md:flex items-center gap-1 text-sm">
-                    @php
-                        $navItems = [
-                            ['label' => 'Dashboard',       'route' => 'admin.dashboard'],
-                            ['label' => 'Data Warga',      'route' => 'residents.index'],
-                            ['label' => 'Pengumuman',      'route' => 'announcements.index'],
-                            ['label' => 'Pengaduan',       'route' => 'complaints.index'],
-                            ['label' => 'Pengajuan Surat', 'route' => 'letter-requests.index'],
-                            ['label' => 'Pembayaran',      'route' => 'payments.index'],
-                        ];
-                    @endphp
-
-                    @foreach($navItems as $item)
-                        @php
-                            $current = Route::currentRouteName() ?? '';
-                            $base    = explode('.', $item['route'])[0];
-                            $isActive = Route::is($item['route']) || ($base && str_starts_with($current, $base));
-                        @endphp
-
-                        <a href="{{ route($item['route']) }}"
-                           class="px-3 py-2 rounded-full font-medium
-                                  {{ $isActive
-                                      ? 'bg-white text-[var(--homi-orange)]'
-                                      : 'text-white hover:bg-orange-200/40' }}">
-                            {{ $item['label'] }}
-                        </a>
-                    @endforeach
-                </nav>
-
-                {{-- User + Mobile toggle --}}
-                <div class="flex items-center gap-2">
-
-                    {{-- User info desktop --}}
-                    @auth
-                        @php
-                            $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
-                        @endphp
-
-                        <div class="hidden md:flex items-center gap-2 text-white">
-                            <div class="leading-tight text-right">
-                                <div class="text-xs font-semibold">
-                                    {{ $displayName }}
-                                </div>
-                                <div class="text-[11px] opacity-80">
-                                    {{ Auth::user()->email }}
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Logout desktop (pakai popup, icon power) --}}
-                        <form method="POST" action="{{ route('admin.logout') }}" class="hidden md:block logout-form">
-                            @csrf
-                            <button type="button"
-                                    class="ml-1 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white text-[var(--homi-orange)] hover:bg-orange-50 logout-trigger"
-                                    title="Keluar">
-                                {{-- Icon power --}}
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="#F97316"
-                                     class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M12 3v9m6.364-6.364a9 9 0 11-12.728 0" />
-                                </svg>
-                            </button>
-                        </form>
-                    @endauth
-
-                    {{-- Mobile hamburger --}}
-                    <button id="mobile-menu-toggle"
-                            class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[var(--homi-orange)]"
-                            aria-label="Toggle navigation">
-                        ☰
+                <form method="POST" action="{{ route('admin.logout') }}" class="logout-form mt-3">
+                    @csrf
+                    <button type="button"
+                            class="w-full px-3 py-2 rounded-lg bg-white text-[var(--homi-orange)] font-semibold text-sm hover:bg-orange-50 logout-trigger">
+                        Keluar
                     </button>
+                </form>
+            @endauth
+        </div>
+
+    </aside>
+
+    {{-- ===== MOBILE SIDEBAR (DRAWER) ===== --}}
+    <div id="sidebar-overlay" class="md:hidden fixed inset-0 bg-black/30 hidden z-40"></div>
+
+    <aside id="mobile-sidebar"
+           class="md:hidden fixed top-0 left-0 h-full w-72 bg-[var(--homi-orange)] text-white border-r border-orange-300 z-50
+                  transform -translate-x-full transition-transform duration-200 ease-out">
+
+        <div class="p-4 border-b border-orange-300 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/homi-logo.png') }}"
+                     alt="HOMI Logo"
+                     class="w-10 h-10 rounded-full object-cover bg-white">
+                <div class="leading-tight">
+                    <div class="font-semibold">HOMI Admin</div>
+                    <div class="text-xs text-white/80">Hawai Garden</div>
                 </div>
             </div>
 
-            {{-- Mobile Menu --}}
-            <div id="mobile-menu" class="md:hidden hidden pb-3">
-                <nav class="pt-2 flex flex-col gap-1 text-sm">
-                    @foreach($navItems as $item)
-                        @php
-                            $current = Route::currentRouteName() ?? '';
-                            $base    = explode('.', $item['route'])[0];
-                            $isActive = Route::is($item['route']) || ($base && str_starts_with($current, $base));
-                        @endphp
+            <button id="sidebar-close"
+                    class="w-9 h-9 rounded-full bg-white text-[var(--homi-orange)] font-bold">
+                ✕
+            </button>
+        </div>
 
-                        <a href="{{ route($item['route']) }}"
-                           class="px-3 py-2 rounded-lg font-medium
-                                  {{ $isActive
-                                      ? 'bg-white text-[var(--homi-orange)]'
-                                      : 'text-white hover:bg-orange-200/40' }}">
-                            {{ $item['label'] }}
-                        </a>
-                    @endforeach
+        <nav class="p-3 space-y-1">
+            @foreach($navItems as $item)
+                @php
+                    $isActive = false;
+                    foreach (($item['active'] ?? [$item['route']]) as $p) {
+                        if (\Illuminate\Support\Facades\Route::is($p)) { $isActive = true; break; }
+                    }
 
-                    @auth
-                        @php
-                            $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
-                        @endphp
+                    $href = \Illuminate\Support\Facades\Route::has($item['route'])
+                        ? route($item['route'])
+                        : route('admin.dashboard');
+                @endphp
 
-                        <div class="border-t border-orange-200 mt-2 pt-2 flex items-center justify-between px-3 text-white">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-full bg-white text-[var(--homi-blue)] flex items-center justify-center font-bold uppercase">
-                                    {{ strtoupper(substr($displayName, 0, 1)) }}
-                                </div>
-                                <div class="leading-tight">
-                                    <div class="text-xs font-semibold">
-                                        {{ $displayName }}
-                                    </div>
-                                    <div class="text-[11px] opacity-80">
-                                        {{ Auth::user()->email }}
-                                    </div>
-                                </div>
-                            </div>
+                <a href="{{ $href }}"
+                   class="block px-3 py-2 rounded-lg font-medium text-sm
+                          {{ $isActive ? 'bg-white text-[var(--homi-orange)]' : 'text-white hover:bg-orange-200/40' }}">
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
+        </nav>
 
-                            {{-- Logout mobile (pakai popup juga) --}}
-                            <form method="POST" action="{{ route('admin.logout') }}" class="logout-form">
-                                @csrf
-                                <button type="button"
-                                        class="text-[11px] px-2 py-1 rounded-full bg-white text-[var(--homi-orange)] logout-trigger">
-                                    Keluar
-                                </button>
-                            </form>
+        @auth
+            @php
+                $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
+            @endphp
+
+            <div class="p-4 border-t border-orange-300 mt-auto">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white text-[var(--homi-blue)] flex items-center justify-center font-bold uppercase">
+                        {{ strtoupper(substr($displayName, 0, 1)) }}
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-semibold truncate">{{ $displayName }}</div>
+                        <div class="text-[11px] text-white/80 truncate">{{ Auth::user()->email }}</div>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('admin.logout') }}" class="logout-form mt-3">
+                    @csrf
+                    <button type="button"
+                            class="w-full px-3 py-2 rounded-lg bg-white text-[var(--homi-orange)] font-semibold text-sm hover:bg-orange-50 logout-trigger">
+                        Keluar
+                    </button>
+                </form>
+            </div>
+        @endauth
+    </aside>
+
+    {{-- ===== MAIN AREA ===== --}}
+    <div class="flex-1 flex flex-col min-h-screen">
+
+        <header class="bg-white border-b border-gray-100">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <button id="sidebar-open"
+                            class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--homi-orange)] text-white"
+                            aria-label="Open menu">
+                        ☰
+                    </button>
+
+                    <div class="leading-tight">
+                        <div class="text-sm font-semibold text-gray-800">
+                            @yield('page_title', 'Dashboard')
                         </div>
-                    @endauth
-                </nav>
+                        <div class="text-[11px] text-gray-500">
+                            @yield('page_subtitle', 'Panel Admin HOMI')
+                        </div>
+                    </div>
+                </div>
+
+                @auth
+                    @php
+                        $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
+                    @endphp
+                    <div class="hidden sm:flex items-center gap-2">
+                        <div class="text-right leading-tight">
+                            <div class="text-xs font-semibold text-gray-800">{{ $displayName }}</div>
+                            <div class="text-[11px] text-gray-500">{{ Auth::user()->email }}</div>
+                        </div>
+                    </div>
+                @endauth
             </div>
+        </header>
 
-        </div>
-    </header>
-
-    {{-- MAIN CONTENT --}}
-    <main class="flex-1">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            @yield('content')
-        </div>
-    </main>
-
-    {{-- FOOTER --}}
-    <footer class="border-t border-gray-100 bg-white">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <p class="text-[11px] text-gray-400 text-center">
-                HOMI &mdash; Sistem Informasi Manajemen Layanan Warga Hawai Garden
-            </p>
-        </div>
-    </footer>
-
-    {{-- POPUP LOGOUT --}}
-    <div id="logout-modal"
-         class="fixed inset-0 z-40 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-5 mx-4">
-            <h2 class="text-sm font-semibold text-gray-800 mb-1">
-                Konfirmasi Keluar
-            </h2>
-            <p class="text-xs text-gray-600 mb-4">
-                Apakah Anda yakin ingin keluar dari dashboard HOMI Admin?
-            </p>
-            <div class="flex justify-end gap-2 text-sm">
-                <button id="logout-cancel"
-                        class="px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
-                    Batal
-                </button>
-                <button id="logout-confirm"
-                        class="px-3 py-2 rounded-lg bg-[var(--homi-orange)] text-white hover:bg-orange-500">
-                    Ya, keluar
-                </button>
+        <main class="flex-1">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                @yield('content')
             </div>
+        </main>
+
+        <footer class="border-t border-gray-100 bg-white">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <p class="text-[11px] text-gray-400 text-center">
+                    HOMI &mdash; Sistem Informasi Manajemen Layanan Warga Hawai Garden
+                </p>
+            </div>
+        </footer>
+    </div>
+</div>
+
+{{-- POPUP LOGOUT --}}
+<div id="logout-modal"
+     class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-5 mx-4">
+        <h2 class="text-sm font-semibold text-gray-800 mb-1">
+            Konfirmasi Keluar
+        </h2>
+        <p class="text-xs text-gray-600 mb-4">
+            Apakah Anda yakin ingin keluar dari dashboard HOMI Admin?
+        </p>
+        <div class="flex justify-end gap-2 text-sm">
+            <button id="logout-cancel"
+                    class="px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+                Batal
+            </button>
+            <button id="logout-confirm"
+                    class="px-3 py-2 rounded-lg bg-[var(--homi-orange)] text-white hover:bg-orange-500">
+                Ya, keluar
+            </button>
         </div>
     </div>
+</div>
 
-    {{-- Script: mobile menu + logout popup --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Toggle mobile menu
-            const toggle = document.getElementById('mobile-menu-toggle');
-            const menu   = document.getElementById('mobile-menu');
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const openBtn  = document.getElementById('sidebar-open');
+    const closeBtn = document.getElementById('sidebar-close');
+    const overlay  = document.getElementById('sidebar-overlay');
+    const drawer   = document.getElementById('mobile-sidebar');
 
-            if (toggle && menu) {
-                toggle.addEventListener('click', function () {
-                    menu.classList.toggle('hidden');
-                });
-            }
+    function openDrawer() {
+        if (!drawer || !overlay) return;
+        drawer.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    }
 
-            // Logout popup
-            const logoutModal   = document.getElementById('logout-modal');
-            const logoutButtons = document.querySelectorAll('.logout-trigger');
-            const cancelBtn     = document.getElementById('logout-cancel');
-            const confirmBtn    = document.getElementById('logout-confirm');
+    function closeDrawer() {
+        if (!drawer || !overlay) return;
+        drawer.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
 
-            let formToSubmit = null;
+    if (openBtn) openBtn.addEventListener('click', openDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (overlay) overlay.addEventListener('click', closeDrawer);
 
-            logoutButtons.forEach(btn => {
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    formToSubmit = btn.closest('form');
-                    if (logoutModal) {
-                        logoutModal.classList.remove('hidden');
-                        logoutModal.classList.add('flex');
-                    }
-                });
-            });
+    const logoutModal   = document.getElementById('logout-modal');
+    const logoutButtons = document.querySelectorAll('.logout-trigger');
+    const cancelBtn     = document.getElementById('logout-cancel');
+    const confirmBtn    = document.getElementById('logout-confirm');
 
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', function () {
-                    if (logoutModal) {
-                        logoutModal.classList.add('hidden');
-                        logoutModal.classList.remove('flex');
-                    }
-                    formToSubmit = null;
-                });
-            }
+    let formToSubmit = null;
 
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', function () {
-                    if (formToSubmit) {
-                        formToSubmit.submit();
-                    }
-                });
-            }
-
-            // Klik area gelap untuk tutup modal
+    logoutButtons.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            formToSubmit = btn.closest('form');
             if (logoutModal) {
-                logoutModal.addEventListener('click', function (e) {
-                    if (e.target === logoutModal) {
-                        logoutModal.classList.add('hidden');
-                        logoutModal.classList.remove('flex');
-                        formToSubmit = null;
-                    }
-                });
+                logoutModal.classList.remove('hidden');
+                logoutModal.classList.add('flex');
             }
         });
-    </script>
+    });
 
-    @stack('scripts')
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function () {
+            if (logoutModal) {
+                logoutModal.classList.add('hidden');
+                logoutModal.classList.remove('flex');
+            }
+            formToSubmit = null;
+        });
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            if (formToSubmit) formToSubmit.submit();
+        });
+    }
+
+    if (logoutModal) {
+        logoutModal.addEventListener('click', function (e) {
+            if (e.target === logoutModal) {
+                logoutModal.classList.add('hidden');
+                logoutModal.classList.remove('flex');
+                formToSubmit = null;
+            }
+        });
+    }
+});
+</script>
+
+@stack('scripts')
 </body>
 </html>

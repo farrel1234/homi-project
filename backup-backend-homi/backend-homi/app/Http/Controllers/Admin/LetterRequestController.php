@@ -1,5 +1,7 @@
 <?php
 
+// File: app/Http/Controllers/Admin/LetterRequestController.php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -51,8 +53,9 @@ class LetterRequestController extends Controller
 
     public function update(Request $request, LetterRequest $letterRequest)
     {
+        // Terima 2 variasi biar aman kalau DB sudah terlanjur pakai "processed"
         $data = $request->validate([
-            'status' => ['required', 'in:submitted,processed,approved,rejected'],
+            'status' => ['required', 'in:submitted,processing,processed,approved,rejected'],
         ]);
 
         $letterRequest->update($data);
@@ -67,8 +70,10 @@ class LetterRequestController extends Controller
         $pdfPath = $this->generatePdf($letterRequest);
 
         $letterRequest->update([
-            'status'   => 'approved',
-            'pdf_path' => $pdfPath,
+            'status'      => 'approved',
+            'pdf_path'    => $pdfPath,
+            'approved_at' => now(),
+            'rejected_at' => null,
         ]);
 
         return redirect()
@@ -79,7 +84,8 @@ class LetterRequestController extends Controller
     public function reject(Request $request, LetterRequest $letterRequest)
     {
         $letterRequest->update([
-            'status' => 'rejected',
+            'status'      => 'rejected',
+            'rejected_at' => now(),
         ]);
 
         return redirect()
@@ -129,11 +135,10 @@ class LetterRequestController extends Controller
         // ==========================
         // Auto-lengkapi field umum
         // ==========================
-        $data = $letterRequest->data_input ?? [];
+        $data = is_array($letterRequest->data_input) ? $letterRequest->data_input : [];
 
         // Nomor Surat: kalau belum ada, auto generate
         if (empty($data['nomor_surat'])) {
-            // contoh: 001/RT01-RW02/HG/2025
             $seq = str_pad((string) $letterRequest->id, 3, '0', STR_PAD_LEFT);
             $rt  = $data['rt'] ?? '01';
             $rw  = $data['rw'] ?? '01';
@@ -144,25 +149,25 @@ class LetterRequestController extends Controller
             $data['tanggal_surat'] = now()->translatedFormat('d F Y');
         }
 
-        // Default nama (kalau mobile belum ngirim)
+        // Default nama
         if (empty($data['nama'])) {
             $data['nama'] = $letterRequest->user->full_name ?? $letterRequest->user->name ?? '';
         }
 
-        // Default alamat (kalau mobile belum ngirim)
+        // Default alamat
         if (empty($data['alamat'])) {
             $rp = $letterRequest->user->residentProfile ?? null;
             $data['alamat'] = $rp?->alamat ?: 'Perumahan Hawai Garden';
         }
 
-        // Default RT/RW (kalau belum ada)
+        // Default RT/RW
         $data['rt'] = $data['rt'] ?? '01';
         $data['rw'] = $data['rw'] ?? '01';
 
-        // Default pejabat penandatangan
+        // Default nama_rt
         $data['nama_rt'] = $data['nama_rt'] ?? 'Ketua RT';
 
-        // Simpan balik biar halaman admin juga ikut rapi
+        // Simpan balik
         $letterRequest->data_input = $data;
         $letterRequest->save();
 
@@ -177,7 +182,6 @@ class LetterRequestController extends Controller
 
         $userName = str_replace(' ', '_', $letterRequest->user->full_name ?? $letterRequest->user->username ?? 'warga');
 
-        // ✅ FIX: kamu gak punya kolom slug di letter_types
         $typeSlug = Str::slug($letterRequest->type->name ?? 'surat');
 
         $fileName = $typeSlug . '-' . $userName . '-' . now()->format('YmdHis') . '.pdf';
@@ -189,32 +193,31 @@ class LetterRequestController extends Controller
     }
 
     /**
-     * ✅ API MOBILE: pilih type_id → auto isi data_input → langsung generate PDF
+     * API MOBILE: pilih type_id + data_input → simpan → generate PDF
      * POST /api/letter-requests/generate
      */
     public function apiCreateAndGenerate(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'type_id' => ['required', 'integer', 'exists:letter_types,id'],
-            'perihal' => ['nullable', 'string', 'max:255'],
-            'data_input' => ['nullable', 'array'],
+            'type_id'     => ['required', 'integer', 'exists:letter_types,id'],
+            'perihal'     => ['nullable', 'string', 'max:255'],
+            'data_input'  => ['nullable', 'array'],
         ]);
 
         $user = $request->user();
         $type = LetterType::findOrFail($data['type_id']);
 
-        // relasi residentProfile (sesuai migrations di project kamu)
         $resident = $user->residentProfile ?? null;
 
-        // data auto (tanpa form)
+        // default umum
         $auto = [
             'nomor_surat'   => '___/HG/___/' . date('Y'),
             'tanggal_surat' => now()->translatedFormat('d F Y'),
             'nama'          => $user->full_name ?? $user->username ?? '',
-            'nik'           => '', // NIK tidak ada di residentProfile bawaan
-            'alamat'        => $resident->alamat ?? (($resident && ($resident->blok || $resident->no_rumah))
-                                ? trim(($resident->blok ?? '') . ' ' . ($resident->no_rumah ?? ''))
-                                : 'Perumahan Hawai Garden'),
+            'alamat'        => $resident->alamat
+                ?? (($resident && ($resident->blok || $resident->no_rumah))
+                    ? trim(($resident->blok ?? '') . ' ' . ($resident->no_rumah ?? ''))
+                    : 'Perumahan Hawai Garden'),
             'no_telepon'    => $user->phone ?? '',
             'keperluan'     => $data['perihal'] ?? 'Pengajuan layanan melalui aplikasi HOMI',
             'tujuan'        => 'Kelurahan/Instansi terkait',
@@ -222,26 +225,34 @@ class LetterRequestController extends Controller
             'jabatan'       => 'Pengelola Perumahan Hawai Garden',
         ];
 
-        // Optional: kalau mobile ngirim data_input (mis: rt, rw, nama_rt, dll), pakai itu untuk override
-        $incoming = $request->input('data_input');
-        if (is_array($incoming)) {
-            foreach ($incoming as $k => $v) {
-                $auto[$k] = $v;
+        // data dari mobile
+        $incoming = $request->input('data_input', []);
+        if (!is_array($incoming)) $incoming = [];
+
+        // ✅ INI KUNCI: simpan SEMUA key (biar semua surat aman)
+        $dataInput = array_merge($auto, $incoming);
+
+        // ✅ Validasi required_json (format DB kamu: ["field1","field2",...])
+        $requiredFields = method_exists($type, 'requiredFields')
+            ? $type->requiredFields()
+            : (is_array($type->required_json) ? $type->required_json : []);
+
+        $missing = [];
+        foreach ($requiredFields as $field) {
+            if (!is_string($field) || $field === '') continue;
+            $val = $dataInput[$field] ?? null;
+            if ($val === null || $val === '') {
+                $missing[] = $field;
             }
         }
 
-        // isi sesuai required_json biar sesuai template masing2 surat
-        $fields = ($type->required_json['fields'] ?? []);
-        $dataInput = [];
-
-        foreach ($fields as $f) {
-            $name = $f['name'] ?? null;
-            if (!$name) continue;
-
-            $dataInput[$name] = $auto[$name] ?? '';
+        if (!empty($missing)) {
+            return response()->json([
+                'message' => 'Data surat belum lengkap (sesuai required_json).',
+                'missing' => $missing,
+            ], 422);
         }
 
-        // buat record request
         $lr = LetterRequest::create([
             'user_id'    => $user->id,
             'type_id'    => $type->id,
@@ -250,9 +261,7 @@ class LetterRequestController extends Controller
             'pdf_path'   => null,
         ]);
 
-        // generate pdf & simpan path
         $path = $this->generatePdf($lr);
-
         $lr->update(['pdf_path' => $path]);
 
         return response()->json([

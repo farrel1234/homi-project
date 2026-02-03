@@ -18,6 +18,8 @@ class AnnouncementController extends Controller
             ->when($q, function ($query) use ($q) {
                 $query->where('title', 'like', '%' . $q . '%');
             })
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('published_at')
             ->orderByDesc('created_at')
             ->paginate(10)
             ->withQueryString();
@@ -59,13 +61,25 @@ class AnnouncementController extends Controller
         // ✅ WAJIB: kolom created_by tidak boleh null
         $data['created_by'] = auth()->id();
 
-        // ✅ Karena di DB kamu ada body & content, samakan saja biar aman
-        // Kalau model/DB kamu pakai 'content' di API mobile, ini bikin konsisten
+        // ✅ Konsisten: content ikut body (mobile pakai content)
         $data['content'] = $data['body'];
 
-        // default kalau tidak dikirim dari form
+        // ✅ default kalau tidak dikirim dari form
         $data['is_pinned'] = (bool)($data['is_pinned'] ?? false);
         $data['is_public'] = (bool)($data['is_public'] ?? true);
+
+        /**
+         * ✅ INI YANG PENTING:
+         * Kalau form admin kamu belum punya field published_at,
+         * maka published_at akan NULL (draft) dan mobile gak akan nampilin.
+         *
+         * Jadi kita auto publish kalau:
+         * - is_public true
+         * - dan published_at kosong
+         */
+        if (($data['is_public'] ?? true) && empty($data['published_at'])) {
+            $data['published_at'] = now();
+        }
 
         Announcement::create($data);
 
@@ -101,16 +115,26 @@ class AnnouncementController extends Controller
             if ($announcement->image_path && Storage::disk('public')->exists($announcement->image_path)) {
                 Storage::disk('public')->delete($announcement->image_path);
             }
-
             $data['image_path'] = $request->file('image')->store('announcements', 'public');
         }
 
-        // ✅ Samakan content dengan body
+        // ✅ Konsisten: content ikut body
         $data['content'] = $data['body'];
 
-        // Kalau checkbox gak dikirim, jangan timpa value lama (biar aman)
+        // ✅ Checkbox yang tidak dikirim jangan timpa value lama (biar aman)
         if (!array_key_exists('is_pinned', $data)) unset($data['is_pinned']);
         if (!array_key_exists('is_public', $data)) unset($data['is_public']);
+
+        // ✅ Auto publish saat update jika public & published_at kosong
+        $isPublic = array_key_exists('is_public', $data)
+            ? (bool)$data['is_public']
+            : (bool)$announcement->is_public;
+
+        $publishedAt = $data['published_at'] ?? $announcement->published_at;
+
+        if ($isPublic && empty($publishedAt)) {
+            $data['published_at'] = now();
+        }
 
         $announcement->update($data);
 

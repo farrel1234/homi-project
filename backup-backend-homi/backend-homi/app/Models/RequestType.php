@@ -6,10 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class RequestType extends Model
 {
-    protected $fillable = ['name', 'is_active'];
+    protected $table = 'request_types';
 
-    public function requests()
+    protected $fillable = [
+        'name',
+        'is_active',
+        'letter_type_id',
+    ];
+
+    public function letterType()
     {
-        return $this->hasMany(ServiceRequest::class);
+        return $this->belongsTo(LetterType::class, 'letter_type_id');
     }
 }

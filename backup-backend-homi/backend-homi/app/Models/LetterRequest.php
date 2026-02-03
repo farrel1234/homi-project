@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class LetterRequest extends Model
 {
@@ -33,15 +33,11 @@ class LetterRequest extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // dipakai view: $item->type->name, dan controller: $letterRequest->type
     public function type()
     {
         return $this->belongsTo(LetterType::class, 'type_id');
     }
 
-    /**
-     * Dipakai view index: $item->status_label
-     */
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -53,9 +49,6 @@ class LetterRequest extends Model
         };
     }
 
-    /**
-     * Dipakai view index: $item->status_badge_class
-     */
     public function getStatusBadgeClassAttribute(): string
     {
         return match ($this->status) {
@@ -68,28 +61,40 @@ class LetterRequest extends Model
     }
 
     /**
-     * Dipakai Admin\LetterRequestController:
-     * $letterRequest->renderHtml()
-     *
-     * template_html: <p>Nama: {{nama}}</p>
-     * data_input: {"nama":"Budi", ...}
+     * Render template_html dengan data_input.
+     * Support placeholder {{key}} / {{ key }} dan key snake_case maupun camelCase.
      */
     public function renderHtml(): string
     {
         $tpl = (string) optional($this->type)->template_html;
         if ($tpl === '') return '';
 
-        $data = (array) ($this->data_input ?? []);
+        $raw = (array) ($this->data_input ?? []);
+        $data = [];
 
-        // replace {{key}} / {{ key }}
-        foreach ($data as $k => $v) {
-            $key = (string) $k;
-            $val = is_scalar($v) ? (string) $v : json_encode($v);
+        // buat alias key: original, camel, snake -> semuanya menunjuk value yang sama
+        foreach ($raw as $k => $v) {
+            $key = trim((string) $k);
 
-            $tpl = str_replace('{{'.$key.'}}', e($val), $tpl);
-            $tpl = str_replace('{{ '.$key.' }}', e($val), $tpl);
+            $val = is_scalar($v)
+                ? (string) $v
+                : json_encode($v, JSON_UNESCAPED_UNICODE);
+
+            foreach (array_unique([$key, Str::camel($key), Str::snake($key)]) as $alias) {
+                if ($alias !== '') $data[$alias] = $val;
+            }
         }
 
-        return $tpl;
+        // replace semua {{ ... }}
+        $out = preg_replace_callback('/{{\s*([a-zA-Z0-9_]+)\s*}}/', function ($m) use ($data) {
+            $k = $m[1];
+
+            // kalau ga ketemu, biarin tetap (biar gampang debug)
+            if (!array_key_exists($k, $data)) return $m[0];
+
+            return e($data[$k]);
+        }, $tpl);
+
+        return $out ?? $tpl;
     }
 }

@@ -5,15 +5,10 @@
 @section('content')
 <div class="space-y-5">
 
-    {{-- Header --}}
     <div class="flex items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-800">
-                Detail Pembayaran Iuran
-            </h1>
-            <p class="text-sm text-gray-600">
-                Halaman ini menampilkan detail lengkap pembayaran yang dipilih.
-            </p>
+            <h1 class="text-2xl font-semibold text-gray-800">Detail Pembayaran Iuran</h1>
+            <p class="text-sm text-gray-600">Halaman ini menampilkan detail lengkap pembayaran yang dipilih.</p>
         </div>
 
         <a href="{{ route('payments.index') }}"
@@ -22,7 +17,6 @@
         </a>
     </div>
 
-    {{-- Notifikasi --}}
     @if (session('success'))
         <div class="rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-800">
             {{ session('success') }}
@@ -35,39 +29,49 @@
         </div>
     @endif
 
+    @php
+        $payer = $payment->payer;
+        $name  = $payer->full_name ?? $payer->name ?? $payer->username ?? '-';
+
+        $invoice = $payment->invoice;
+        $feeName = $invoice?->feeType?->name ?? '-';
+        $trxId   = $invoice?->trx_id ?? '-';
+
+        $periodText = '-';
+        if ($invoice?->period) {
+            $periodText = $invoice->period instanceof \Illuminate\Support\Carbon
+                ? $invoice->period->translatedFormat('F Y')
+                : \Carbon\Carbon::parse($invoice->period)->translatedFormat('F Y');
+        }
+
+        $amount  = $invoice?->amount;
+        $dueDate = $invoice?->due_date;
+
+        $rs = $payment->review_status; // pending/approved/rejected
+        $label = [
+            'pending'  => 'Belum Diproses',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+        ][$rs] ?? ($rs ?? '-');
+
+        $badgeClass = match($rs) {
+            'pending'  => 'bg-amber-100 text-amber-800',
+            'approved' => 'bg-emerald-100 text-emerald-800',
+            'rejected' => 'bg-rose-100 text-rose-800',
+            default    => 'bg-gray-100 text-gray-700',
+        };
+    @endphp
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {{-- KIRI: DETAIL PEMBAYARAN --}}
         <div class="lg:col-span-2 space-y-4">
 
-            {{-- CARD DETAIL --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-xs uppercase tracking-wide text-gray-500">ID Pembayaran</p>
                         <p class="text-sm font-mono text-gray-800">#{{ $payment->id }}</p>
                     </div>
-
-                    @php
-                        // status sekarang: pending / approved / rejected
-                        $label = [
-                            'pending'  => 'Belum Diproses',
-                            'approved' => 'Disetujui',
-                            'rejected' => 'Ditolak',
-                        ][$payment->status] ?? $payment->status;
-
-                        $badgeClass = match($payment->status) {
-                            'pending'  => 'bg-amber-100 text-amber-800',
-                            'approved' => 'bg-emerald-100 text-emerald-800',
-                            'rejected' => 'bg-rose-100 text-rose-800',
-                            default    => 'bg-gray-100 text-gray-700',
-                        };
-
-                        // ambil invoice (kalau ada)
-                        $invoice = $payment->invoice ?? null;
-                        $amount  = $invoice->amount ?? null;
-                        $dueDate = $invoice->due_date ?? null;
-                    @endphp
 
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium {{ $badgeClass }}">
                         {{ $label }}
@@ -77,15 +81,14 @@
                 <div class="border-t border-gray-100 pt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500">Nama Warga</p>
-                        <p class="font-medium text-gray-900">
-                            {{ $payment->user->name ?? '-' }}
-                        </p>
-                        <p class="text-xs text-gray-500">{{ $payment->user->email ?? '-' }}</p>
+                        <p class="font-medium text-gray-900">{{ $name }}</p>
+                        <p class="text-xs text-gray-500">{{ $payer->email ?? '-' }}</p>
                     </div>
 
                     <div class="space-y-1">
-                        <p class="text-xs text-gray-500">Catatan / Deskripsi</p>
-                        <p class="text-gray-800">{{ $payment->description ?? '-' }}</p>
+                        <p class="text-xs text-gray-500">Keterangan</p>
+                        <p class="text-gray-800">{{ $feeName }} • {{ $periodText }}</p>
+                        <p class="text-xs text-gray-500">TRX: {{ $trxId }}</p>
                     </div>
 
                     <div class="space-y-1">
@@ -107,26 +110,16 @@
                     </div>
 
                     <div class="space-y-1">
+                        <p class="text-xs text-gray-500">Tanggal Dibayar (Upload Bukti)</p>
+                        <p class="text-gray-800">
+                            {{ $payment->created_at ? $payment->created_at->format('d M Y H:i') : '-' }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-1">
                         <p class="text-xs text-gray-500">Tanggal Review</p>
                         <p class="text-gray-800">
-                            {{ optional($payment->paid_at)->format('d M Y H:i') ?? '-' }}
-                        </p>
-                        <p class="text-[11px] text-gray-400">
-                            (paid_at = reviewed_at)
-                        </p>
-                    </div>
-
-                    <div class="space-y-1">
-                        <p class="text-xs text-gray-500">Dibuat Pada</p>
-                        <p class="text-gray-800">
-                            {{ optional($payment->created_at)->format('d M Y H:i') ?? '-' }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-1">
-                        <p class="text-xs text-gray-500">Terakhir Diperbarui</p>
-                        <p class="text-gray-800">
-                            {{ optional($payment->updated_at)->format('d M Y H:i') ?? '-' }}
+                            {{ $payment->reviewed_at ? $payment->reviewed_at->format('d M Y H:i') : '-' }}
                         </p>
                     </div>
                 </div>
@@ -152,8 +145,7 @@
                 @if($proofUrl)
                     <div class="space-y-2">
                         <div class="border rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center max-h-80">
-                            <img src="{{ $proofUrl }}" alt="Bukti pembayaran"
-                                 class="object-contain max-h-80 w-full">
+                            <img src="{{ $proofUrl }}" alt="Bukti pembayaran" class="object-contain max-h-80 w-full">
                         </div>
 
                         <a href="{{ $proofUrl }}" target="_blank"
@@ -172,35 +164,32 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-2">
                 <h3 class="text-sm font-semibold text-gray-800">Catatan Admin</h3>
                 <p class="text-sm text-gray-700">
-                    {{ $payment->admin_note ?? 'Belum ada catatan.' }}
+                    {{ $payment->note ?? 'Belum ada catatan.' }}
                 </p>
             </div>
         </div>
 
-        {{-- KANAN: AKSI APPROVAL --}}
+        {{-- KANAN --}}
         <div class="space-y-4">
 
-            {{-- DATA WARGA --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-2">
                 <h3 class="text-sm font-semibold text-gray-800 mb-1">Data Warga</h3>
-
                 <div class="text-sm space-y-1">
                     <p>
                         <span class="text-gray-500 text-xs">Nama</span><br>
-                        <span class="text-gray-900 font-medium">{{ $payment->user->name ?? '-' }}</span>
+                        <span class="text-gray-900 font-medium">{{ $name }}</span>
                     </p>
                     <p>
                         <span class="text-gray-500 text-xs">Email</span><br>
-                        <span class="text-gray-800">{{ $payment->user->email ?? '-' }}</span>
+                        <span class="text-gray-800">{{ $payer->email ?? '-' }}</span>
                     </p>
                     <p>
                         <span class="text-gray-500 text-xs">No. HP</span><br>
-                        <span class="text-gray-800">{{ $payment->user->phone ?? '-' }}</span>
+                        <span class="text-gray-800">{{ $payer->phone ?? '-' }}</span>
                     </p>
                 </div>
             </div>
 
-            {{-- FORM APPROVAL --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
                 <h3 class="text-sm font-semibold text-gray-800">Aksi Approval</h3>
 
@@ -208,7 +197,6 @@
                     Gunakan form di bawah untuk menyetujui atau menolak pembayaran ini.
                 </p>
 
-                {{-- SETUJUI --}}
                 <form method="POST" action="{{ route('payments.approve', $payment) }}" class="space-y-2">
                     @csrf
                     <label class="block text-xs font-medium text-gray-700 mb-1">Catatan (opsional)</label>
@@ -222,7 +210,6 @@
                     </button>
                 </form>
 
-                {{-- TOLAK --}}
                 <form method="POST" action="{{ route('payments.reject', $payment) }}" class="space-y-2 pt-2 border-t border-gray-100">
                     @csrf
                     <label class="block text-xs font-medium text-gray-700 mb-1">Alasan penolakan</label>
@@ -235,10 +222,6 @@
                         Tolak Pembayaran
                     </button>
                 </form>
-
-                <p class="text-[11px] text-gray-400 pt-1">
-                    Status akan tersimpan di sistem (review_status).
-                </p>
             </div>
         </div>
     </div>

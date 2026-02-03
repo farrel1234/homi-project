@@ -22,4 +22,8 @@ class ResidentProfile extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function residentProfile()
+{
+    return $this->hasOne(\App\Models\ResidentProfile::class, 'user_id');
+}
 }

@@ -16,15 +16,28 @@ class LetterType extends Model
     ];
 
     protected $casts = [
-        'required_json' => 'array',
+        'required_json' => 'array', // ["nama","nik",...]
     ];
 
-    /**
-     * Dipakai oleh Admin\LetterRequestController:
-     * $type->fields
-     */
-    public function getFieldsAttribute(): array
+    public function requiredFields(): array
     {
-        return $this->required_json ?? [];
+        $r = $this->required_json;
+
+        // format: ["nama","nik",...]
+        if (is_array($r) && isset($r[0]) && is_string($r[0])) {
+            return $r;
+        }
+
+        // fallback kalau suatu saat jadi object: {"fields":[{"name":"nama"},...]}
+        if (is_array($r) && isset($r['fields']) && is_array($r['fields'])) {
+            $out = [];
+            foreach ($r['fields'] as $f) {
+                $name = $f['name'] ?? null;
+                if ($name) $out[] = $name;
+            }
+            return $out;
+        }
+
+        return [];
     }
 }

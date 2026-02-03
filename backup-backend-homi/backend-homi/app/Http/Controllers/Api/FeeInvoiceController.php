@@ -7,6 +7,7 @@ use App\Models\FeeInvoice;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class FeeInvoiceController extends Controller
 {
@@ -33,7 +34,7 @@ class FeeInvoiceController extends Controller
         ]);
 
         // normalisasi period jadi awal bulan
-        $period = date('Y-m-01', strtotime($request->input('period')));
+        $period = Carbon::parse($request->input('period'))->startOfMonth()->toDateString();
 
         $usersQuery = User::query()->where('role', 'resident');
 
@@ -74,6 +75,7 @@ class FeeInvoiceController extends Controller
         }
 
         return response()->json([
+            'status'  => true,
             'message' => 'Invoices generated',
             'created' => $created,
             'skipped' => $skipped,
@@ -94,11 +96,14 @@ class FeeInvoiceController extends Controller
         $data = FeeInvoice::query()
             ->with(['user:id,name,email', 'feeType:id,name'])
             ->when($qStatus, fn($q) => $q->where('status', $qStatus))
-            ->when($qPeriod, fn($q) => $q->where('period', date('Y-m-01', strtotime($qPeriod))))
+            ->when($qPeriod, fn($q) => $q->where('period', Carbon::parse($qPeriod)->startOfMonth()->toDateString()))
             ->latest()
             ->paginate(20);
 
-        return response()->json($data);
+        return response()->json([
+            'status' => true,
+            'data'   => $data,
+        ]);
     }
 
     /**
@@ -110,7 +115,7 @@ class FeeInvoiceController extends Controller
     {
         $user = $request->user();
 
-        $status = $request->query('status'); // unpaid,pending
+        $status   = $request->query('status'); // unpaid,pending
         $statuses = $status ? array_map('trim', explode(',', $status)) : null;
 
         $query = FeeInvoice::query()
@@ -122,17 +127,47 @@ class FeeInvoiceController extends Controller
             $query->whereIn('status', $statuses);
         }
 
-        $items = $query->get()->map(fn ($inv) => [
-            'id'        => $inv->id,
-            'fee_type'  => $inv->feeType?->name,
-            'amount'    => $inv->amount,
-            'status'    => $inv->status,
-            'trx_id'    => $inv->trx_id,
-            'period'    => $inv->period ? $inv->period->format('Y-m') : null,
-            'due_date'  => $inv->due_date ? $inv->due_date->format('Y-m-d') : null,
+        $items = $query->get()->map(function ($inv) {
+            // period aman walau string/Carbon
+            $periodYm = null;
+            if (!empty($inv->period)) {
+                try {
+                    $periodYm = Carbon::parse($inv->period)->format('Y-m');
+                } catch (\Throwable $e) {
+                    $periodYm = (string) $inv->period;
+                }
+            }
+
+            // due_date aman walau string/Carbon
+            $dueYmd = null;
+            if (!empty($inv->due_date)) {
+                try {
+                    $dueYmd = Carbon::parse($inv->due_date)->format('Y-m-d');
+                } catch (\Throwable $e) {
+                    $dueYmd = (string) $inv->due_date;
+                }
+            }
+
+            // beberapa field biar cocok sama kebutuhan mobile
+            $trx = $inv->trx_id ?: ('INV-' . $inv->id);
+
+            return [
+                'invoiceId' => $inv->id,
+                'nominal'   => (int) $inv->amount,
+                'bulan'     => $inv->bulan ?? $periodYm,
+                'trxId'     => $trx,      // camelCase
+                'trx_id'    => $trx,      // snake_case (compat)
+                'status'    => $inv->status,
+                'fee_type'  => $inv->feeType?->name,
+                'period'    => $periodYm,
+                'due_date'  => $dueYmd,
+    ];
+
+        });
+
+        return response()->json([
+            'status' => true,
+            'data'   => $items,
         ]);
-
-        return response()->json(['data' => $items]);
     }
-
 }
