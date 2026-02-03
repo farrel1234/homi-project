@@ -36,12 +36,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun FormSuratBelumMenikahScreen(
     onBack: () -> Unit = {},
-    onKonfirmasi: () -> Unit = {}
+    onKonfirmasi: (Map<String, String>) -> Unit = {}
 ) {
     val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
     val poppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
 
-    // ====== FORM STATE ======
     var nama by rememberSaveable { mutableStateOf("") }
     var nik by rememberSaveable { mutableStateOf("") }
     var tempatTglLahir by rememberSaveable { mutableStateOf("") }
@@ -52,8 +51,6 @@ fun FormSuratBelumMenikahScreen(
 
     var keperluan by rememberSaveable { mutableStateOf("") }
     var tujuanInstansi by rememberSaveable { mutableStateOf("") }
-
-    var showSuccess by rememberSaveable { mutableStateOf(false) }
 
     val canSubmit =
         nama.isNotBlank() &&
@@ -78,7 +75,20 @@ fun FormSuratBelumMenikahScreen(
                     .padding(horizontal = 22.dp, vertical = 14.dp)
             ) {
                 Button(
-                    onClick = { showSuccess = true },
+                    onClick = {
+                        val payload = mapOf(
+                            "nama" to nama,
+                            "nik" to nik,
+                            "tempat_tgl_lahir" to tempatTglLahir,
+                            "jenis_kelamin" to jenisKelamin,
+                            "agama" to agama,
+                            "pekerjaan" to pekerjaan,
+                            "alamat" to alamat,
+                            "keperluan" to keperluan,
+                            "tujuan_instansi" to tujuanInstansi
+                        )
+                        onKonfirmasi(payload)
+                    },
                     enabled = canSubmit,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFA06B),
@@ -119,7 +129,6 @@ fun FormSuratBelumMenikahScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Back
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,7 +171,6 @@ fun FormSuratBelumMenikahScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // Container putih
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -202,65 +210,13 @@ fun FormSuratBelumMenikahScreen(
 
                         Spacer(Modifier.height(10.dp))
 
-                        FieldBox(
-                            label = "Nama",
-                            value = nama,
-                            onChange = { nama = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Siti Aisyah"
-                        )
-
-                        FieldBox(
-                            label = "NIK",
-                            value = nik,
-                            onChange = { nik = it.filter { c -> c.isDigit() }.take(16) },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "16 digit NIK",
-                            singleLine = true
-                        )
-
-                        FieldBox(
-                            label = "Tempat/Tanggal Lahir",
-                            value = tempatTglLahir,
-                            onChange = { tempatTglLahir = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Batam, 10-10-2002"
-                        )
-
-                        FieldBox(
-                            label = "Jenis Kelamin",
-                            value = jenisKelamin,
-                            onChange = { jenisKelamin = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Laki-laki / Perempuan"
-                        )
-
-                        FieldBox(
-                            label = "Agama",
-                            value = agama,
-                            onChange = { agama = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Islam"
-                        )
-
-                        FieldBox(
-                            label = "Pekerjaan",
-                            value = pekerjaan,
-                            onChange = { pekerjaan = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Karyawan Swasta"
-                        )
-
-                        FieldBox(
-                            label = "Alamat",
-                            value = alamat,
-                            onChange = { alamat = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Blok A No. 7, Hawai Garden",
-                            singleLine = false,
-                            maxLines = 3,
-                            height = 90.dp
-                        )
+                        FieldBox("Nama", nama, { nama = it }, poppinsSemi, "Contoh: Siti Aisyah")
+                        FieldBox("NIK", nik, { nik = it.filter { c -> c.isDigit() }.take(16) }, poppinsSemi, "16 digit NIK", true)
+                        FieldBox("Tempat/Tanggal Lahir", tempatTglLahir, { tempatTglLahir = it }, poppinsSemi, "Contoh: Batam, 10-10-2002")
+                        FieldBox("Jenis Kelamin", jenisKelamin, { jenisKelamin = it }, poppinsSemi, "Contoh: Laki-laki / Perempuan")
+                        FieldBox("Agama", agama, { agama = it }, poppinsSemi, "Contoh: Islam")
+                        FieldBox("Pekerjaan", pekerjaan, { pekerjaan = it }, poppinsSemi, "Contoh: Karyawan Swasta")
+                        FieldBox("Alamat", alamat, { alamat = it }, poppinsSemi, "Contoh: Blok A No. 7, Hawai Garden", false, 3, 90.dp)
 
                         DividerSoft()
 
@@ -273,41 +229,14 @@ fun FormSuratBelumMenikahScreen(
                             modifier = Modifier.padding(top = 6.dp)
                         )
 
-                        FieldBox(
-                            label = "Keperluan",
-                            value = keperluan,
-                            onChange = { keperluan = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Persyaratan administrasi pernikahan",
-                            singleLine = false,
-                            maxLines = 3,
-                            height = 90.dp
-                        )
-
-                        FieldBox(
-                            label = "Tujuan/Instansi",
-                            value = tujuanInstansi,
-                            onChange = { tujuanInstansi = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: KUA / Kelurahan / Instansi"
-                        )
+                        FieldBox("Keperluan", keperluan, { keperluan = it }, poppinsSemi, "Contoh: Persyaratan administrasi pernikahan", false, 3, 90.dp)
+                        FieldBox("Tujuan/Instansi", tujuanInstansi, { tujuanInstansi = it }, poppinsSemi, "Contoh: KUA / Kelurahan / Instansi")
 
                         Spacer(Modifier.height(8.dp))
                     }
                 }
             }
         }
-    }
-
-    if (showSuccess) {
-        SuccessPopup(
-            title = "Pengajuan Berhasil!",
-            subtitle = "Surat Belum Menikah sudah dikirim.\nSilakan pantau status pengajuan.",
-            onFinished = {
-                showSuccess = false
-                onKonfirmasi()
-            }
-        )
     }
 }
 
@@ -386,52 +315,8 @@ private fun FieldBox(
     )
 }
 
-@Composable
-private fun SuccessPopup(
-    title: String,
-    subtitle: String,
-    onFinished: () -> Unit
-) {
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            delay(900)
-            onFinished()
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = { /* auto */ },
-        confirmButton = {},
-        title = {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        text = {
-            Text(
-                text = subtitle,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    )
-}
-
-/* =================== PREVIEW =================== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewFormSuratBelumMenikah() {
-    MaterialTheme {
-        FormSuratBelumMenikahScreen(
-            onBack = {},
-            onKonfirmasi = {}
-        )
-    }
+    MaterialTheme { FormSuratBelumMenikahScreen() }
 }

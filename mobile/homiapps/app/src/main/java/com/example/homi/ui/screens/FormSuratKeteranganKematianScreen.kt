@@ -36,22 +36,21 @@ import kotlinx.coroutines.launch
 @Composable
 fun FormSuratKeteranganKematianScreen(
     onBack: () -> Unit = {},
-    onKonfirmasi: () -> Unit = {}
+    onKonfirmasi: (Map<String, String>) -> Unit = {}
 ) {
     val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
     val poppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
 
-    // ====== FORM STATE ======
     // Pelapor
     var namaPelapor by rememberSaveable { mutableStateOf("") }
     var nikPelapor by rememberSaveable { mutableStateOf("") }
     var alamatPelapor by rememberSaveable { mutableStateOf("") }
-    var hubungan by rememberSaveable { mutableStateOf("") } // hubungan pelapor dengan almarhum
+    var hubungan by rememberSaveable { mutableStateOf("") }
 
     // Almarhum/Almarhumah
     var namaAlm by rememberSaveable { mutableStateOf("") }
     var nikAlm by rememberSaveable { mutableStateOf("") }
-    var ttlAlm by rememberSaveable { mutableStateOf("") } // tempat/tgl lahir ringkas
+    var ttlAlm by rememberSaveable { mutableStateOf("") }
     var alamatAlm by rememberSaveable { mutableStateOf("") }
 
     // Detail kematian
@@ -59,8 +58,6 @@ fun FormSuratKeteranganKematianScreen(
     var tempatKematian by rememberSaveable { mutableStateOf("") }
     var penyebab by rememberSaveable { mutableStateOf("") }
     var keperluan by rememberSaveable { mutableStateOf("") }
-
-    var showSuccess by rememberSaveable { mutableStateOf(false) }
 
     val canSubmit =
         namaPelapor.isNotBlank() &&
@@ -88,7 +85,25 @@ fun FormSuratKeteranganKematianScreen(
                     .padding(horizontal = 22.dp, vertical = 14.dp)
             ) {
                 Button(
-                    onClick = { showSuccess = true },
+                    onClick = {
+                        val payload = mapOf(
+                            "nama_pelapor" to namaPelapor,
+                            "nik_pelapor" to nikPelapor,
+                            "alamat_pelapor" to alamatPelapor,
+                            "hubungan" to hubungan,
+
+                            "nama_alm" to namaAlm,
+                            "nik_alm" to nikAlm,
+                            "ttl_alm" to ttlAlm,
+                            "alamat_alm" to alamatAlm,
+
+                            "tanggal_kematian" to tanggalKematian,
+                            "tempat_kematian" to tempatKematian,
+                            "penyebab" to penyebab,
+                            "keperluan" to keperluan
+                        )
+                        onKonfirmasi(payload)
+                    },
                     enabled = canSubmit,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFA06B),
@@ -129,7 +144,6 @@ fun FormSuratKeteranganKematianScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Back
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -170,7 +184,6 @@ fun FormSuratKeteranganKematianScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // Container putih
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -202,7 +215,6 @@ fun FormSuratKeteranganKematianScreen(
                             .imePadding()
                             .padding(bottom = 80.dp)
                     ) {
-                        // ====== PELAPOR ======
                         Text(
                             text = "Data Pelapor",
                             fontFamily = poppinsSemi,
@@ -213,45 +225,13 @@ fun FormSuratKeteranganKematianScreen(
 
                         Spacer(Modifier.height(10.dp))
 
-                        FieldBox(
-                            label = "Nama Pelapor",
-                            value = namaPelapor,
-                            onChange = { namaPelapor = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Budi Santoso"
-                        )
-
-                        FieldBox(
-                            label = "NIK Pelapor",
-                            value = nikPelapor,
-                            onChange = { nikPelapor = it.filter { c -> c.isDigit() }.take(16) },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "16 digit NIK",
-                            singleLine = true
-                        )
-
-                        FieldBox(
-                            label = "Alamat Pelapor",
-                            value = alamatPelapor,
-                            onChange = { alamatPelapor = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Blok A No. 7, Hawai Garden",
-                            singleLine = false,
-                            maxLines = 3,
-                            height = 90.dp
-                        )
-
-                        FieldBox(
-                            label = "Hubungan dengan Almarhum/Almarhumah",
-                            value = hubungan,
-                            onChange = { hubungan = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Anak / Istri / Suami / Keluarga"
-                        )
+                        FieldBox("Nama Pelapor", namaPelapor, { namaPelapor = it }, poppinsSemi, "Contoh: Budi Santoso")
+                        FieldBox("NIK Pelapor", nikPelapor, { nikPelapor = it.filter { c -> c.isDigit() }.take(16) }, poppinsSemi, "16 digit NIK", true)
+                        FieldBox("Alamat Pelapor", alamatPelapor, { alamatPelapor = it }, poppinsSemi, "Contoh: Blok A No. 7, Hawai Garden", false, 3, 90.dp)
+                        FieldBox("Hubungan dengan Almarhum/Almarhumah", hubungan, { hubungan = it }, poppinsSemi, "Contoh: Anak / Istri / Suami / Keluarga")
 
                         DividerSoft()
 
-                        // ====== ALMARHUM ======
                         Text(
                             text = "Data Almarhum/Almarhumah",
                             fontFamily = poppinsSemi,
@@ -261,45 +241,13 @@ fun FormSuratKeteranganKematianScreen(
                             modifier = Modifier.padding(top = 6.dp)
                         )
 
-                        FieldBox(
-                            label = "Nama Almarhum/Almarhumah",
-                            value = namaAlm,
-                            onChange = { namaAlm = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Nama sesuai KTP/KK"
-                        )
-
-                        FieldBox(
-                            label = "NIK Almarhum/Almarhumah",
-                            value = nikAlm,
-                            onChange = { nikAlm = it.filter { c -> c.isDigit() }.take(16) },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "16 digit NIK",
-                            singleLine = true
-                        )
-
-                        FieldBox(
-                            label = "Tempat/Tanggal Lahir",
-                            value = ttlAlm,
-                            onChange = { ttlAlm = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Batam, 10-10-1980"
-                        )
-
-                        FieldBox(
-                            label = "Alamat Almarhum/Almarhumah",
-                            value = alamatAlm,
-                            onChange = { alamatAlm = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Alamat sesuai KK/KTP",
-                            singleLine = false,
-                            maxLines = 3,
-                            height = 90.dp
-                        )
+                        FieldBox("Nama Almarhum/Almarhumah", namaAlm, { namaAlm = it }, poppinsSemi, "Nama sesuai KTP/KK")
+                        FieldBox("NIK Almarhum/Almarhumah", nikAlm, { nikAlm = it.filter { c -> c.isDigit() }.take(16) }, poppinsSemi, "16 digit NIK", true)
+                        FieldBox("Tempat/Tanggal Lahir", ttlAlm, { ttlAlm = it }, poppinsSemi, "Contoh: Batam, 10-10-1980")
+                        FieldBox("Alamat Almarhum/Almarhumah", alamatAlm, { alamatAlm = it }, poppinsSemi, "Alamat sesuai KK/KTP", false, 3, 90.dp)
 
                         DividerSoft()
 
-                        // ====== DETAIL KEMATIAN ======
                         Text(
                             text = "Detail Kematian",
                             fontFamily = poppinsSemi,
@@ -309,57 +257,16 @@ fun FormSuratKeteranganKematianScreen(
                             modifier = Modifier.padding(top = 6.dp)
                         )
 
-                        FieldBox(
-                            label = "Tanggal Kematian",
-                            value = tanggalKematian,
-                            onChange = { tanggalKematian = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: 19-12-2025"
-                        )
-
-                        FieldBox(
-                            label = "Tempat Kematian",
-                            value = tempatKematian,
-                            onChange = { tempatKematian = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: RS / Rumah / Lokasi"
-                        )
-
-                        FieldBox(
-                            label = "Penyebab Kematian",
-                            value = penyebab,
-                            onChange = { penyebab = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Sakit / Kecelakaan / Lainnya"
-                        )
-
-                        FieldBox(
-                            label = "Keperluan",
-                            value = keperluan,
-                            onChange = { keperluan = it },
-                            poppinsSemi = poppinsSemi,
-                            placeholder = "Contoh: Administrasi kependudukan",
-                            singleLine = false,
-                            maxLines = 3,
-                            height = 90.dp
-                        )
+                        FieldBox("Tanggal Kematian", tanggalKematian, { tanggalKematian = it }, poppinsSemi, "Contoh: 19-12-2025")
+                        FieldBox("Tempat Kematian", tempatKematian, { tempatKematian = it }, poppinsSemi, "Contoh: RS / Rumah / Lokasi")
+                        FieldBox("Penyebab Kematian", penyebab, { penyebab = it }, poppinsSemi, "Contoh: Sakit / Kecelakaan / Lainnya")
+                        FieldBox("Keperluan", keperluan, { keperluan = it }, poppinsSemi, "Contoh: Administrasi kependudukan", false, 3, 90.dp)
 
                         Spacer(Modifier.height(8.dp))
                     }
                 }
             }
         }
-    }
-
-    if (showSuccess) {
-        SuccessPopup(
-            title = "Pengajuan Berhasil!",
-            subtitle = "Surat Keterangan Kematian sudah dikirim.\nSilakan pantau status pengajuan.",
-            onFinished = {
-                showSuccess = false
-                onKonfirmasi()
-            }
-        )
     }
 }
 
@@ -438,52 +345,8 @@ private fun FieldBox(
     )
 }
 
-@Composable
-private fun SuccessPopup(
-    title: String,
-    subtitle: String,
-    onFinished: () -> Unit
-) {
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            delay(900)
-            onFinished()
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = { /* auto */ },
-        confirmButton = {},
-        title = {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        text = {
-            Text(
-                text = subtitle,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    )
-}
-
-/* =================== PREVIEW =================== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewFormSuratKeteranganKematian() {
-    MaterialTheme {
-        FormSuratKeteranganKematianScreen(
-            onBack = {},
-            onKonfirmasi = {}
-        )
-    }
+    MaterialTheme { FormSuratKeteranganKematianScreen() }
 }

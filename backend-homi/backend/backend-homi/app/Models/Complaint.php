@@ -7,43 +7,29 @@ use Illuminate\Database\Eloquent\Model;
 class Complaint extends Model
 {
     protected $fillable = [
-        'user_id',
+        'user_id',              // ← tambah
         'nama_pelapor',
         'tanggal_pengaduan',
         'tempat_kejadian',
         'perihal',
         'foto_path',
-        'status',        // enum: baru/diproses/selesai
-        'resolved_at',
-        'assigned_to',
-    ];
-
-    protected $casts = [
-        'tanggal_pengaduan' => 'date',
-        'resolved_at'       => 'datetime',
+        'status',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function assigned()
-    {
-        return $this->belongsTo(User::class, 'assigned_to');
-    }
+    protected $appends = ['foto_url'];
 
-    // accessor: $complaint->foto_url
     public function getFotoUrlAttribute(): ?string
     {
-        $path = $this->foto_path;
-        if (!$path) return null;
-
-        // kalau sudah URL penuh
-        if (preg_match('/^https?:\\/\\//i', $path)) {
-            return $path;
+        if (!$this->foto_path) {
+            return null;
         }
 
-        return asset('storage/' . ltrim($path, '/'));
+        return asset('storage/' . $this->foto_path);
     }
+
 }

@@ -1,410 +1,293 @@
-// File: ProsesPengajuan.kt
+// File: app/src/main/java/com/example/homi/ui/screens/ProsesPengajuanLayananScreen.kt
 package com.example.homi.ui.screens
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
-import kotlinx.coroutines.delay
+import com.example.homi.data.model.ComplaintDto
+import com.example.homi.data.repository.ComplaintRepository
+import com.example.homi.util.WhatsAppUtil
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-/* ========= THEME ========= */
-private val BlueMain = Color(0xFF2F79A0)
-private val BlueLine = Color(0xFFFFFFFF)
-private val BlueBorder = Color(0xFF2F79A0)
-private val AccentOrange = Color(0xFFFF9966)
-private val TextPrimary = Color(0xFF0E0E0E)
-private val TextMuted = Color(0xFF8A8A8A)
-private val DangerRed = Color(0xFFE53935)
-private val SuccessGreen = Color(0xFF22C55E)
-private val InfoBlue = Color(0xFF3B82F6)
+/* ===== Tokens ===== */
+private val BlueMain = Color(0xFF2F7FA3)
+private val AccentOrange = Color(0xFFE26A2C)
+private val LineGray = Color(0xFFE5E7EB)
+private val TextDark = Color(0xFF0E0E0E)
+private val TextMute = Color(0xFF64748B)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg = FontFamily(Font(R.font.poppins_regular))
 
-/* ========= STATE ========= */
-enum class ProsesPengajuanState { ANTRIAN, DIPROSES, SELESAI }
-enum class HasilPengajuan { NONE, DITOLAK, DITERIMA, DISELIDIKI }
-
-/**
- * 1 SCREEN UNTUK 3 ALUR:
- * - ANTRIAN
- * - DIPROSES
- * - SELESAI (+ status)
- */
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ProsesPengajuanScreen(
-    state: ProsesPengajuanState = ProsesPengajuanState.ANTRIAN,
-
-    nomorPengajuan: String = "001",
-    nama: String = "Lily",
-    jenisPengajuan: String = "Surat Keterangan",
-    tanggalPengajuan: String = "01 Oktober 2021",
-
-    // khusus layar selesai (opsional)
-    hasil: HasilPengajuan = HasilPengajuan.DITOLAK,
-    catatanStatus: String = "Peminjaman Fasilitas pada tanggal 03 September 2025 telah penuh.",
-
-    onBack: (() -> Unit)? = null,
+fun ProsesPengajuanLayananScreen(
+    complaintId: Long,
+    complaintRepo: ComplaintRepository,
+    onBack: () -> Unit,
     onWhatsappClick: (() -> Unit)? = null,
-
-    // ✅ NEW: klik download pdf
-    onDownloadPdfClick: (() -> Unit)? = null,
-
-    // ✅ demo
-    demoAutoFlow: Boolean = false,
-    demoStepDelayMs: Long = 1500L,
-    demoLoop: Boolean = false,
-
-    /* ====== Drawable default ====== */
-    @DrawableRes icBack: Int = R.drawable.panahkembali,
-
-    @DrawableRes icStepPengajuan1: Int = R.drawable.ic_pengajuan_aktif,
-    @DrawableRes icStepPengajuan2: Int = R.drawable.ic_pengajuan_aktif2,
-    @DrawableRes icStepProses1: Int = R.drawable.ic_proses,
-    @DrawableRes icStepProses2: Int = R.drawable.ic_proses2,
-    @DrawableRes icStepSelesai1: Int = R.drawable.ic_selesai,
-    @DrawableRes icStepSelesai2: Int = R.drawable.ic_selesai2,
-
-    @DrawableRes icDetailHeader: Int = R.drawable.ic_detail_header,
-    @DrawableRes icNama: Int = R.drawable.ic_user,
-    @DrawableRes icJenis: Int = R.drawable.ic_doc,
-    @DrawableRes icTanggal: Int = R.drawable.ic_calendar
 ) {
-    var demoState by rememberSaveable { mutableStateOf(state) }
-    val currentState = if (demoAutoFlow) demoState else state
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(demoAutoFlow, demoLoop, demoStepDelayMs) {
-        if (!demoAutoFlow) return@LaunchedEffect
+    var loading by remember { mutableStateOf(true) }
+    var refreshing by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var dto by remember { mutableStateOf<ComplaintDto?>(null) }
 
-        demoState = ProsesPengajuanState.ANTRIAN
-        delay(demoStepDelayMs)
-
-        demoState = ProsesPengajuanState.DIPROSES
-        delay(demoStepDelayMs)
-
-        demoState = ProsesPengajuanState.SELESAI
-        delay(demoStepDelayMs)
-
-        if (demoLoop) {
-            while (true) {
-                demoState = ProsesPengajuanState.ANTRIAN
-                delay(demoStepDelayMs)
-
-                demoState = ProsesPengajuanState.DIPROSES
-                delay(demoStepDelayMs)
-
-                demoState = ProsesPengajuanState.SELESAI
-                delay(demoStepDelayMs)
+    fun load(refresh: Boolean) {
+        scope.launch {
+            if (refresh) refreshing = true else loading = true
+            error = null
+            try {
+                dto = complaintRepo.detail(complaintId)
+            } catch (e: Exception) {
+                error = e.message ?: "Gagal memuat detail pengaduan"
+            } finally {
+                if (refresh) refreshing = false else loading = false
             }
         }
     }
 
-    val step1Circle = when (currentState) {
-        ProsesPengajuanState.ANTRIAN -> Color(0xFFF7A477)
-        ProsesPengajuanState.DIPROSES, ProsesPengajuanState.SELESAI -> Color.White
-    }
-    val step2Circle = when (currentState) {
-        ProsesPengajuanState.ANTRIAN -> Color.White
-        ProsesPengajuanState.DIPROSES -> AccentOrange
-        ProsesPengajuanState.SELESAI -> Color.White
-    }
-    val step3Circle = when (currentState) {
-        ProsesPengajuanState.ANTRIAN, ProsesPengajuanState.DIPROSES -> Color.White
-        ProsesPengajuanState.SELESAI -> AccentOrange
+    LaunchedEffect(complaintId) { load(refresh = false) }
+
+    val statusRaw = (dto?.status ?: "baru").trim().lowercase()
+    val step = when {
+        statusRaw.contains("selesai") -> 3
+        statusRaw.contains("diproses") -> 2
+        statusRaw.contains("tolak") || statusRaw.contains("ditolak") -> 3
+        else -> 1
     }
 
-    val step1Icon = if (currentState == ProsesPengajuanState.ANTRIAN) icStepPengajuan1 else icStepPengajuan2
-    val step2Icon = if (currentState == ProsesPengajuanState.DIPROSES) icStepProses2 else icStepProses1
-    val step3Icon = if (currentState == ProsesPengajuanState.SELESAI) icStepSelesai2 else icStepSelesai1
-
-    val statusTitle = "Pengajuan Layanan"
-    val statusMessage = when (currentState) {
-        ProsesPengajuanState.ANTRIAN,
-        ProsesPengajuanState.DIPROSES -> "Mohon ditunggu, pengajuan Anda sedang dalam Antrian."
-        ProsesPengajuanState.SELESAI -> "Pengajuan selesai."
-    }
+    val nomor = complaintId.toInt().coerceAtLeast(0).toString().padStart(3, '0')
+    val swipeState = rememberSwipeRefreshState(isRefreshing = refreshing)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BlueMain)
+            .statusBarsPadding()
     ) {
-        /* ===== TOP BAR ===== */
+        // ===== HEADER =====
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(icBack),
-                contentDescription = "Kembali",
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .clickable(enabled = onBack != null) { onBack?.invoke() }
-            )
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
+            }
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(6.dp))
+
             Text(
-                text = "Pengajuan Layanan",
+                text = "Laporan Pengaduan",
                 fontFamily = PoppinsSemi,
-                fontSize = 22.sp,
+                fontSize = 18.sp,
                 color = Color.White,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
+                modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.width(24.dp))
+
+            // ✅ tombol refresh tetap ada
+            IconButton(
+                onClick = { load(refresh = true) },
+                enabled = !refreshing && !loading
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh",
+                    tint = Color.White
+                )
+            }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
 
-        /* ===== STEPPER ===== */
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            StepItem(icon = step1Icon, label = "Pengajuan\nLayanan", circleColor = step1Circle)
-            StepConnector()
-            StepItem(icon = step2Icon, label = "Sedang\nDiproses", circleColor = step2Circle)
-            StepConnector()
-            StepItem(icon = step3Icon, label = "Pengajuan\nSelesai", circleColor = step3Circle)
-        }
+        // ===== STEPPER =====
+        StepperHeader(step = step)
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(10.dp))
 
-        /* ===== NOMOR PENGAJUAN ===== */
-        Column(
+        Text(
+            text = "Nomor Pengaduan",
+            fontFamily = PoppinsReg,
+            fontSize = 12.sp,
+            color = Color.White.copy(alpha = 0.95f),
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Nomor Pengajuan",
-                fontFamily = PoppinsReg,
-                fontSize = 14.sp,
-                color = Color.White
-            )
-            Text(
-                text = nomorPengajuan,
-                fontFamily = PoppinsSemi,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                color = Color.White
-            )
-        }
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = nomor,
+            fontFamily = PoppinsSemi,
+            fontSize = 32.sp,
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(12.dp))
 
-        /* ===== KONTEN PUTIH ===== */
         Card(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            SwipeRefresh(
+                state = swipeState,
+                onRefresh = { load(refresh = true) },
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Card Status
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(2.dp, BlueBorder),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                // ✅ KUNCI: bikin konten scrollable biar pull-to-refresh kebaca stabil
+                val scrollState = rememberScrollState()
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
-                    ) {
-                        Text(
-                            text = statusTitle,
-                            fontFamily = PoppinsSemi,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = BlueMain,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = statusMessage,
-                            fontFamily = PoppinsReg,
-                            fontSize = 13.sp,
-                            color = TextPrimary,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 18.sp,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                // Card Detail
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, BlueBorder),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Image(
-                                painter = painterResource(icDetailHeader),
-                                contentDescription = null,
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "Detail Pengajuan",
-                                fontFamily = PoppinsSemi,
-                                fontSize = 14.sp,
-                                color = AccentOrange
-                            )
-                        }
-
-                        Spacer(Modifier.height(12.dp))
-                        DetailRow(icon = icNama, title = "Nama", value = nama)
-                        DividerLine()
-                        DetailRow(icon = icJenis, title = "Jenis Pengajuan", value = jenisPengajuan)
-                        DividerLine()
-                        DetailRow(icon = icTanggal, title = "Tanggal Pengajuan", value = tanggalPengajuan)
-
-                        if (currentState == ProsesPengajuanState.SELESAI && hasil != HasilPengajuan.NONE) {
-                            DividerLine()
-                            Spacer(Modifier.height(8.dp))
-
-                            Text(
-                                text = "Status",
-                                fontFamily = PoppinsSemi,
-                                fontSize = 13.sp,
-                                color = AccentOrange,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(Modifier.height(6.dp))
-
-                            val (kata, warna) = when (hasil) {
-                                HasilPengajuan.DITOLAK -> "Tolak" to DangerRed
-                                HasilPengajuan.DITERIMA -> "Terima" to SuccessGreen
-                                HasilPengajuan.DISELIDIKI -> "Selidiki" to InfoBlue
-                                HasilPengajuan.NONE -> "" to TextPrimary
-                            }
-
-                            val statusText = buildAnnotatedString {
-                                append("Pengajuan Anda di ")
-                                withStyle(
-                                    SpanStyle(
-                                        color = warna,
-                                        fontFamily = PoppinsSemi,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                ) { append(kata) }
-                                if (catatanStatus.isNotBlank()) {
-                                    append(", ")
-                                    append(catatanStatus)
-                                }
-                            }
-
-                            Text(
-                                text = statusText,
-                                fontFamily = PoppinsReg,
-                                fontSize = 12.sp,
-                                color = TextPrimary,
-                                lineHeight = 18.sp,
+                    when {
+                        loading -> {
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 8.dp),
-                                textAlign = TextAlign.Center
-                            )
+                                    .height(520.dp),
+                                contentAlignment = Alignment.Center
+                            ) { CircularProgressIndicator() }
                         }
-                    }
-                }
 
-                Spacer(Modifier.height(10.dp))
+                        error != null -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(520.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ErrorBlock(
+                                    message = error!!,
+                                    onRetry = { load(refresh = true) }
+                                )
+                            }
+                        }
 
-                if (currentState != ProsesPengajuanState.SELESAI) {
-                    Text(
-                        text = "*Jika Anda keluar dari halaman ini, Anda dapat melihat kembali proses pengajuan di halaman Akun",
-                        fontFamily = PoppinsReg,
-                        fontSize = 10.sp,
-                        color = AccentOrange,
-                        textAlign = TextAlign.Left,
-                        lineHeight = 14.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
-                }
+                        dto == null -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(520.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Data tidak ditemukan", fontFamily = PoppinsReg, color = TextMute)
+                            }
+                        }
 
-                // ✅ biar tombol nempel bawah (seperti gambar)
-                Spacer(modifier = Modifier.weight(1f))
+                        else -> {
+                            val nama = dto!!.namaPelapor.safeText("-")
+                            val perihal = dto!!.perihal.safeText("Pengaduan")
 
-                // ✅ BUTTON SESUAI GAMBAR: muncul saat SELESAI
-                if (currentState == ProsesPengajuanState.SELESAI) {
-                    Button(
-                        onClick = { onDownloadPdfClick?.invoke() },
-                        enabled = onDownloadPdfClick != null,
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentOrange),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                    ) {
-                        Text(
-                            text = "Download PDF",
-                            fontFamily = PoppinsSemi,
-                            fontSize = 14.sp,
-                            color = Color.White
-                        )
-                    }
-                } else {
-                    // default (sebelumnya)
-                    OutlinedButton(
-                        onClick = { onWhatsappClick?.invoke() },
-                        enabled = onWhatsappClick != null,
-                        border = BorderStroke(1.dp, BlueMain),
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Text(
-                            text = "Bantuan Via Whatsapp",
-                            fontFamily = PoppinsSemi,
-                            fontSize = 14.sp,
-                            color = BlueMain
-                        )
+                            val tanggal = dto!!.tanggalLabel?.trim()
+                                ?.takeIf { it.isNotEmpty() }
+                                ?: run {
+                                    val tanggalRaw = dto!!.tanggalPengaduan
+                                        .safeText("")
+                                        .ifBlankFallback(dto!!.tanggalIso.takeDate10())
+                                        .ifBlankFallback(dto!!.createdAt.takeDate10())
+                                    formatIsoToDisplay(tanggalRaw)
+                                }
+
+                            val tempat = dto!!.tempat?.trim()
+                                ?.takeIf { it.isNotEmpty() }
+                                ?: dto!!.tempatKejadian.safeText("-")
+
+                            StatusBox(statusRaw = statusRaw)
+
+                            Spacer(Modifier.height(14.dp))
+
+                            DetailBox(
+                                nama = nama,
+                                perihal = perihal,
+                                tanggal = tanggal,
+                                tempat = tempat
+                            )
+
+                            Spacer(Modifier.height(16.dp))
+
+                            Button(
+                                onClick = {
+                                    if (onWhatsappClick != null) {
+                                        onWhatsappClick.invoke()
+                                    } else {
+                                        val msg =
+                                            "Halo Admin HOMI, saya butuh bantuan untuk Pengaduan #$nomor (ID=$complaintId)."
+                                        WhatsAppUtil.openChat(
+                                            context = ctx,
+                                            phoneInternational = "6281992440287",
+                                            message = msg
+                                        )
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)
+                            ) {
+                                Text(
+                                    text = "Bantuan via WhatsApp",
+                                    fontFamily = PoppinsSemi,
+                                    fontSize = 14.sp,
+                                    color = Color.White
+                                )
+                            }
+
+                            Spacer(Modifier.height(10.dp))
+
+                            Text(
+                                text = "*Tarik layar ke bawah untuk memperbarui status pengaduan.",
+                                fontFamily = PoppinsReg,
+                                fontSize = 11.sp,
+                                color = Color(0xFFB45309),
+                                lineHeight = 16.sp
+                            )
+
+                            Spacer(Modifier.height(30.dp)) // biar enak ditarik
+                        }
                     }
                 }
             }
@@ -412,115 +295,230 @@ fun ProsesPengajuanScreen(
     }
 }
 
-/* ========= SUBCOMPONENTS ========= */
+/* ===================== STEPPER UI (SIMETRIS) ===================== */
 
 @Composable
-private fun StepItem(
-    @DrawableRes icon: Int,
-    label: String,
-    circleColor: Color
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(circleColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = label,
-            color = Color.White,
-            fontSize = 11.sp,
-            fontFamily = PoppinsReg,
-            textAlign = TextAlign.Center,
-            lineHeight = 14.sp
-        )
-    }
-}
+private fun StepperHeader(step: Int) {
+    val circleSize = 46.dp
+    val lineStroke = 3.dp
 
-@Composable
-private fun RowScope.StepConnector() {
-    Box(
+    val doneCircle = AccentOrange
+    val idleCircle = Color.White.copy(alpha = 0.65f)
+
+    val lineDone = AccentOrange
+    val lineIdle = Color.White.copy(alpha = 0.35f)
+
+    val c1 = if (step >= 1) doneCircle else idleCircle
+    val c2 = if (step >= 2) doneCircle else idleCircle
+    val c3 = if (step >= 3) doneCircle else idleCircle
+
+    val l12 = if (step >= 2) lineDone else lineIdle
+    val l23 = if (step >= 3) lineDone else lineIdle
+
+    Column(
         modifier = Modifier
-            .weight(1f)
-            .height(48.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp)
     ) {
         Box(
             modifier = Modifier
-                .align(Alignment.Center)
-                .offset(y = (-20).dp)
                 .fillMaxWidth()
-                .height(2.dp)
-                .clip(RoundedCornerShape(1.dp))
-                .background(BlueLine)
-        )
+                .height(circleSize),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(circleSize)
+            ) {
+                val y = size.height / 2f
+                val x1 = size.width * (1f / 6f)
+                val x2 = size.width * (3f / 6f)
+                val x3 = size.width * (5f / 6f)
+
+                drawLine(
+                    color = l12,
+                    start = Offset(x1, y),
+                    end = Offset(x2, y),
+                    strokeWidth = lineStroke.toPx()
+                )
+                drawLine(
+                    color = l23,
+                    start = Offset(x2, y),
+                    end = Offset(x3, y),
+                    strokeWidth = lineStroke.toPx()
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    StepCircle(icon = Icons.Default.Autorenew, bg = c1)
+                }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    StepCircle(icon = Icons.Default.Description, bg = c2)
+                }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    StepCircle(icon = Icons.Default.Check, bg = c3)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            StepLabel("Pengajuan\nLaporan", Modifier.weight(1f))
+            StepLabel("Sedang\nDiproses", Modifier.weight(1f))
+            StepLabel("Pengajuan\nSelesai", Modifier.weight(1f))
+        }
     }
 }
 
 @Composable
-private fun DividerLine() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(BlueBorder.copy(alpha = 0.6f))
+private fun StepLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        fontFamily = PoppinsReg,
+        fontSize = 11.sp,
+        color = Color.White,
+        textAlign = TextAlign.Center,
+        modifier = modifier
     )
 }
 
 @Composable
-private fun DetailRow(
-    @DrawableRes icon: Int,
-    title: String,
-    value: String
+private fun StepCircle(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    bg: Color
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .size(46.dp)
+            .clip(CircleShape)
+            .background(bg),
+        contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(icon),
-            contentDescription = title,
-            modifier = Modifier.size(20.dp)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(22.dp)
         )
-        Spacer(Modifier.width(10.dp))
-        Column {
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                fontFamily = PoppinsReg,
-                color = TextMuted
-            )
-            Text(
-                text = value,
-                fontSize = 14.sp,
-                fontFamily = PoppinsSemi,
-                color = TextPrimary
-            )
+    }
+}
+
+/* ===================== CONTENT BOXES ===================== */
+
+@Composable
+private fun StatusBox(statusRaw: String) {
+    val (title, desc) = when {
+        statusRaw.contains("selesai") -> "Laporan pengaduan" to "Laporan selesai."
+        statusRaw.contains("diproses") -> "Laporan pengaduan" to "Mohon ditunggu, laporan Anda sedang diproses."
+        statusRaw.contains("tolak") || statusRaw.contains("ditolak") -> "Laporan pengaduan" to "Laporan Anda ditolak."
+        else -> "Laporan pengaduan" to "Mohon ditunggu, laporan Anda sedang dalam antrian."
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Text(text = title, fontFamily = PoppinsSemi, fontSize = 13.sp, color = AccentOrange)
+            Spacer(Modifier.height(6.dp))
+            Text(text = desc, fontFamily = PoppinsReg, fontSize = 12.sp, color = TextMute)
         }
     }
 }
 
-/* ========= PREVIEWS ========= */
-@Preview(showSystemUi = true, showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-private fun Preview_Selesai_WithDownload() {
-    MaterialTheme {
-        ProsesPengajuanScreen(
-            state = ProsesPengajuanState.SELESAI,
-            hasil = HasilPengajuan.DITERIMA,
-            catatanStatus = "Pengajuan Anda di Terima, Peminjaman Fasilitas akan diberitakan di Dashboard Pengumuman.",
-            onDownloadPdfClick = { }
+private fun DetailBox(nama: String, perihal: String, tanggal: String, tempat: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, LineGray, RoundedCornerShape(14.dp))
+                .padding(14.dp)
+        ) {
+            Text(text = "Detail Pengaduan", fontFamily = PoppinsSemi, fontSize = 13.sp, color = AccentOrange)
+            Spacer(Modifier.height(10.dp))
+
+            DetailRow(label = "Nama", value = nama)
+            Spacer(Modifier.height(8.dp))
+            DetailRow(label = "Perihal", value = perihal)
+            Spacer(Modifier.height(8.dp))
+            DetailRow(label = "Tanggal Pengajuan", value = tanggal)
+            Spacer(Modifier.height(8.dp))
+            DetailRow(label = "Tempat Kejadian", value = tempat)
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        Text(
+            text = label,
+            fontFamily = PoppinsReg,
+            fontSize = 12.sp,
+            color = TextMute,
+            modifier = Modifier.width(130.dp)
+        )
+        Text(
+            text = value,
+            fontFamily = PoppinsSemi,
+            fontSize = 12.sp,
+            color = TextDark
         )
     }
 }
+
+@Composable
+private fun ErrorBlock(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = message, fontFamily = PoppinsReg, color = Color(0xFFDC2626), textAlign = TextAlign.Center)
+        Spacer(Modifier.height(10.dp))
+        OutlinedButton(onClick = onRetry, shape = RoundedCornerShape(14.dp)) {
+            Text("Coba Lagi", fontFamily = PoppinsSemi)
+        }
+    }
+}
+
+/* ===================== DATE FORMAT ===================== */
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun formatIsoToDisplay(iso: String): String {
+    return try {
+        if (iso.isBlank()) return "-"
+        val safe = if (iso.length >= 10) iso.substring(0, 10) else iso
+        val dt = LocalDate.parse(safe, DateTimeFormatter.ISO_DATE)
+        dt.format(DateTimeFormatter.ofPattern("dd MMMM yyyy"))
+    } catch (_: Exception) {
+        iso.ifBlank { "-" }
+    }
+}
+
+/* ================== helpers ================== */
+
+private fun String?.safeText(fallback: String): String =
+    this?.trim()?.takeIf { it.isNotEmpty() } ?: fallback
+
+private fun String?.takeDate10(): String? =
+    this?.trim()?.takeIf { it.length >= 10 }?.substring(0, 10)
+
+private fun String.ifBlankFallback(fallback: String?): String =
+    this.takeIf { it.isNotBlank() } ?: (fallback ?: this)
