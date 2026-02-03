@@ -257,63 +257,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
         composable(
             route = Routes.DetailPengumuman,
             arguments = listOf(navArgument("id") { type = NavType.LongType })
-        ) { bse ->
-            val id = bse.arguments?.getLong("id") ?: return@composable
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: return@composable
 
-            val annVm: AnnouncementViewModel =
-                viewModel(factory = AnnouncementViewModelFactory(tokenStore))
+            // pakai VM yang sama (factory tokenStore)
+            val annVm: AnnouncementViewModel = viewModel(
+                factory = AnnouncementViewModelFactory(tokenStore)
+            )
 
+            // load detail pas masuk screen
             LaunchedEffect(id) { annVm.loadDetail(id) }
 
-            val state by annVm.state.collectAsState()
-            val data = state.detail
+                val state by annVm.state.collectAsState()
+                val data = state.detail
 
-            when {
-                data != null -> {
-                    DetailPengumumanScreen(
-                        announcement = data,
-                        onBack = { navController.popBackStack() }
-                    )
-                }
-                state.error != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = state.error ?: "Gagal memuat detail")
-                        Spacer(Modifier.height(12.dp))
-                        Button(onClick = { navController.popBackStack() }) { Text("Kembali") }
-                    }
-                }
-                else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            }
-        }
-
-        // =================== PEMBAYARAN (LIST TAGIHAN) ===================
-        composable(route = Routes.Pembayaran) {
-            val entry = navController.currentBackStackEntry!!
-
-            val refreshKey by entry.savedStateHandle
-                .getStateFlow("refreshTagihan", false)
-                .collectAsState()
-
-            LaunchedEffect(refreshKey) {
-                if (refreshKey) entry.savedStateHandle["refreshTagihan"] = false
-            }
-
-            TagihanIuranScreen(
-                feeRepo = feeRepo,
-                refreshKey = refreshKey,
-                onBack = { navController.popBackStack() },
-                previewInvoices = null,
-                onBayarClick = { _, item ->
-                    entry.savedStateHandle["pay_amount"] = item.nominal
-                    entry.savedStateHandle["pay_bulan"] = item.bulan
-                    entry.savedStateHandle["pay_trxId"] = item.trxId
-                    navController.navigate(Routes.pembayaranIuran(item.invoiceId))
+            if (data != null) {
+                DetailPengumumanScreen(
+                    announcement = data,
+                    onBack = { navController.popBackStack() }
+                )
+            } else {
+                // loading sederhana
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             )
         }
@@ -549,6 +515,19 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 id = id,
                 repo = serviceRepo,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.ProsesPengajuanLayanan,
+            arguments = listOf(navArgument("id") { type = NavType.LongType }),
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) }
+        ) { backStackEntry ->
+            val layananId = backStackEntry.arguments?.getLong("id") ?: 0L
+            ProsesPengajuanScreen(
+                onBack = { navController.popBackStack() },
+                onWhatsappClick = { /* TODO */ }
             )
         }
 

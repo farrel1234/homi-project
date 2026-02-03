@@ -31,29 +31,26 @@ object Routes {
 
     // ===== SURAT =====
     const val FormAjuan1 = "form_ajuan_1"
+    const val ProsesPengajuan = "proses_pengajuan"
+
+    const val FormPengaduan = "form_pengaduan"
+    const val DetailRiwayatPengaduan = "detail_riwayat_pengaduan"
+    const val DetailRiwayatPengajuan = "detail_riwayat_pengajuan"
+
+    const val UbahKataSandi = "ubah_kata_sandi"
+    const val LupaKataSandi = "lupa_kata_sandi" // 1 aja, jangan dobel
+
+    // ✅ NEW
+    const val Akun = "akun"
+    const val LaporkanMasalah = "laporkan_masalah"
+
+    // ✅ TAMBAHAN (biar FormAjuan1 gak error)
     const val SuratDomisili = "surat_domisili"
     const val SuratPengantar = "surat_pengantar"
     const val SuratUsaha = "surat_usaha"
     const val SuratKematian = "surat_kematian"
     const val SuratBelumMenikah = "surat_belum_menikah"
 
-    const val PengajuanSuratStatus = "pengajuan_surat_status/{id}"
-    fun pengajuanSuratStatus(id: Long) = "pengajuan_surat_status/$id"
-
-    // ===== PENGADUAN =====
-    const val FormPengaduan = "form_pengaduan"
-
-    const val ProsesPengajuanLayanan = "proses_pengajuan_layanan"
-    const val ProsesPengajuanLayananDetail = "proses_pengajuan_layanan/{id}"
-    fun prosesPengajuanLayanan(id: Long) = "proses_pengajuan_layanan/$id"
-
-    const val ProsesPengajuan = "proses_pengajuan"
-
-    // ===== RIWAYAT (legacy screen) =====
-    const val DetailRiwayatPengaduan = "detail_riwayat_pengaduan"
-    const val DetailRiwayatPengajuan = "detail_riwayat_pengajuan"
-
-    // ===== LAIN-LAIN =====
-    const val UbahKataSandi = "ubah_kata_sandi"
-    const val LaporkanMasalah = "laporkan_masalah"
+    // ✅ kalau kamu pakai screen status surat
+    const val PengajuanSuratStatus = "pengajuan_surat_status"
 }
