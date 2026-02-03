@@ -1,449 +1,436 @@
-// File: FormPengaduanScreen.kt
+// File: app/src/main/java/com/example/homi/ui/screens/FormLaporan.kt
 package com.example.homi.ui.screens
 
-import androidx.annotation.DrawableRes
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.example.homi.R
-import kotlinx.coroutines.delay
+import com.example.homi.data.repository.ComplaintRepository
 import kotlinx.coroutines.launch
 
-/* ===== Theme tokens (punyamu) ===== */
-private val BlueMain     = Color(0xFF2F7FA3)
-private val BlueBorder   = Color(0xFF2F7FA3)
-private val BlueText     = Color(0xFF2F7FA3)
-private val TextPrimary  = Color(0xFF0E0E0E)
-private val TextMuted    = Color(0xFF8A8A8A)
-private val FieldLine    = Color(0xFF2F7FA3)
-private val UploadBg     = Color(0xFFF0F0F0)
+private val BlueMain = Color(0xFF2F7FA3)
+private val AccentOrange = Color(0xFFE26A2C)
+private val LineGray = Color(0xFFE5E7EB)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
-private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
+private val PoppinsReg = FontFamily(Font(R.font.poppins_regular))
 
 @Composable
-fun FormPengaduanScreen(
-    onBack: (() -> Unit)? = null,
-    onKonfirmasi: ((nama: String, tanggal: String, tempat: String, perihal: String) -> Unit)? = null,
-    @DrawableRes backIcon: Int = R.drawable.panahkembali,
-    @DrawableRes icUpload: Int = R.drawable.kamera,
-    @DrawableRes successImage: Int? = R.drawable.bahagia,
-    @DrawableRes bellIcon: Int = R.drawable.notif
+fun FormLaporanScreen(
+    complaintRepo: ComplaintRepository,
+    onBack: () -> Unit,
+    onCreated: (Long) -> Unit
 ) {
-    var nama by rememberSaveable { mutableStateOf("") }
-    var tanggal by rememberSaveable { mutableStateOf("") }
-    var tempat by rememberSaveable { mutableStateOf("") }
-    var perihal by rememberSaveable { mutableStateOf("") }
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    var showPopup by rememberSaveable { mutableStateOf(false) }
+    var nama by remember { mutableStateOf("") }
+    var tempat by remember { mutableStateOf("") }
+    var perihal by remember { mutableStateOf("") }
 
-    // scroll + bring into view support
-    val scrollState = rememberScrollState()
+    // ✅ tanggal angka saja: ddMMyyyy
+    var tanggalInput by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // ✅ foto opsional
+    var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        fotoUri = uri
+    }
+
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    var showSuccess by remember { mutableStateOf(false) }
+
+    fun validDdMmYyyy(raw: String): Boolean {
+        if (raw.length != 8) return false
+        if (!raw.all { it.isDigit() }) return false
+        val dd = raw.substring(0, 2).toIntOrNull() ?: return false
+        val mm = raw.substring(2, 4).toIntOrNull() ?: return false
+        val yyyy = raw.substring(4, 8).toIntOrNull() ?: return false
+        if (yyyy < 1900) return false
+        if (mm !in 1..12) return false
+        if (dd !in 1..31) return false
+        return true
+    }
+
+    fun submit() {
+        val n = nama.trim()
+        val t = tempat.trim()
+        val p = perihal.trim()
+        val d = tanggalInput.trim()
+
+        if (n.isBlank() || t.isBlank() || p.isBlank() || d.isBlank()) {
+            error = "Lengkapi semua field wajib."
+            return
+        }
+        if (!validDdMmYyyy(d)) {
+            error = "Format tanggal harus ddMMyyyy (contoh: 09012026)."
+            return
+        }
+
+        loading = true
+        error = null
+
+        scope.launch {
+            try {
+                val created = complaintRepo.create(
+                    context = ctx,
+                    namaPelapor = n,
+                    tanggalInputDdmmyyyy = d,
+                    tempatKejadian = t,
+                    perihal = p,
+                    fotoUri = fotoUri
+                )
+
+                val id = created?.id ?: throw Exception("Gagal membuat laporan (id null)")
+                showSuccess = true
+
+                // langsung ke stepper by id
+                onCreated(id)
+            } catch (e: Exception) {
+                error = e.message ?: "Gagal mengirim laporan"
+            } finally {
+                loading = false
+            }
+        }
+    }
+
+    // ✅ Scroll + nyaman saat keyboard muncul:
+    // - Card content dibuat verticalScroll
+    // - bagian bawah pakai imePadding + navigationBarsPadding
+    // - tombol KONFIRMASI tetap di bawah dan ikut naik saat keyboard muncul
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BlueMain)
+            .statusBarsPadding()
+    ) {
+        // ===== HEADER (biru) =====
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(BlueMain)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-
-            /* ===== TOP BAR ===== */
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .height(44.dp)
             ) {
-                Image(
-                    painter = painterResource(id = backIcon),
-                    contentDescription = "Kembali",
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White,
                     modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .clickable(enabled = onBack != null) { onBack?.invoke() }
+                        .align(Alignment.CenterStart)
+                        .size(22.dp)
+                        .clickable { onBack() }
                 )
-                Spacer(Modifier.width(8.dp))
+
                 Text(
                     text = "Formulir Pengaduan",
                     fontFamily = PoppinsSemi,
-                    fontSize = 22.sp,
+                    fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                Spacer(Modifier.width(24.dp))
             }
+
+            Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Untuk melaporkan masalah di area lingkungan Anda,\n" +
-                        "silahkan mengisi data formulir dibawah ini:",
+                text = "Untuk melaporkan masalah di area lingkungan Anda,\nsilahkan mengisi data formulir dibawah ini:",
                 fontFamily = PoppinsReg,
                 fontSize = 12.sp,
-                color = Color.White,
-                lineHeight = 18.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                color = Color.White.copy(alpha = 0.92f),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start,
+                lineHeight = 16.sp
             )
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(10.dp))
+        }
 
-            /* ===== WHITE CONTENT ===== */
-            Card(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            val scrollState = rememberScrollState()
+
+            // ✅ tombol tetap di bawah, konten di atas bisa scroll
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()              // dorong konten & tombol naik saat keyboard muncul
+                    .navigationBarsPadding()   // aman untuk gesture navigation
+                    .padding(16.dp)
             ) {
+                Text(
+                    text = "Silahkan isi data laporan di bawah ini",
+                    fontFamily = PoppinsSemi,
+                    fontSize = 13.sp,
+                    color = AccentOrange,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
 
-                // ✅ INI KUNCINYA:
-                // - verticalScroll biar bisa geser
-                // - imePadding biar konten naik pas keyboard muncul
-                // - navigationBarsPadding biar aman di bawah
+                Spacer(Modifier.height(14.dp))
+
+                // ===== FORM (SCROLL AREA) =====
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .weight(1f, fill = true)
                         .verticalScroll(scrollState)
-                        .imePadding()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(bottom = 12.dp) // jarak aman sebelum tombol
                 ) {
+                    // Nama
+                    Field(
+                        label = "Nama",
+                        value = nama,
+                        onValueChange = { nama = it },
+                        placeholder = "Masukkan nama pelapor",
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                        onImeAction = {}
+                    )
 
+                    // Tanggal (ddMMyyyy)
+                    Field(
+                        label = "Tanggal Pengaduan",
+                        value = tanggalInput,
+                        onValueChange = { input ->
+                            val filtered = input.filter { it.isDigit() }.take(8)
+                            tanggalInput = filtered
+                        },
+                        placeholder = "ddMMyyyy (contoh: 09012026)",
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next,
+                        onImeAction = {}
+                    )
+
+                    // Tempat
+                    Field(
+                        label = "Tempat Kejadian",
+                        value = tempat,
+                        onValueChange = { tempat = it },
+                        placeholder = "Contoh: Blok A / Pos Satpam",
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                        onImeAction = {}
+                    )
+
+                    // Perihal
+                    Field(
+                        label = "Perihal",
+                        value = perihal,
+                        onValueChange = { perihal = it },
+                        placeholder = "Contoh: Sampah berserakan / Lampu mati",
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                        onImeAction = { if (!loading) submit() }
+                    )
+
+                    Spacer(Modifier.height(10.dp))
+
+                    // Upload foto opsional
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(2.dp, BlueBorder),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, LineGray),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-
-                            FieldLabel("Nama Pelapor")
-                            UnderlineTextFieldBringIntoView(
-                                value = nama,
-                                onValueChange = { nama = it },
-                                singleLine = true
+                        Column(Modifier.padding(12.dp)) {
+                            Text(
+                                text = "Foto (Opsional)",
+                                fontFamily = PoppinsSemi,
+                                fontSize = 12.sp,
+                                color = Color(0xFF0E0E0E)
                             )
-                            Spacer(Modifier.height(16.dp))
 
-                            FieldLabel("Tanggal")
-                            UnderlineTextFieldBringIntoView(
-                                value = tanggal,
-                                onValueChange = { tanggal = it },
-                                singleLine = true
-                            )
-                            Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(6.dp))
 
-                            FieldLabel("Tempat")
-                            UnderlineTextFieldBringIntoView(
-                                value = tempat,
-                                onValueChange = { tempat = it },
-                                singleLine = true
-                            )
-                            Spacer(Modifier.height(16.dp))
-
-                            FieldLabel("Perihal")
-                            UnderlineTextFieldBringIntoView(
-                                value = perihal,
-                                onValueChange = { perihal = it },
-                                singleLine = false,
-                                minHeight = 72.dp
-                            )
-                            Spacer(Modifier.height(16.dp))
-
-                            FieldLabel("Upload Foto")
-                            Column(horizontalAlignment = Alignment.Start) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(UploadBg)
-                                        .clickable {
-                                            // TODO: panggil image picker kamu
-                                        },
-                                    contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedButton(
+                                    onClick = { pickImage.launch("image/*") },
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, BlueMain),
+                                    modifier = Modifier.height(42.dp)
                                 ) {
-                                    Image(
-                                        painter = painterResource(id = icUpload),
-                                        contentDescription = "Upload",
-                                        contentScale = ContentScale.Fit,
-                                        modifier = Modifier.size(46.dp)
+                                    Text(
+                                        "Upload Foto",
+                                        fontFamily = PoppinsSemi,
+                                        fontSize = 12.sp,
+                                        color = BlueMain
                                     )
                                 }
-                                Spacer(Modifier.height(6.dp))
-                                Text(
-                                    text = "Max 5 MB",
-                                    fontFamily = PoppinsReg,
-                                    fontSize = 11.sp,
-                                    color = TextMuted,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-                                Spacer(Modifier.height(24.dp))
-                            }
 
-                            Button(
-                                onClick = { showPopup = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA06B)),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 35.dp)
-                                    .height(48.dp)
-                            ) {
-                                Text(
-                                    text = "Konfirmasi",
-                                    color = Color.White,
-                                    fontFamily = PoppinsReg,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp
-                                )
-                            }
+                                Spacer(Modifier.width(10.dp))
 
-                            Spacer(Modifier.height(18.dp))
+                                if (fotoUri != null) {
+                                    Text(
+                                        text = "Foto dipilih",
+                                        fontFamily = PoppinsReg,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF64748B),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Hapus",
+                                        tint = Color(0xFF64748B),
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .clickable { fotoUri = null }
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Tidak ada foto",
+                                        fontFamily = PoppinsReg,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    // spacer ekstra biar tombol gak mepet bawah
-                    Spacer(Modifier.height(24.dp))
-                }
-            }
-        }
+                    Spacer(Modifier.height(12.dp))
 
-        /* ===== POPUP ===== */
-        if (showPopup) {
-            SuccessPopup10s(
-                successImage = successImage,
-                bellIcon = bellIcon,
-                message = "Formulir Pengaduan Anda\nBerhasil Dikirim !",
-                onFinished = {
-                    showPopup = false
-                    onKonfirmasi?.invoke(nama, tanggal, tempat, perihal)
-                    nama = ""; tanggal = ""; tempat = ""; perihal = ""
-                }
-            )
-        }
-    }
-}
-
-/* ===== Subcomponents ===== */
-@Composable
-private fun FieldLabel(text: String) {
-    Text(
-        text = text,
-        fontFamily = PoppinsSemi,
-        fontSize = 14.sp,
-        color = BlueText
-    )
-    Spacer(Modifier.height(6.dp))
-}
-
-/**
- * ✅ TextField underline versi kamu + auto geser saat fokus
- * Ini yang bikin "pas ngetik ga ketutup keyboard".
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun UnderlineTextFieldBringIntoView(
-    value: String,
-    onValueChange: (String) -> Unit,
-    singleLine: Boolean,
-    minHeight: Dp = 0.dp
-) {
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    val scope = rememberCoroutineScope()
-
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .bringIntoViewRequester(bringIntoViewRequester)
-            .onFocusEvent { state ->
-                if (state.isFocused) {
-                    scope.launch {
-                        delay(200)
-                        bringIntoViewRequester.bringIntoView()
-                    }
-                }
-            }
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            singleLine = singleLine,
-            textStyle = TextStyle(
-                color = TextPrimary,
-                fontFamily = PoppinsReg,
-                fontSize = 14.sp
-            ),
-            cursorBrush = SolidColor(FieldLine),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = if (minHeight > 0.dp) minHeight else 0.dp)
-                .padding(bottom = 6.dp)
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(FieldLine.copy(alpha = 0.8f))
-        )
-    }
-}
-
-/* ===== POPUP (punyamu) ===== */
-@Composable
-private fun SuccessPopup10s(
-    @DrawableRes successImage: Int? = null,
-    @DrawableRes bellIcon: Int,
-    message: String,
-    onFinished: () -> Unit
-) {
-    LaunchedEffect(Unit) {
-        delay(2_000L)
-        onFinished()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x80000000))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { }
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier.wrapContentSize(),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(2.dp, BlueBorder),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    modifier = Modifier
-                        .widthIn(max = 320.dp)
-                        .fillMaxWidth(0.8f)
-                        .padding(top = 32.dp)
-                        .zIndex(1f)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = 24.dp, vertical = 20.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        successImage?.let {
-                            Image(
-                                painter = painterResource(id = it),
-                                contentDescription = "Sukses",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.size(140.dp)
-                            )
-                            Spacer(Modifier.height(12.dp))
-                        }
-
+                    if (error != null) {
                         Text(
-                            text = message,
-                            fontFamily = PoppinsSemi,
-                            fontSize = 16.sp,
-                            color = TextPrimary,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 22.sp
+                            text = error!!,
+                            fontFamily = PoppinsReg,
+                            fontSize = 12.sp,
+                            color = Color(0xFFDC2626)
                         )
                         Spacer(Modifier.height(8.dp))
                     }
+
+                    // spacer kecil agar scroll enak
+                    Spacer(Modifier.height(8.dp))
                 }
 
-                Box(
+                // ===== FOOTER BUTTON (STICKY) =====
+                Button(
+                    onClick = { if (!loading) submit() },
+                    enabled = !loading,
                     modifier = Modifier
-                        .offset(y = (-4).dp)
-                        .size(64.dp)
-                        .zIndex(2f),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(BlueMain),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = bellIcon),
-                            contentDescription = "Notifikasi",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(32.dp)
+                    if (loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
                         )
-
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 4.dp, y = (-4).dp)
-                                .size(18.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFF9966)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "1",
-                                color = Color.White,
-                                fontFamily = PoppinsSemi,
-                                fontSize = 10.sp
-                            )
-                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = "Mengirim...",
+                            fontFamily = PoppinsSemi,
+                            fontSize = 14.sp,
+                            color = Color.White
+                        )
+                    } else {
+                        Text(
+                            text = "Konfirmasi",
+                            fontFamily = PoppinsSemi,
+                            fontSize = 14.sp,
+                            color = Color.White
+                        )
                     }
                 }
+
+                Spacer(Modifier.height(10.dp))
             }
         }
     }
+
+    if (showSuccess) {
+        AlertDialog(
+            onDismissRequest = { showSuccess = false },
+            confirmButton = {
+                TextButton(onClick = { showSuccess = false }) {
+                    Text("OK", fontFamily = PoppinsSemi, color = BlueMain)
+                }
+            },
+            title = { Text("Berhasil", fontFamily = PoppinsSemi) },
+            text = { Text("Laporan kamu sudah terkirim.", fontFamily = PoppinsReg, fontSize = 13.sp) }
+        )
+    }
 }
 
-/* ===== Preview ===== */
-@Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-private fun PreviewFormPengaduan() {
-    MaterialTheme {
-        FormPengaduanScreen(
-            onKonfirmasi = { _, _, _, _ -> }
+private fun Field(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
+    onImeAction: () -> Unit = {}
+) {
+    Column {
+        Text(
+            text = label,
+            fontFamily = PoppinsSemi,
+            fontSize = 12.sp,
+            color = Color(0xFF0E0E0E)
         )
+        Spacer(Modifier.height(6.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, fontFamily = PoppinsReg, fontSize = 12.sp) },
+            textStyle = LocalTextStyle.current.copy(fontFamily = PoppinsReg, fontSize = 12.sp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType,
+                imeAction = imeAction
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { onImeAction() },
+                onDone = { onImeAction() }
+            ),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp)
+        )
+        Spacer(Modifier.height(10.dp))
     }
 }

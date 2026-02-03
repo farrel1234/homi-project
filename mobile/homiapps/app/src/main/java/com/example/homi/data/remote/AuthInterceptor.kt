@@ -1,3 +1,4 @@
+// File: com/example/homi/data/remote/AuthInterceptor.kt
 package com.example.homi.data.remote
 
 import kotlinx.coroutines.runBlocking
@@ -10,17 +11,16 @@ class AuthInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
-
         val token = runBlocking { tokenProvider() }?.trim()
 
-        val builder = original.newBuilder()
-            .header("Accept", "application/json")
-
-        if (!token.isNullOrBlank()) {
-            // kalau tokenStore kamu menyimpan token mentah, ini sudah benar
-            builder.header("Authorization", "Bearer $token")
+        val req = if (!token.isNullOrEmpty()) {
+            original.newBuilder()
+                .header("Authorization", "Bearer $token") // pakai header biar replace
+                .build()
+        } else {
+            original
         }
 
-        return chain.proceed(builder.build())
+        return chain.proceed(req)
     }
 }

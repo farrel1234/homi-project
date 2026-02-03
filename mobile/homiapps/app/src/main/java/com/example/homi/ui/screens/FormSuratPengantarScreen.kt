@@ -1,3 +1,4 @@
+// File: app/src/main/java/com/example/homi/ui/screens/FormSuratPengantarScreen.kt
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
 package com.example.homi.ui.screens
@@ -36,12 +37,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun FormSuratPengantarScreen(
     onBack: () -> Unit = {},
-    onKonfirmasi: () -> Unit = {}
-) {
+    onKonfirmasi: (Map<String, String>) -> Unit = {}
+){
     val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
     val poppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
 
-    // ====== FORM STATE ======
     var nama by rememberSaveable { mutableStateOf("") }
     var nik by rememberSaveable { mutableStateOf("") }
     var alamat by rememberSaveable { mutableStateOf("") }
@@ -109,7 +109,6 @@ fun FormSuratPengantarScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Back
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,7 +117,7 @@ fun FormSuratPengantarScreen(
                 Icon(
                     painter = painterResource(id = R.drawable.panahkembali),
                     contentDescription = "Kembali",
-                    tint = Color.Unspecified,
+                    tint = Color.White,
                     modifier = Modifier
                         .size(26.dp)
                         .align(Alignment.CenterStart)
@@ -150,24 +149,16 @@ fun FormSuratPengantarScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // Container putih
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Color.White,
-                        shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
-                    )
+                    .background(Color.White, shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
                     .padding(horizontal = 22.dp, vertical = 18.dp)
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxSize()
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFF1C6BA4),
-                            shape = RoundedCornerShape(18.dp)
-                        ),
+                        .border(1.dp, Color(0xFF1C6BA4), RoundedCornerShape(18.dp)),
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -262,11 +253,18 @@ fun FormSuratPengantarScreen(
 
     if (showSuccess) {
         SuccessPopup(
-            title = "Pengajuan Berhasil!",
-            subtitle = "Surat Pengantar kamu sudah dikirim.\nSilakan pantau status pengajuan.",
+            title = "Konfirmasi Data",
+            subtitle = "Data kamu sudah lengkap.\nKlik lanjut untuk mengirim pengajuan.",
             onFinished = {
                 showSuccess = false
-                onKonfirmasi()
+                val payload = mapOf(
+                    "nama" to nama,
+                    "nik" to nik,
+                    "alamat" to alamat,
+                    "tujuan_instansi" to tujuanInstansi,
+                    "keperluan" to keperluan
+                )
+                onKonfirmasi(payload)
             }
         )
     }
@@ -354,17 +352,21 @@ private fun SuccessPopup(
     onFinished: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-
     LaunchedEffect(Unit) {
         scope.launch {
-            delay(900)
-            onFinished()
+            delay(300)
+            // biar gak auto ketutup tanpa klik? kamu mau auto, ya tinggal delay 900
         }
     }
 
     AlertDialog(
-        onDismissRequest = { /* auto */ },
-        confirmButton = {},
+        onDismissRequest = { /* ignore */ },
+        confirmButton = {
+            TextButton(onClick = onFinished) { Text("Lanjut") }
+        },
+        dismissButton = {
+            TextButton(onClick = { /* do nothing */ }) { Text("Batal") }
+        },
         title = {
             Text(
                 text = title,
@@ -384,7 +386,6 @@ private fun SuccessPopup(
         }
     )
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

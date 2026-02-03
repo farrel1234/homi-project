@@ -50,6 +50,7 @@ enum class HasilPengaduan { NONE, DITOLAK, DITERIMA, DISELIDIKI }
 
 /**
  * Wrapper untuk dipanggil dari NavHost
+ * - Kamu bisa pakai ini buat detail id (nanti tinggal load detail dari VM).
  */
 @Composable
 fun PengaduanWargaScreen(
@@ -62,18 +63,17 @@ fun PengaduanWargaScreen(
     )
 }
 
-
 @Composable
 fun ProsesPengaduanScreen(
     state: ProsesPengaduanState = ProsesPengaduanState.ANTRIAN,
 
     nomorPengaduan: String = "001",
     nama: String = "Lily",
-    jenisPengaduan: String = "Surat Keterangan",
-    tanggalPengaduan: String = "01 Oktober 2021",
+    jenisPengaduan: String = "Pengaduan Layanan",
+    tanggalPengaduan: String = "01 Oktober 2025",
 
-    hasil: HasilPengaduan = HasilPengaduan.DITOLAK,
-    catatanStatus: String = "Peminjaman Fasilitas pada tanggal 03 September 2025 telah penuh.",
+    hasil: HasilPengaduan = HasilPengaduan.NONE,
+    catatanStatus: String = "",
 
     onBack: (() -> Unit)? = null,
     onWhatsappClick: (() -> Unit)? = null,
@@ -115,10 +115,8 @@ fun ProsesPengaduanScreen(
             while (true) {
                 demoState = ProsesPengaduanState.ANTRIAN
                 delay(demoStepDelayMs)
-
                 demoState = ProsesPengaduanState.DIPROSES
                 delay(demoStepDelayMs)
-
                 demoState = ProsesPengaduanState.SELESAI
                 delay(demoStepDelayMs)
             }
@@ -126,7 +124,7 @@ fun ProsesPengaduanScreen(
     }
 
     val step1Circle = when (currentState) {
-        ProsesPengaduanState.ANTRIAN -> Color(0xFFF7A477)
+        ProsesPengaduanState.ANTRIAN -> AccentOrange
         ProsesPengaduanState.DIPROSES, ProsesPengaduanState.SELESAI -> Color.White
     }
     val step2Circle = when (currentState) {
@@ -145,9 +143,9 @@ fun ProsesPengaduanScreen(
 
     val statusTitle = "Pengaduan Layanan"
     val statusMessage = when (currentState) {
-        ProsesPengaduanState.ANTRIAN,
-        ProsesPengaduanState.DIPROSES -> "Mohon ditunggu, pengaduan Anda sedang dalam Antrian."
-        ProsesPengaduanState.SELESAI -> "Pengaduan selesai."
+        ProsesPengaduanState.ANTRIAN -> "Pengaduan Anda sudah diterima dan sedang menunggu antrian."
+        ProsesPengaduanState.DIPROSES -> "Pengaduan Anda sedang diproses oleh pengurus."
+        ProsesPengaduanState.SELESAI -> "Pengaduan sudah selesai diproses."
     }
 
     Column(
@@ -312,14 +310,14 @@ fun ProsesPengaduanScreen(
                             Spacer(Modifier.height(6.dp))
 
                             val (kata, warna) = when (hasil) {
-                                HasilPengaduan.DITOLAK -> "Tolak" to DangerRed
-                                HasilPengaduan.DITERIMA -> "Terima" to SuccessGreen
-                                HasilPengaduan.DISELIDIKI -> "Selidiki" to InfoBlue
+                                HasilPengaduan.DITOLAK -> "Ditolak" to DangerRed
+                                HasilPengaduan.DITERIMA -> "Diterima" to SuccessGreen
+                                HasilPengaduan.DISELIDIKI -> "Diselidiki" to InfoBlue
                                 HasilPengaduan.NONE -> "" to TextPrimary
                             }
 
                             val statusText = buildAnnotatedString {
-                                append("Pengaduan Anda di ")
+                                append("Pengaduan Anda ")
                                 withStyle(
                                     SpanStyle(
                                         color = warna,
@@ -328,7 +326,7 @@ fun ProsesPengaduanScreen(
                                     )
                                 ) { append(kata) }
                                 if (catatanStatus.isNotBlank()) {
-                                    append(", ")
+                                    append(". ")
                                     append(catatanStatus)
                                 }
                             }
@@ -352,7 +350,7 @@ fun ProsesPengaduanScreen(
 
                 if (currentState != ProsesPengaduanState.SELESAI) {
                     Text(
-                        text = "*Jika Anda keluar dari halaman ini, Anda dapat melihat kembali proses pengaduan di halaman Akun",
+                        text = "*Jika Anda keluar dari halaman ini, Anda dapat melihat kembali proses pengaduan di halaman Riwayat",
                         fontFamily = PoppinsReg,
                         fontSize = 10.sp,
                         color = AccentOrange,
@@ -418,7 +416,6 @@ private fun StepItem(
     }
 }
 
-/** garis dinaikkan seperti yang kamu pakai */
 @Composable
 private fun RowScope.StepConnector() {
     Box(
@@ -493,18 +490,6 @@ private fun Preview_DemoAutoFlow() {
             demoAutoFlow = true,
             demoStepDelayMs = 900L,
             demoLoop = true
-        )
-    }
-}
-
-@Preview(showSystemUi = true, showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-private fun Preview_Selesai_Ditolak() {
-    MaterialTheme {
-        ProsesPengaduanScreen(
-            state = ProsesPengaduanState.SELESAI,
-            hasil = HasilPengaduan.DITOLAK,
-            catatanStatus = "Peminjaman Fasilitas pada tanggal 03 September 2025 telah penuh."
         )
     }
 }

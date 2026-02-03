@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun FormSuratKeteranganUsahaScreen(
     onBack: () -> Unit = {},
-    onKonfirmasi: () -> Unit = {}
+    onKonfirmasi: (Map<String, String>) -> Unit = {}
 ) {
     val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
     val poppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
@@ -49,10 +49,8 @@ fun FormSuratKeteranganUsahaScreen(
     var namaUsaha by rememberSaveable { mutableStateOf("") }
     var jenisUsaha by rememberSaveable { mutableStateOf("") }
     var alamatUsaha by rememberSaveable { mutableStateOf("") }
-    var lamaUsaha by rememberSaveable { mutableStateOf("") } // misal: "2 tahun"
+    var lamaUsaha by rememberSaveable { mutableStateOf("") }
     var keperluan by rememberSaveable { mutableStateOf("") }
-
-    var showSuccess by rememberSaveable { mutableStateOf(false) }
 
     val canSubmit =
         nama.isNotBlank() &&
@@ -76,7 +74,19 @@ fun FormSuratKeteranganUsahaScreen(
                     .padding(horizontal = 22.dp, vertical = 14.dp)
             ) {
                 Button(
-                    onClick = { showSuccess = true },
+                    onClick = {
+                        val payload = mapOf(
+                            "nama" to nama,
+                            "nik" to nik,
+                            "alamat" to alamat,
+                            "nama_usaha" to namaUsaha,
+                            "jenis_usaha" to jenisUsaha,
+                            "alamat_usaha" to alamatUsaha,
+                            "lama_usaha" to lamaUsaha,
+                            "keperluan" to keperluan
+                        )
+                        onKonfirmasi(payload)
+                    },
                     enabled = canSubmit,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFA06B),
@@ -117,7 +127,6 @@ fun FormSuratKeteranganUsahaScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Back
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -158,7 +167,6 @@ fun FormSuratKeteranganUsahaScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // Container putih
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -291,17 +299,6 @@ fun FormSuratKeteranganUsahaScreen(
             }
         }
     }
-
-    if (showSuccess) {
-        SuccessPopup(
-            title = "Pengajuan Berhasil!",
-            subtitle = "Surat Keterangan Usaha kamu sudah dikirim.\nSilakan pantau status pengajuan.",
-            onFinished = {
-                showSuccess = false
-                onKonfirmasi()
-            }
-        )
-    }
 }
 
 @Composable
@@ -379,52 +376,10 @@ private fun FieldBox(
     )
 }
 
-@Composable
-private fun SuccessPopup(
-    title: String,
-    subtitle: String,
-    onFinished: () -> Unit
-) {
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            delay(900)
-            onFinished()
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = { /* auto */ },
-        confirmButton = {},
-        title = {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        text = {
-            Text(
-                text = subtitle,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    )
-}
-
-/* =================== PREVIEW =================== */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewFormSuratKeteranganUsaha() {
     MaterialTheme {
-        FormSuratKeteranganUsahaScreen(
-            onBack = {},
-            onKonfirmasi = {}
-        )
+        FormSuratKeteranganUsahaScreen()
     }
 }

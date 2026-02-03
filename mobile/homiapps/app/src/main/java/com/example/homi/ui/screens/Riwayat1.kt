@@ -1,627 +1,512 @@
 package com.example.homi.ui.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
+import com.example.homi.data.model.ComplaintDto
+import com.example.homi.data.model.ServiceRequestDto
+import com.example.homi.data.repository.ComplaintRepository
+import com.example.homi.data.repository.ServiceRequestRepository
+import kotlinx.coroutines.launch
 
 /* ====== Tokens ====== */
-private val BlueMain   = Color(0xFF2F7FA3)
-private val BlueText   = Color(0xFF2F7FA3)
-private val CardLine   = Color(0xFFE0E0E0)
-private val TextDark   = Color(0xFF0E0E0E)
-private val LineGray   = Color(0xFFDDDDDD)
-private val Success    = Color(0xFF22C55E)
-private val Danger     = Color(0xFFEF4444)
-private val AccentOrange = Color(0xFFFF9966)
-private val BorderBlue = Color(0xFF4D8FB0)
-private val LabelGray  = Color(0xFF444444)
+private val BlueMain = Color(0xFF2F7FA3)
+private val BlueText = Color(0xFF2F7FA3)
+private val LineGray = Color(0xFFE5E7EB)
+private val TextDark = Color(0xFF0E0E0E)
+private val TextMute = Color(0xFF64748B)
+private val BgPage = Color(0xFFF6F7FB)
+
+private val Success = Color(0xFF22C55E)
+private val Danger = Color(0xFFEF4444)
+private val Warning = Color(0xFFF59E0B)
+private val InfoBlue = Color(0xFF2563EB)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
-private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
+private val PoppinsReg = FontFamily(Font(R.font.poppins_regular))
 
-/* ====== Tab enum ====== */
 private enum class RiwayatTab { PENGAJUAN, PENGADUAN }
 
-/* ====== Model Pengaduan ====== */
-data class RiwayatPengaduanItem(
-    val nama: String,
-    val tanggal: String,
-    val tempat: String,
-    val perihal: String,
-    val status: StatusPengajuan          // 🔹 status diterima / ditolak
-)
-
-/* ====== Model Pengajuan ====== */
-enum class StatusPengajuan { DITERIMA, DITOLAK }
-
-data class RiwayatPengajuanItem(
-    val nama: String,
-    val jenisAjuan: String,
-    val tanggal: String,
-    val status: StatusPengajuan
-)
-
-/* =======================================================
- *  SCREEN GABUNGAN: RIWAYAT PENGAJUAN + PENGADUAN
- * ======================================================= */
 @Composable
 fun Riwayat1Screen(
-    // klik salah satu card RIWAYAT PENGADUAN
-    onItemClick: (() -> Unit)? = null,
-    // klik salah satu card RIWAYAT PENGAJUAN -> kirim STATUS
-    onPengajuanItemClick: ((StatusPengajuan) -> Unit)? = null
-) {
-    // supaya setelah balik dari detail, tetap di tab terakhir
-    var selectedTab by rememberSaveable { mutableStateOf(RiwayatTab.PENGADUAN) }
+    serviceRepo: ServiceRequestRepository? = null,
+    complaintRepo: ComplaintRepository? = null,
 
-    val pengaduanItems = remember { dummyPengaduanItems() }
-    val pengajuanItems = remember { sampleRiwayatPengajuan() }
+    onPengaduanItemClick: ((id: Long) -> Unit)? = null,
+    onPengajuanSuratClick: ((id: Long) -> Unit)? = null,
+
+    // preview fallback
+    previewPengajuan: List<ServiceRequestDto>? = null,
+    previewPengaduan: List<ComplaintDto>? = null,
+) {
+    var selectedTab by rememberSaveable { mutableStateOf(RiwayatTab.PENGADUAN) }
+    val scope = rememberCoroutineScope()
+
+    // ========= PENGAJUAN =========
+    var loadingPengajuan by remember { mutableStateOf(true) }
+    var errorPengajuan by remember { mutableStateOf<String?>(null) }
+    var pengajuanData by remember { mutableStateOf<List<ServiceRequestDto>>(emptyList()) }
+
+    fun loadPengajuan() {
+        scope.launch {
+            if (serviceRepo == null) {
+                pengajuanData = previewPengajuan ?: emptyList()
+                loadingPengajuan = false
+                errorPengajuan = null
+                return@launch
+            }
+
+            loadingPengajuan = true
+            errorPengajuan = null
+            try {
+                pengajuanData = serviceRepo.listMy()
+            } catch (e: Exception) {
+                errorPengajuan = e.message ?: "Gagal memuat riwayat pengajuan"
+                pengajuanData = emptyList()
+            } finally {
+                loadingPengajuan = false
+            }
+        }
+    }
+
+    // ========= PENGADUAN =========
+    var loadingPengaduan by remember { mutableStateOf(true) }
+    var errorPengaduan by remember { mutableStateOf<String?>(null) }
+    var pengaduanData by remember { mutableStateOf<List<ComplaintDto>>(emptyList()) }
+
+    fun loadPengaduan() {
+        scope.launch {
+            if (complaintRepo == null) {
+                pengaduanData = previewPengaduan ?: emptyList()
+                loadingPengaduan = false
+                errorPengaduan = null
+                return@launch
+            }
+
+            loadingPengaduan = true
+            errorPengaduan = null
+            try {
+                pengaduanData = complaintRepo.list()
+            } catch (e: Exception) {
+                errorPengaduan = e.message ?: "Gagal memuat riwayat pengaduan"
+                pengaduanData = emptyList()
+            } finally {
+                loadingPengaduan = false
+            }
+        }
+    }
+
+    LaunchedEffect(serviceRepo) { loadPengajuan() }
+    LaunchedEffect(complaintRepo) { loadPengaduan() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BlueMain)
-            .statusBarsPadding()
+            .background(BgPage)
     ) {
-        /* Header */
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = "Riwayat Layanan",
-            fontFamily = PoppinsSemi,
-            fontSize = 22.sp,
-            color = Color.White,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Anda dapat melihat riwayat pengajuan dan pengaduan\n" +
-                    "yang telah diajukan oleh Anda",
-            fontFamily = PoppinsReg,
-            fontSize = 12.sp,
-            color = Color.White.copy(alpha = 0.95f),
-            textAlign = TextAlign.Center,
-            lineHeight = 20.sp,
+        // ===== Header =====
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        /* White container rounded */
-        Spacer(Modifier.height(16.dp))
-        Card(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+                .background(BlueMain)
+                .statusBarsPadding()
+                .padding(top = 14.dp, bottom = 18.dp)
         ) {
-            Spacer(Modifier.height(16.dp))
-            Column(Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Riwayat Layanan",
+                    fontFamily = PoppinsSemi,
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "Pantau pengajuan dan pengaduan yang pernah Anda buat",
+                    fontFamily = PoppinsReg,
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.95f),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp
+                )
+            }
+        }
 
-                /* Tabs */
-                Spacer(Modifier.height(14.dp))
+        // ===== Container putih =====
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(y = (-14).dp),
+            shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Spacer(Modifier.height(14.dp))
+
+            // ===== Tabs modern =====
+            Card(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Tombol Pengajuan
-                    if (selectedTab == RiwayatTab.PENGAJUAN) {
-                        Button(
-                            onClick = { selectedTab = RiwayatTab.PENGAJUAN },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BlueMain),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            Text(
-                                "Pengajuan",
-                                fontFamily = PoppinsSemi,
-                                fontSize = 14.sp,
-                                color = Color.White
-                            )
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = { selectedTab = RiwayatTab.PENGAJUAN },
-                            border = BorderStroke(2.dp, BlueText),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = BlueText),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            Text("Pengajuan", fontFamily = PoppinsSemi, fontSize = 14.sp)
-                        }
-                    }
+                    TabPill(
+                        selected = selectedTab == RiwayatTab.PENGADUAN,
+                        text = "Pengaduan",
+                        icon = Icons.Default.ReportProblem,
+                        onClick = { selectedTab = RiwayatTab.PENGADUAN }
+                    )
+                    TabPill(
+                        selected = selectedTab == RiwayatTab.PENGAJUAN,
+                        text = "Pengajuan",
+                        icon = Icons.Default.Description,
+                        onClick = { selectedTab = RiwayatTab.PENGAJUAN }
+                    )
+                }
+            }
 
-                    // Tombol Pengaduan
-                    if (selectedTab == RiwayatTab.PENGADUAN) {
-                        Button(
-                            onClick = { selectedTab = RiwayatTab.PENGADUAN },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BlueMain),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            Text(
-                                "Pengaduan",
-                                fontFamily = PoppinsSemi,
-                                fontSize = 14.sp,
-                                color = Color.White
-                            )
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = { selectedTab = RiwayatTab.PENGADUAN },
-                            border = BorderStroke(2.dp, BlueText),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = BlueText),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            Text("Pengaduan", fontFamily = PoppinsSemi, fontSize = 14.sp)
+            Spacer(Modifier.height(12.dp))
+
+            // ===== LIST =====
+            when (selectedTab) {
+                RiwayatTab.PENGADUAN -> {
+                    when {
+                        loadingPengaduan -> CenterLoading("Memuat riwayat pengaduan...")
+                        errorPengaduan != null -> ErrorBlockModern(
+                            message = errorPengaduan!!,
+                            onRetry = { loadPengaduan() }
+                        )
+                        pengaduanData.isEmpty() -> EmptyBlock("Belum ada riwayat pengaduan.")
+                        else -> {
+                            LazyColumn(
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(pengaduanData) { c ->
+                                    val tanggal = formatTanggalForList(c.pickTanggal())
+                                    val tempat = c.pickTempat()
+
+                                    RiwayatCardModern(
+                                        title = c.perihal.ifBlank { "Pengaduan" },
+                                        dateText = tanggal,
+                                        placeText = tempat,
+                                        statusRaw = c.status.ifBlank { "baru" },
+                                        onClick = { onPengaduanItemClick?.invoke(c.id) }
+                                    )
+                                }
+                                item { Spacer(Modifier.height(18.dp)) }
+                            }
                         }
                     }
                 }
 
-                /* List berdasarkan tab */
-                Spacer(Modifier.height(16.dp))
-                when (selectedTab) {
-                    RiwayatTab.PENGADUAN -> PengaduanList(
-                        items = pengaduanItems,
-                        onItemClick = onItemClick
-                    )
-                    RiwayatTab.PENGAJUAN -> PengajuanList(
-                        items = pengajuanItems,
-                        onPengajuanItemClick = onPengajuanItemClick
-                    )
+                RiwayatTab.PENGAJUAN -> {
+                    when {
+                        loadingPengajuan -> CenterLoading("Memuat riwayat pengajuan...")
+                        errorPengajuan != null -> ErrorBlockModern(
+                            message = errorPengajuan!!,
+                            onRetry = { loadPengajuan() }
+                        )
+                        pengajuanData.isEmpty() -> EmptyBlock("Belum ada riwayat pengajuan.")
+                        else -> {
+                            LazyColumn(
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(pengajuanData) { sr ->
+                                    RiwayatCardModern(
+                                        title = sr.subject ?: "Pengajuan Layanan",
+                                        dateText = sr.requestDate ?: "-",
+                                        placeText = sr.place ?: "-",
+                                        statusRaw = sr.status,
+                                        onClick = { onPengajuanSuratClick?.invoke(sr.id) }
+                                    )
+                                }
+                                item { Spacer(Modifier.height(18.dp)) }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-/* =======================================================
- *  LIST & CARD PENGADUAN
- * ======================================================= */
-
 @Composable
-private fun PengaduanList(
-    items: List<RiwayatPengaduanItem>,
-    onItemClick: (() -> Unit)?
-) {
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(items) { item ->
-            RiwayatPengaduanCard(
-                item = item,
-                onClick = { onItemClick?.invoke() }
-            )
-        }
-    }
-}
-
-@Composable
-private fun RiwayatPengaduanCard(
-    item: RiwayatPengaduanItem,
+private fun RowScope.TabPill(
+    selected: Boolean,
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
-    Card(
+    val bg = if (selected) BlueMain else Color.White
+    val fg = if (selected) Color.White else TextDark
+    val border = if (selected) BlueMain else LineGray
+
+    Surface(
         modifier = Modifier
-            .fillMaxWidth()
+            .weight(1f)
+            .height(44.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(1.dp),
-        border = BorderStroke(1.dp, LineGray),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF9F9F9)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        shape = RoundedCornerShape(14.dp),
+        color = bg,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            RowItem(label = "Nama Pelapor :", value = item.nama)
-            Spacer(Modifier.height(8.dp))
-            RowItem(label = "Tanggal :", value = item.tanggal)
-            Spacer(Modifier.height(8.dp))
-            RowItem(label = "Tempat :", value = item.tempat)
-            Spacer(Modifier.height(8.dp))
-            RowItem(
-                label = "Perihal :",
-                value = item.perihal,
-                bold = true,
-                color = BlueText
-            )
-            Spacer(Modifier.height(8.dp))
-            // 🔹 Status diterima / ditolak
-            RowStatus(status = item.status)
-        }
-    }
-}
-
-/* =======================================================
- *  LIST & CARD PENGAJUAN
- * ======================================================= */
-
-@Composable
-private fun PengajuanList(
-    items: List<RiwayatPengajuanItem>,
-    onPengajuanItemClick: ((StatusPengajuan) -> Unit)?
-) {
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(items) { item ->
-            RiwayatPengajuanCard(
-                item = item,
-                onClick = { onPengajuanItemClick?.invoke(item.status) } // kirim status
-            )
-        }
-    }
-}
-
-@Composable
-private fun RiwayatPengajuanCard(
-    item: RiwayatPengajuanItem,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(6.dp),
-        border = BorderStroke(1.dp, CardLine),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            RowField(label = "Nama Pelapor :", value = item.nama)
-
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Ajuan : ${item.jenisAjuan}",
-                fontFamily = PoppinsSemi,
-                fontSize = 13.sp,
-                color = BlueText,
-                textDecoration = TextDecoration.Underline
-            )
-
-            Spacer(Modifier.height(6.dp))
-            RowField(label = "Tanggal :", value = item.tanggal, valueColor = BlueText)
-
-            Spacer(Modifier.height(6.dp))
-            RowStatus(status = item.status)
-        }
-    }
-}
-
-/* =======================================================
- *  KOMONEN KECIL
- * ======================================================= */
-
-@Composable
-private fun RowItem(
-    label: String,
-    value: String,
-    bold: Boolean = false,
-    color: Color = TextDark
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = label,
-            fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = TextDark,
-            modifier = Modifier.padding(end = 6.dp)
-        )
-        Text(
-            text = value,
-            fontFamily = if (bold) PoppinsSemi else PoppinsReg,
-            fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
-            fontSize = 13.sp,
-            color = color
-        )
-    }
-}
-
-@Composable
-private fun RowField(
-    label: String,
-    value: String,
-    valueColor: Color = TextDark
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = label,
-            fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = TextDark
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = value,
-            fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = valueColor
-        )
-    }
-}
-
-@Composable
-private fun RowStatus(status: StatusPengajuan) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = "Status :",
-            fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = TextDark
-        )
-        Spacer(Modifier.width(4.dp))
-        when (status) {
-            StatusPengajuan.DITOLAK -> Text(
-                text = "Di Tolak",
-                fontFamily = PoppinsSemi,
-                fontSize = 13.sp,
-                color = Danger
-            )
-            StatusPengajuan.DITERIMA -> Text(
-                text = "Di Terima",
-                fontFamily = PoppinsSemi,
-                fontSize = 13.sp,
-                color = Success
-            )
-        }
-    }
-}
-
-/* =======================================================
- *  DETAIL RIWAYAT PENGAJUAN (DITERIMA / DITOLAK)
- * ======================================================= */
-
-@Composable
-fun RiwayatDiterimaScreen(
-    jenisPengajuan: String = "Peminjaman Fasilitas",
-    namaPelapor: String = "Lily",
-    tanggal: String = "1 Oktober 2025",
-    tempat: String = "Masjid Perumahan Hawaii Garden",
-    perihal: String = "Peminjaman fasilitas masjid untuk acara pengajian warga",
-    status: StatusPengajuan = StatusPengajuan.DITERIMA,
-    catatan: String =
-        "Penggunaan fasilitas bangunan masjid untuk acara pengajian pada tanggal 1 Oktober 2025 akan diumumkan di dashboard Pengumuman.",
-    onBack: () -> Unit = {}
-) {
-    val isDiterima = status == StatusPengajuan.DITERIMA
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        // Background gambar biru melengkung (optional)
-        Image(
-            painter = painterResource(R.drawable.bg_dashboard),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Icon back
-        IconButton(
-            onClick = { onBack() },
-            modifier = Modifier
-                .padding(top = 32.dp, start = 16.dp)
-                .size(48.dp)
-                .align(Alignment.TopStart)
-        ) {
-            Image(
-                painter = painterResource(R.drawable.panahkembali),
-                contentDescription = "Kembali",
-                modifier = Modifier.size(28.dp)
-            )
-        }
-
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
+                .border(1.dp, border, RoundedCornerShape(14.dp))
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center
         ) {
-            /* Header */
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = if (isDiterima) "Pengajuan Diterima" else "Pengajuan Ditolak",
-                color = Color.White,
-                fontFamily = PoppinsSemi,
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = if (isDiterima)
-                    "Selamat, pengajuan Anda telah diterima."
-                else
-                    "Maaf, pengajuan Anda ditolak. Lihat detailnya di bawah.",
-                color = Color.White.copy(alpha = 0.9f),
-                fontFamily = PoppinsReg,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
-            /* Panel putih isi */
-            Spacer(Modifier.height(28.dp))
-            Surface(
-                color = Color.White,
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Jenis pengajuan
-                    Text(
-                        text = "Jenis Pengajuan:",
-                        fontFamily = PoppinsReg,
-                        fontSize = 14.sp,
-                        color = LabelGray
-                    )
-                    Text(
-                        text = jenisPengajuan,
-                        fontFamily = PoppinsSemi,
-                        fontSize = 16.sp,
-                        color = if (isDiterima) AccentOrange else Danger
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Card detail
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                width = 1.dp,
-                                color = BorderBlue,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
-                    ) {
-                        ItemField(label = "Nama Pelapor", value = namaPelapor)
-                        ItemField(label = "Tanggal", value = tanggal)
-                        ItemField(label = "Tempat", value = tempat)
-                        ItemField(label = "Perihal", value = perihal)
-                        ItemField(
-                            label = "Status",
-                            value = if (status == StatusPengajuan.DITERIMA) "Diterima" else "Di Tolak",
-                            valueColor = if (status == StatusPengajuan.DITERIMA)
-                                Color(0xFF1BAE58) else Color(0xFFEF4444)
-                        )
-                        ItemField(
-                            label = "Catatan",
-                            value = catatan
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(text, fontFamily = PoppinsSemi, fontSize = 13.sp, color = fg)
             }
         }
     }
 }
 
-/* ===== ItemField reusable untuk detail pengajuan ===== */
 @Composable
-private fun ItemField(label: String, value: String, valueColor: Color = Color.Black) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+private fun RiwayatCardModern(
+    title: String,
+    dateText: String,
+    placeText: String,
+    statusRaw: String,
+    onClick: () -> Unit
+) {
+    val (label, color) = mapStatus(statusRaw)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, LineGray, RoundedCornerShape(16.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(8.dp)
+                    .fillMaxHeight()
+                    .background(color, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        fontFamily = PoppinsSemi,
+                        fontSize = 14.sp,
+                        color = TextDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatusChipSmall(label = label, color = color)
+                }
+
+                InfoRow(icon = Icons.Default.CalendarMonth, text = "Tanggal: ${dateText.ifBlank { "-" }}")
+                InfoRow(icon = Icons.Default.LocationOn, text = "Tempat: ${placeText.ifBlank { "-" }}")
+
+                Text(
+                    text = "Ketuk untuk melihat detail/progres",
+                    fontFamily = PoppinsReg,
+                    fontSize = 11.sp,
+                    color = BlueText
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = TextMute, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(8.dp))
         Text(
-            text = label,
-            fontFamily = PoppinsSemi,
-            fontSize = 12.sp,
-            color = BlueMain
-        )
-        Text(
-            text = value,
+            text = text,
             fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = valueColor,
-            lineHeight = 18.sp
-        )
-        Divider(
-            color = Color(0xFFE5E7EB),
-            thickness = 1.dp,
-            modifier = Modifier.padding(vertical = 6.dp)
+            fontSize = 12.sp,
+            color = TextMute,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
-/* ====== Dummy data ====== */
-
-private fun dummyPengaduanItems() = listOf(
-    RiwayatPengaduanItem(
-        nama = "Lily",
-        tanggal = "1 Oktober 2025",
-        tempat = "di depan lapangan voli",
-        perihal = "Sampah berserakan di jalan",
-        status = StatusPengajuan.DITERIMA
-    ),
-    RiwayatPengaduanItem(
-        nama = "Lily",
-        tanggal = "3 Oktober 2025",
-        tempat = "di belakang Blok AA1",
-        perihal = "Lampu jalan mati",
-        status = StatusPengajuan.DITOLAK
-    ),
-    RiwayatPengaduanItem(
-        nama = "Lily",
-        tanggal = "5 Oktober 2025",
-        tempat = "area taman bermain",
-        perihal = "Selokan tersumbat",
-        status = StatusPengajuan.DITERIMA
-    )
-)
-
-private fun sampleRiwayatPengajuan() = listOf(
-    RiwayatPengajuanItem("Lily", "Peminjaman Fasilitas", "1 Oktober 2025", StatusPengajuan.DITOLAK),
-    RiwayatPengajuanItem("Lily", "Peminjaman Fasilitas", "2 Oktober 2025", StatusPengajuan.DITERIMA),
-    RiwayatPengajuanItem("Lily", "Pengajuan Surat Domisili", "3 Oktober 2025", StatusPengajuan.DITOLAK),
-    RiwayatPengajuanItem("Lily", "Izin Keramaian", "4 Oktober 2025", StatusPengajuan.DITERIMA),
-)
-
-/* Preview */
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun PreviewRiwayatGabungan() {
-    MaterialTheme { Riwayat1Screen() }
+private fun StatusChipSmall(label: String, color: Color) {
+    Box(
+        modifier = Modifier
+            .background(color.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
+            .border(1.dp, color.copy(alpha = 0.30f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) {
+        Text(text = label, fontFamily = PoppinsSemi, fontSize = 11.sp, color = color)
+    }
+}
+
+@Composable
+private fun CenterLoading(text: String) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(strokeWidth = 2.dp)
+            Spacer(Modifier.height(10.dp))
+            Text(text, fontFamily = PoppinsReg, fontSize = 12.sp, color = TextMute)
+        }
+    }
+}
+
+@Composable
+private fun EmptyBlock(text: String) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text, fontFamily = PoppinsReg, fontSize = 12.sp, color = TextMute)
+    }
+}
+
+@Composable
+private fun ErrorBlockModern(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = message,
+            fontFamily = PoppinsReg,
+            color = Color(0xFFDC2626),
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(10.dp))
+        OutlinedButton(
+            onClick = onRetry,
+            border = androidx.compose.foundation.BorderStroke(1.dp, BlueText),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text("Coba Lagi", fontFamily = PoppinsSemi, color = BlueText)
+        }
+    }
+}
+
+private fun mapStatus(raw: String): Pair<String, Color> {
+    val s = raw.trim().lowercase()
+    return when {
+        s.contains("tolak") || s.contains("rejected") || s.contains("ditolak") -> "Ditolak" to Danger
+        s.contains("selesai") || s.contains("done") || s.contains("approved") || s.contains("paid") -> "Selesai" to Success
+        s.contains("baru") || s.contains("pending") || s.contains("submitted") -> "Baru" to InfoBlue
+        else -> "Diproses" to Warning
+    }
+}
+
+/* ========= HELPERS khusus ComplaintDto ========= */
+private fun ComplaintDto.pickTempat(): String {
+    val a = this.tempat?.trim().orEmpty()
+    if (a.isNotBlank()) return a
+
+    val b = this.tempatKejadian.trim()
+    if (b.isNotBlank()) return b
+
+    return "-"
+}
+
+private fun ComplaintDto.pickTanggal(): String {
+    val label = this.tanggalLabel?.trim().orEmpty()
+    if (label.isNotBlank()) return label
+
+    val legacy = this.tanggalPengaduan.trim()
+    if (legacy.isNotBlank()) return legacy
+
+    val iso = (this.tanggalIso?.trim().orEmpty())
+    if (iso.isNotBlank()) return iso
+
+    val created = (this.createdAt?.trim().orEmpty())
+    if (created.isNotBlank()) return created
+
+    return "-"
+}
+
+private fun formatTanggalForList(raw: String): String {
+    val t = raw.trim()
+    if (t.isBlank() || t == "-") return "-"
+
+    // kalau format "9 Januari 2026" (ada huruf), tampilkan apa adanya
+    if (t.any { it.isLetter() }) return t
+
+    // kalau ISO timestamp "2026-01-09T..." ambil 10 char dulu
+    val d10 = if (t.length >= 10) t.substring(0, 10) else t
+    if (d10.length == 10 && d10[4] == '-' && d10[7] == '-') {
+        val y = d10.substring(0, 4)
+        val m = d10.substring(5, 7)
+        val d = d10.substring(8, 10)
+        return "$d/$m/$y"
+    }
+    return t
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewRiwayatDiterimaScreen() {
+private fun PreviewRiwayatModern() {
     MaterialTheme {
-        RiwayatDiterimaScreen()
+        Riwayat1Screen(
+            serviceRepo = null,
+            complaintRepo = null,
+            previewPengajuan = emptyList(),
+            previewPengaduan = emptyList()
+        )
     }
 }

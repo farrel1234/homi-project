@@ -1,6 +1,10 @@
+// File: ApiConfig.kt
 package com.example.homi.data.remote
 
 object ApiConfig {
-    // emulator Android -> akses localhost PC/Laragon
-    const val BASE_URL = "http://10.0.2.2:8000/api/"
+    // Host laravel (buat file/gambar juga)
+    const val HOST = "http://192.168.1.246:8000"
+
+    // Retrofit base url WAJIB diakhiri "/"
+    const val BASE_URL = "$HOST/api/"
 }

@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,6 +22,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
+import com.example.homi.data.model.FeeInvoiceDto
+import com.example.homi.data.repository.FeeRepository
+import kotlinx.coroutines.launch
 
 /* ===== THEME COLORS ===== */
 private val BlueMain = Color(0xFF2F7FA3)
@@ -34,48 +35,68 @@ private val RowBg = Color(0xFFF7F7F7)
 private val TextDark = Color(0xFF0E0E0E)
 private val PaidGreen = Color(0xFF2EAD67)
 private val LineGray = Color(0xFFE6E6E6)
+private val PendingBlue = Color(0xFF2563EB)
 
 /* ===== FONTS ===== */
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg = FontFamily(Font(R.font.poppins_regular))
 
 /* ===== DATA CLASSES ===== */
-data class TagihanItem(val bulan: String, val nominal: String, val paid: Boolean)
+data class TagihanItem(
+    val invoiceId: Long,
+    val trxId: String, // NON-NULL
+    val bulan: String,
+    val nominal: String,
+    val status: String
+)
+
 data class TagihanTahun(val label: String, val items: List<TagihanItem>)
 
 /* ===== SCREEN ===== */
 @Composable
 fun TagihanIuranScreen(
+    feeRepo: FeeRepository? = null,
+    refreshKey: Boolean = false,
+    previewInvoices: List<FeeInvoiceDto>? = null,
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
     onBack: (() -> Unit)? = null,
-
-    // tahun label (contoh: "IPL 2025") + item bulan
     onBayarClick: ((tahun: String, item: TagihanItem) -> Unit)? = null
 ) {
-    val data = remember {
-        mutableStateListOf(
-            TagihanTahun(
-                "IPL 2025",
-                listOf(
-                    TagihanItem("Agustus 2025", "Rp. 25.000", false),
-                    TagihanItem("Juli 2025", "Rp. 25.000", false),
-                    TagihanItem("Juni 2025", "Rp. 25.000", true),
-                    TagihanItem("Mei 2025", "Rp. 25.000", true),
-                    TagihanItem("April 2025", "Rp. 25.000", true),
-                    TagihanItem("Maret 2025", "Rp. 25.000", true),
-                    TagihanItem("Februari 2025", "Rp. 25.000", true),
-                    TagihanItem("Januari 2025", "Rp. 25.000", true),
-                )
-            ),
-            TagihanTahun(
-                "IPL 2024",
-                listOf(
-                    TagihanItem("Desember 2024", "Rp. 25.000", true),
-                    TagihanItem("November 2024", "Rp. 25.000", true)
-                )
-            )
-        )
+    val scope = rememberCoroutineScope()
+
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var data by remember { mutableStateOf<List<TagihanTahun>>(emptyList()) }
+
+    fun setFromInvoices(invoices: List<FeeInvoiceDto>) {
+        data = buildGroupedTagihan(invoices)
+        loading = false
+        error = null
     }
+
+    fun reload() {
+        scope.launch {
+            if (feeRepo == null) {
+                val dummy = previewInvoices ?: dummyInvoices()
+                setFromInvoices(dummy)
+                return@launch
+            }
+
+            loading = true
+            error = null
+            try {
+                val invoices = feeRepo.getInvoices()
+                setFromInvoices(invoices)
+            } catch (e: Exception) {
+                error = e.message ?: "Gagal memuat tagihan"
+                data = emptyList()
+                loading = false
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) { reload() }
+    LaunchedEffect(refreshKey) { if (refreshKey) reload() }
 
     Column(
         modifier = Modifier
@@ -90,15 +111,12 @@ fun TagihanIuranScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = { onBack?.invoke() },
-                modifier = Modifier.size(48.dp) // area sentuh
-            ) {
+            IconButton(onClick = { onBack?.invoke() }, modifier = Modifier.size(48.dp)) {
                 Icon(
                     painter = painterResource(id = backIcon),
                     contentDescription = "Kembali",
                     tint = Color.White,
-                    modifier = Modifier.size(28.dp) // ikon besar
+                    modifier = Modifier.size(28.dp)
                 )
             }
 
@@ -113,7 +131,6 @@ fun TagihanIuranScreen(
             Spacer(Modifier.width(40.dp))
         }
 
-        /* ===== SUBTITLE ===== */
         Text(
             text = "Segera membayar tagihan iuran yang tersedia",
             fontFamily = PoppinsReg,
@@ -126,8 +143,8 @@ fun TagihanIuranScreen(
                 .padding(horizontal = 24.dp)
         )
 
-        /* ===== WHITE CONTAINER ===== */
         Spacer(Modifier.height(12.dp))
+
         Card(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
@@ -150,18 +167,51 @@ fun TagihanIuranScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(data.size) { idx ->
-                        TahunSection(
-                            tahun = data[idx].label,
-                            items = data[idx].items,
-                            onBayarClick = { item ->
-                                onBayarClick?.invoke(data[idx].label, item)
+                when {
+                    loading -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    error != null -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = error!!,
+                                fontFamily = PoppinsReg,
+                                color = Color(0xFFDC2626),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            OutlinedButton(onClick = { reload() }) {
+                                Text("Coba Lagi", fontFamily = PoppinsSemi, color = BlueText)
                             }
-                        )
+                        }
+                    }
+
+                    data.isEmpty() -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Belum ada tagihan.", fontFamily = PoppinsReg, color = Color(0xFF64748B))
+                        }
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(data.size) { idx ->
+                                TahunSection(
+                                    tahun = data[idx].label,
+                                    items = data[idx].items,
+                                    onBayarClick = { item -> onBayarClick?.invoke(data[idx].label, item) }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -182,7 +232,6 @@ private fun TahunSection(
             .border(1.dp, LineGray, RoundedCornerShape(10.dp))
             .padding(12.dp)
     ) {
-        // Header Oranye
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -190,18 +239,14 @@ private fun TahunSection(
                 .background(AccentOrange)
                 .padding(vertical = 10.dp, horizontal = 14.dp)
         ) {
-            Text(
-                text = tahun,
-                fontFamily = PoppinsSemi,
-                fontSize = 14.sp,
-                color = Color.White
-            )
+            Text(text = tahun, fontFamily = PoppinsSemi, fontSize = 14.sp, color = Color.White)
         }
 
         Spacer(Modifier.height(10.dp))
 
-        // List Rows
         items.forEachIndexed { i, item ->
+            val st = item.status.lowercase()
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -224,47 +269,150 @@ private fun TahunSection(
                     modifier = Modifier.weight(1f)
                 )
 
-                if (item.paid) {
-                    Text(
-                        text = "Sudah Dibayar",
-                        fontFamily = PoppinsSemi,
-                        fontSize = 10.sp,
-                        color = PaidGreen,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .weight(0.9f)
-                            .fillMaxWidth()
-                    )
-                } else {
-                    OutlinedButton(
-                        onClick = { onBayarClick(item) },
-                        border = BorderStroke(1.dp, AccentOrange),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentOrange),
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
-                        modifier = Modifier
-                            .height(28.dp)
-                            .widthIn(min = 91.dp)
-                    ) {
+                when {
+                    st == "paid" || st == "approved" -> {
                         Text(
-                            "Bayar",
+                            text = "Sudah Dibayar",
                             fontFamily = PoppinsSemi,
-                            fontSize = 12.sp
+                            fontSize = 10.sp,
+                            color = PaidGreen,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(0.9f)
                         )
+                    }
+
+                    st == "pending" -> {
+                        Text(
+                            text = "Menunggu\nVerifikasi",
+                            fontFamily = PoppinsSemi,
+                            fontSize = 10.sp,
+                            color = PendingBlue,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(0.9f)
+                        )
+                    }
+
+                    else -> {
+                        OutlinedButton(
+                            onClick = { onBayarClick(item) },
+                            border = BorderStroke(1.dp, AccentOrange),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentOrange),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .height(28.dp)
+                                .widthIn(min = 91.dp)
+                        ) {
+                            Text("Bayar", fontFamily = PoppinsSemi, fontSize = 12.sp)
+                        }
                     }
                 }
             }
 
-            if (i != items.lastIndex) {
-                Divider(color = LineGray, thickness = 1.dp)
-            }
+            if (i != items.lastIndex) Divider(color = LineGray, thickness = 1.dp)
         }
     }
 }
 
-/* ===== PREVIEW ===== */
+/* ===== Helpers (FIX ANTI NULL) ===== */
+private fun buildGroupedTagihan(invoices: List<FeeInvoiceDto>): List<TagihanTahun> {
+    val mapped = invoices.map { dto ->
+        val periodYm = (dto.period ?: "0000-00").trim() // aman
+        val year = periodYm.take(4).toIntOrNull() ?: 0
+        val bulanLabel = periodToIndoMonthYear(periodYm)
+        val nominal = formatRupiah(dto.amount)
+
+        val safeTrxId = dto.trxId?.takeIf { it.isNotBlank() } ?: "INV-${dto.id}" // ✅ fallback biar non-null
+
+        TagihanItem(
+            invoiceId = dto.id,
+            trxId = safeTrxId,
+            bulan = bulanLabel,
+            nominal = nominal,
+            status = dto.status
+        ) to year
+    }
+
+    return mapped
+        .groupBy { it.second }
+        .toSortedMap(compareByDescending { it })
+        .map { (year, list) ->
+            TagihanTahun(
+                label = "IPL $year",
+                items = list.map { it.first }.sortedByDescending { it.invoiceId }
+            )
+        }
+}
+
+
+private fun safePeriodYm(periodRaw: String?): String {
+    val raw = (periodRaw ?: "").trim()
+    val m = Regex("""(\d{4})-(\d{2})""").find(raw)
+    return m?.value ?: "0000-00"
+}
+
+private fun periodToIndoMonthYear(periodYm: String): String {
+    val m = Regex("""(\d{4})-(\d{2})""").find(periodYm) ?: return "-"
+    val year = m.groupValues[1]
+    val month = m.groupValues[2].toIntOrNull() ?: return "-"
+
+    val bulan = listOf(
+        "Januari","Februari","Maret","April","Mei","Juni",
+        "Juli","Agustus","September","Oktober","November","Desember"
+    ).getOrNull(month - 1) ?: "-"
+    return "$bulan $year"
+}
+
+private fun formatRupiah(amount: Long): String {
+    val s = amount.toString()
+    val sb = StringBuilder()
+    var count = 0
+    for (i in s.length - 1 downTo 0) {
+        sb.append(s[i])
+        count++
+        if (count % 3 == 0 && i != 0) sb.append('.')
+    }
+    return "Rp. " + sb.reverse().toString()
+}
+
+private fun dummyInvoices(): List<FeeInvoiceDto> = listOf(
+    FeeInvoiceDto(
+        id = 5,
+        amount = 150000,
+        status = "rejected",
+        trxId = "IPL-5VDHMRD2VK",
+        period = "2025-08",
+        dueDate = "2025-08-31",
+        feeType = "Iuran Sampah"
+    ),
+    FeeInvoiceDto(
+        id = 6,
+        amount = 25000,
+        status = "pending",
+        trxId = "IPL-XXXX000006",
+        period = "2025-07",
+        dueDate = "2025-07-31",
+        feeType = "Iuran Sampah"
+    ),
+    FeeInvoiceDto(
+        id = 7,
+        amount = 25000,
+        status = "paid",
+        trxId = "IPL-XXXX000007",
+        period = "2025-06",
+        dueDate = "2025-06-30",
+        feeType = "Iuran Sampah"
+    )
+)
+
 @Preview(showSystemUi = true, showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun PreviewTagihan() {
-    MaterialTheme { TagihanIuranScreen() }
+    MaterialTheme {
+        TagihanIuranScreen(
+            feeRepo = null,
+            onBack = {},
+            onBayarClick = { _, _ -> }
+        )
+    }
 }

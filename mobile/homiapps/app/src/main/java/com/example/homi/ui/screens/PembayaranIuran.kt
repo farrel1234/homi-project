@@ -1,8 +1,8 @@
-// File: PembayaranIuranScreen.kt
+// File: app/src/main/java/com/example/homi/ui/screens/PembayaranIuran.kt
 package com.example.homi.ui.screens
 
-import android.content.ContentResolver
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,11 +21,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -33,47 +35,75 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.homi.R
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
+import com.example.homi.util.FileUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.HttpException
 
 /* ===== TOKENS ===== */
-private val BlueMain    = Color(0xFF2F7FA3)
-private val BlueText    = Color(0xFF2F7FA3)
-private val ChipBg      = Color(0xFFE6F3F8)
-private val TextDark    = Color(0xFF0E0E0E)
-private val LineGray    = Color(0xFFE6E6E6)
-private val HintGray    = Color(0xFF9AA4AF)
+private val BlueMain = Color(0xFF2F7FA3)
+private val BlueText = Color(0xFF2F7FA3)
+private val ChipBg = Color(0xFFE6F3F8)
+private val TextDark = Color(0xFF0E0E0E)
+private val LineGray = Color(0xFFE6E6E6)
+private val HintGray = Color(0xFF9AA4AF)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
-private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
+private val PoppinsReg = FontFamily(Font(R.font.poppins_regular))
 
 @Composable
 fun PembayaranIuranScreen(
     amount: String = "Rp25.000",
     bulan: String = "Agustus 2025",
     transaksiId: String = "IPL-123456789",
+    qrUrl: String? = null,
     @DrawableRes backIcon: Int = R.drawable.panahkembali,
     @DrawableRes qrIcon: Int = R.drawable.qr_code,
     onBack: (() -> Unit)? = null,
-    onUploadBukti: ((uri: Uri) -> Unit)? = null
+    onUploadBukti: (suspend (uri: Uri) -> Unit)? = null
 ) {
-    var rincianExpanded by remember { mutableStateOf(false) }
-    var buktiUri by remember { mutableStateOf<Uri?>(null) }
-    var isUploading by remember { mutableStateOf(false) }
-    var uploadMessage by remember { mutableStateOf<String?>(null) }
+    var rincianExpanded by rememberSaveable { mutableStateOf(false) }
+    var buktiUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var isUploading by rememberSaveable { mutableStateOf(false) }
+    var uploadMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var showSuccessDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
 
-    // ✅ auto scroll ke bawah setelah pilih bukti
+    // bust cache kalau qrUrl berubah
+    val qrUrlBusted = remember(qrUrl) {
+        if (qrUrl.isNullOrBlank()) null
+        else {
+            val sep = if (qrUrl.contains("?")) "&" else "?"
+            "$qrUrl${sep}t=${System.currentTimeMillis()}"
+        }
+    }
+
+
+    val qrRequest = remember(qrUrlBusted) {
+        if (qrUrlBusted.isNullOrBlank()) null
+        else {
+            ImageRequest.Builder(ctx)
+                .data(qrUrlBusted)
+                .crossfade(true)
+                // QR harus fresh
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .networkCachePolicy(CachePolicy.ENABLED)
+                .build()
+        }
+    }
+
+    LaunchedEffect(qrUrl) {
+        Log.d("QR_DEBUG", "qrUrl(raw)=$qrUrl | qrUrl(busted)=$qrUrlBusted")
+    }
+
     LaunchedEffect(buktiUri) {
         if (buktiUri != null) {
             delay(150)
@@ -85,6 +115,27 @@ fun PembayaranIuranScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let { buktiUri = it }
+    }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            title = { Text("Pembayaran Berhasil", fontFamily = PoppinsSemi) },
+            text = {
+                Text(
+                    "Bukti pembayaran berhasil dikirim dan sedang menunggu verifikasi admin.",
+                    fontFamily = PoppinsReg
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSuccessDialog = false
+                        onBack?.invoke()
+                    }
+                ) { Text("OK", fontFamily = PoppinsSemi) }
+            }
+        )
     }
 
     Column(
@@ -150,6 +201,7 @@ fun PembayaranIuranScreen(
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -198,7 +250,11 @@ fun PembayaranIuranScreen(
                             .padding(top = 8.dp, bottom = 6.dp)
                     ) {
                         Box(Modifier.fillMaxWidth()) {
-                            Divider(color = LineGray, thickness = 1.dp, modifier = Modifier.align(Alignment.Center))
+                            Divider(
+                                color = LineGray,
+                                thickness = 1.dp,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
                             Text(
                                 text = "Rincian Pembayaran",
                                 fontFamily = PoppinsSemi,
@@ -227,19 +283,47 @@ fun PembayaranIuranScreen(
                     Image(
                         painter = painterResource(id = R.drawable.ic_qr),
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp).clip(CircleShape),
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(text = "QRIS", fontFamily = PoppinsSemi, fontSize = 14.sp, color = TextDark)
                     Spacer(Modifier.height(8.dp))
 
-                    Image(
-                        painter = painterResource(qrIcon),
-                        contentDescription = "QR Pembayaran",
-                        modifier = Modifier.size(220.dp).padding(2.dp),
-                        contentScale = ContentScale.Fit
-                    )
+                    // ===== QR IMAGE (ANTI-BLANK) =====
+                    if (qrRequest != null) {
+                        SubcomposeAsyncImage(
+                            model = qrRequest,
+                            contentDescription = "QR Pembayaran",
+                            modifier = Modifier.size(220.dp).padding(2.dp),
+                            contentScale = ContentScale.Fit,
+                            onError = { st ->
+                                Log.e("QR_DEBUG", "QR throwable=${st.result.throwable}", st.result.throwable)
+                            },
+                            loading = { /* ... */ },
+                            error = {
+                                Image(
+                                    painter = painterResource(qrIcon),
+                                    contentDescription = "QR Pembayaran (fallback)",
+                                    modifier = Modifier.size(220.dp).padding(2.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                                Log.e("QR_DEBUG", "QR failed to load. url=$qrUrlBusted")
+                            }
+                        )
+
+                    } else {
+                        Image(
+                            painter = painterResource(qrIcon),
+                            contentDescription = "QR Pembayaran",
+                            modifier = Modifier
+                                .size(220.dp)
+                                .padding(2.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(22.dp))
@@ -289,13 +373,22 @@ fun PembayaranIuranScreen(
                     AnimatedVisibility(visible = buktiUri != null) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Spacer(Modifier.height(10.dp))
-                            AsyncImage(
+                            SubcomposeAsyncImage(
                                 model = buktiUri,
                                 contentDescription = "Preview Bukti",
                                 modifier = Modifier
                                     .size(width = 260.dp, height = 180.dp)
                                     .clip(RoundedCornerShape(14.dp)),
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.Crop,
+                                loading = {
+                                    Box(
+                                        Modifier
+                                            .size(width = 260.dp, height = 180.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
                             )
                         }
                     }
@@ -319,13 +412,27 @@ fun PembayaranIuranScreen(
                             scope.launch {
                                 isUploading = true
                                 uploadMessage = "Mengunggah bukti…"
-                                onUploadBukti?.invoke(target)
-                                delay(250)
-                                isUploading = false
-                                uploadMessage = "Bukti terkirim. Menunggu verifikasi admin."
+
+                                try {
+                                    // optional debug
+                                    val debugPart = FileUtils.uriToMultipart(ctx, target)
+                                    Log.d("UPLOAD_DEBUG", "debugPart.headers=${debugPart.headers}")
+
+                                    onUploadBukti?.invoke(target) ?: error("Upload handler belum diset")
+
+                                    uploadMessage = "Bukti terkirim. Menunggu verifikasi admin."
+                                    showSuccessDialog = true
+                                } catch (e: HttpException) {
+                                    val body = e.response()?.errorBody()?.string()
+                                    uploadMessage = body ?: "Upload gagal (HTTP ${e.code()})"
+                                } catch (e: Exception) {
+                                    uploadMessage = e.message ?: "Upload gagal"
+                                } finally {
+                                    isUploading = false
+                                }
                             }
                         },
-                        enabled = buktiUri != null && !isUploading,
+                        enabled = buktiUri != null && !isUploading && onUploadBukti != null,
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
                             .height(48.dp),
@@ -372,37 +479,8 @@ private fun RincianRow(left: String, right: String, highlightRight: Boolean = fa
     }
 }
 
-/* ===== Utils: Uri -> Multipart (tetap) ===== */
-fun uriToMultipart(resolver: ContentResolver, uri: Uri, formFieldName: String): MultipartBody.Part {
-    val fileName = guessDisplayName(resolver, uri) ?: "bukti_${System.currentTimeMillis()}.jpg"
-    val mime = resolver.getType(uri) ?: "image/jpeg"
-    val bytes = readAllBytes(resolver.openInputStream(uri))
-    val body: RequestBody = bytes.toRequestBody(mime.toMediaTypeOrNull())
-    return MultipartBody.Part.createFormData(formFieldName, fileName, body)
-}
-
-private fun readAllBytes(inputStream: InputStream?): ByteArray {
-    inputStream ?: return ByteArray(0)
-    val buffer = ByteArrayOutputStream()
-    val data = ByteArray(8 * 1024)
-    var nRead: Int
-    while (inputStream.read(data).also { nRead = it } != -1) {
-        buffer.write(data, 0, nRead)
-    }
-    inputStream.close()
-    return buffer.toByteArray()
-}
-
-private fun guessDisplayName(resolver: ContentResolver, uri: Uri): String? {
-    val cursor = resolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
-    return cursor?.use {
-        val idx = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-        if (idx >= 0 && it.moveToFirst()) it.getString(idx) else null
-    }
-}
-
 @Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun PreviewPembayaran() {
-    MaterialTheme { PembayaranIuranScreen(qrIcon = R.drawable.qr_code) }
+    MaterialTheme { PembayaranIuranScreen(qrUrl = null, qrIcon = R.drawable.qr_code) }
 }
