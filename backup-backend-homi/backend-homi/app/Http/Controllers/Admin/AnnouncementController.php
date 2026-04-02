@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Announcement;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 
 class AnnouncementController extends Controller
 {
@@ -81,7 +82,7 @@ class AnnouncementController extends Controller
             $data['published_at'] = now();
         }
 
-        Announcement::create($data);
+        Announcement::create($this->filterColumns('announcements', $data));
 
         return redirect()->route('announcements.index')
             ->with('ok', 'Pengumuman berhasil dibuat.');
@@ -98,7 +99,7 @@ class AnnouncementController extends Controller
     {
         $data = $request->validate([
             'title'       => 'required|string|max:255',
-            'body'        => 'required|string',
+            'body'        => 'nullable|string',
             'category'    => 'nullable|string|max:100',
             'image'       => 'nullable|image|max:2048',
 
@@ -118,8 +119,12 @@ class AnnouncementController extends Controller
             $data['image_path'] = $request->file('image')->store('announcements', 'public');
         }
 
-        // ✅ Konsisten: content ikut body
-        $data['content'] = $data['body'];
+        // ✅ Konsisten: content ikut body; kalau kosong pakai content lama.
+        $body = trim((string)($data['body'] ?? ''));
+        if ($body === '') {
+            $body = (string)($announcement->content ?? '');
+        }
+        $data['content'] = $body;
 
         // ✅ Checkbox yang tidak dikirim jangan timpa value lama (biar aman)
         if (!array_key_exists('is_pinned', $data)) unset($data['is_pinned']);
@@ -136,7 +141,7 @@ class AnnouncementController extends Controller
             $data['published_at'] = now();
         }
 
-        $announcement->update($data);
+        $announcement->update($this->filterColumns('announcements', $data));
 
         return redirect()->route('announcements.index')
             ->with('ok', 'Pengumuman berhasil diperbarui.');
@@ -153,5 +158,40 @@ class AnnouncementController extends Controller
 
         return redirect()->route('announcements.index')
             ->with('ok', 'Pengumuman berhasil dihapus.');
+    }
+
+    // TOGGLE AKTIF / NONAKTIF
+    public function toggleActive(Announcement $announcement)
+    {
+        $announcement->is_public = !$announcement->is_public;
+
+        // Jika diaktifkan tapi belum punya published_at, set sekarang
+        if ($announcement->is_public && !$announcement->published_at) {
+            $announcement->published_at = now();
+        }
+
+        $announcement->save();
+
+        $status = $announcement->is_public ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->route('announcements.index')
+            ->with('ok', "Pengumuman berhasil {$status}.");
+    }
+
+    private function filterColumns(string $table, array $data): array
+    {
+        if (array_key_exists('body', $data) && !array_key_exists('content', $data)) {
+            $data['content'] = $data['body'];
+        }
+
+        // "body" hanya input form, kolom DB yang dipakai adalah "content".
+        unset($data['body']);
+
+        foreach (array_keys($data) as $col) {
+            if (!Schema::hasColumn($table, $col)) {
+                unset($data[$col]);
+            }
+        }
+
+        return $data;
     }
 }

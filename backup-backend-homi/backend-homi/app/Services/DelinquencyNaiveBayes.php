@@ -29,6 +29,8 @@ class DelinquencyNaiveBayes
         $categorical = [
             'last_status'   => ['paid_on_time', 'paid_late', 'unpaid'],
             'amount_bucket' => ['<=50k', '50-150k', '>150k'],
+            'pekerjaan'     => ['Karyawan Swasta', 'PNS / ASN', 'Wiraswasta', 'Buruh', 'Tidak Bekerja', 'Lainnya'],
+            'house_type'    => ['Ruby', 'Emerald', 'Sapphire', 'Diamond'],
         ];
 
         $samples = [];
@@ -227,6 +229,15 @@ class DelinquencyNaiveBayes
 
         $invoiceIds6 = $invoices6->pluck('id')->all();
 
+        // Ambil Data Profil Resident (Demografi)
+        $profile = DB::table('resident_profiles')
+            ->select('pekerjaan', 'house_type')
+            ->where('user_id', $userId)
+            ->first();
+
+        $occ = $profile->pekerjaan ?? 'Lainnya';
+        $ht  = $profile->house_type ?? 'Ruby'; // Default ke tipe dasar jika kosong
+
         // paidAtMap yang hanya diketahui <= asOf
         $paidAtMap = [];
         if (!empty($invoiceIds6)) {
@@ -318,6 +329,8 @@ class DelinquencyNaiveBayes
             'avg_late_6m'   => $avgLateDays6 > 0 ? 1 : 0,
             'last_status'   => $lastStatus,
             'amount_bucket' => $amountBucket,
+            'pekerjaan'     => $occ,
+            'house_type'    => $ht,
         ];
 
         $featuresJson = [
@@ -333,5 +346,71 @@ class DelinquencyNaiveBayes
         ];
 
         return [$featuresJson, $featureValues];
+    }
+
+    /**
+     * Prediksi risiko penunggak (Class 1) untuk user tertentu.
+     * Mengembalikan [label, probabilitiy_delinquent, features].
+     */
+    public function predict(int $userId, $period, string $modelName = 'delinquency_nb_v1'): array
+    {
+        $periodStart = Carbon::parse($period)->startOfMonth();
+        $modelRec = MlNbModel::where('name', $modelName)->first();
+
+        if (!$modelRec) {
+            return ['label' => 0, 'prob' => 0, 'error' => 'Model not found'];
+        }
+
+        $model = $modelRec->model_json;
+        $grace = (int)($model['grace_days'] ?? 7);
+        $asOf  = now();
+
+        [, $x] = $this->computeFeatures($userId, $periodStart, $grace, $asOf);
+
+        $priors     = $model['priors']; // [p0, p1]
+        $likelihood = $model['likelihood'];
+
+        // Hitung Log-Likelihood untuk tiap kelas (0: lancar, 1: nunggak)
+        $scores = [
+            0 => log($priors[0]),
+            1 => log($priors[1]),
+        ];
+
+        foreach ($x as $feature => $val) {
+            if (!isset($likelihood[$feature])) continue;
+
+            $probs = $likelihood[$feature]; // [[p10],[p11]] atau [{map0},{map1}]
+
+            for ($c = 0; $c <= 1; $c++) {
+                $p = 0.5; // default if not found
+                
+                if (is_array($probs[$c])) {
+                    // Categorical (Map)
+                    $p = $probs[$c][$val] ?? 0.05; // small penalty if category unknown
+                } else {
+                    // Bernoulli (Single value in array/float)
+                    // NB: Scorer format likelihood[f][class]
+                    $p_val_1 = (float)($probs[$c][0] ?? 0.5);
+                    $p = ((int)$val === 1) ? $p_val_1 : (1 - $p_val_1);
+                }
+
+                $scores[$c] += log(max(1e-9, $p));
+            }
+        }
+
+        // Softmax to get probabilities
+        $maxScore = max($scores);
+        $exp0 = exp($scores[0] - $maxScore);
+        $exp1 = exp($scores[1] - $maxScore);
+        $sumMap = $exp0 + $exp1;
+
+        $prob0 = $exp0 / $sumMap;
+        $prob1 = $exp1 / $sumMap;
+
+        return [
+            'label'    => ($prob1 > $prob0) ? 1 : 0,
+            'prob'     => (float)$prob1,
+            'features' => $x
+        ];
     }
 }

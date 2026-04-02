@@ -40,9 +40,9 @@
                     <div>
                         <div class="text-xs text-gray-500 mb-1">Nama Warga</div>
                         <div class="text-gray-800">
-                            {{ $item->user->full_name ?? $item->user->username ?? '-' }}
+                            {{ $item->user?->full_name ?? $item->user?->username ?? 'User Tidak Ditemukan' }}
                         </div>
-                        @if($item->user->email)
+                        @if($item->user?->email)
                             <div class="text-[11px] text-gray-500">
                                 {{ $item->user->email }}
                             </div>
@@ -142,8 +142,30 @@
                 {{-- Tombol aksi --}}
                 <div class="space-y-2">
                     @if($item->status !== 'approved')
-                        <form method="POST" action="{{ route('letter-requests.approve', $item->id) }}">
+                        <form method="POST" action="{{ route('letter-requests.approve', $item->id) }}" class="space-y-4">
                             @csrf
+                            
+                            <div>
+                                <label class="homi-label">Nomor Surat</label>
+                                <input type="text" name="nomor_surat" class="homi-input" placeholder="Contoh: 001/RT01-RW01/HG/2026" value="{{ old('nomor_surat') }}">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="homi-label">RT</label>
+                                    <input type="text" name="rt" class="homi-input" placeholder="01" value="{{ old('rt', $item->user->residentProfile->rt ?? '') }}">
+                                </div>
+                                <div>
+                                    <label class="homi-label">RW</label>
+                                    <input type="text" name="rw" class="homi-input" placeholder="01" value="{{ old('rw', $item->user->residentProfile->rw ?? '') }}">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="homi-label">Nama Ketua RT (Tanda Tangan)</label>
+                                <input type="text" name="nama_rt" class="homi-input" placeholder="Nama Lengkap Ketua RT" value="{{ old('nama_rt') }}">
+                            </div>
+
                             <button
                                 class="w-full inline-flex justify-center items-center px-3 py-2 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600">
                                 Setujui & Generate PDF

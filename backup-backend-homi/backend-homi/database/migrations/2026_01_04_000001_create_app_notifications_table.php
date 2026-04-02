@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('app_notifications')) {
+            return;
+        }
+
         Schema::create('app_notifications', function (Blueprint $table) {
             $table->id();
 

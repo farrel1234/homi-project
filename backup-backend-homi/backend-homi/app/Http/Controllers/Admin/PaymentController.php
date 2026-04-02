@@ -67,7 +67,15 @@ class PaymentController extends Controller
             'reviewer:id,name,full_name,username,email',
         ]);
 
-        return view('payments.show', compact('payment'));
+        $invoice = $payment->invoice;
+        $feeName = $invoice->feeType->name ?? 'Iuran';
+        $periodText = $invoice->period ? $invoice->period->format('M Y') : '-';
+        $amount = $invoice->total_amount ?? $invoice->amount ?? 0;
+        $dueDate = $invoice->due_date;
+        $payer = $payment->payer;
+        $name = $payer->full_name ?? $payer->name ?? 'Warga';
+
+        return view('payments.show', compact('payment', 'feeName', 'periodText', 'amount', 'dueDate', 'payer', 'name'));
     }
 
     public function approve(Request $request, Payment $payment)

@@ -1,8 +1,27 @@
 .idea/
 *.zip
+*.log
 
-# ignore runtime storage
+# ignore environment & keys
+.env
+.env.*
+*.json
+!package.json
+!composer.json
+!firebase.json
+
+# ignore runtime & vendor
 storage/
 storage/**
-backend-homi/backend/backend-homi/storage/
-backend-homi/backend/backend-homi/storage/**
+vendor/
+node_modules/
+.gradle/
+build/
+.next/
+
+# ignore app data
+backup-backend-homi/backend-homi/storage/
+backup-backend-homi/backend-homi/vendor/
+backup-backend-homi/backend-homi/node_modules/
+_archive-unused/
+.gemini/

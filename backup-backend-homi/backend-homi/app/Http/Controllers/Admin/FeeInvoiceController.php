@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Services\DelinquencyNaiveBayes;
 
 class FeeInvoiceController extends Controller
 {
@@ -19,7 +20,7 @@ class FeeInvoiceController extends Controller
         9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
     ];
 
-    public function index(Request $request)
+    public function index(Request $request, DelinquencyNaiveBayes $nb)
     {
         $q = FeeInvoice::query()->with(['user', 'feeType']);
 
@@ -38,9 +39,28 @@ class FeeInvoiceController extends Controller
         // ✅ urut berdasarkan period terbaru, biar grouping rapi
         $items = $q->orderByDesc('period')->orderByDesc('id')->paginate(50)->withQueryString();
 
+        $groups = $items->getCollection()->groupBy(function($it) {
+            if (empty($it->period)) return 'tanpa';
+            // periode di model di-cast ke date, jadi otomatis Carbon
+            return $it->period->format('Y-m');
+        });
+
+        // Hitung Prediksi NB untuk tagihan yang belum bayar
+        $items->getCollection()->each(function($it) use ($nb) {
+            if ($it->status === 'unpaid' && $it->user_id) {
+                try {
+                    $res = $nb->predict((int)$it->user_id, $it->period);
+                    $it->nb_delinquent = (bool)($res['label'] ?? false);
+                    $it->nb_prob = (float)($res['prob'] ?? 0);
+                } catch (\Throwable $e) {
+                    $it->nb_delinquent = false;
+                }
+            }
+        });
+
         $monthNames = $this->monthNames;
 
-        return view('admin.fees.invoices.index', compact('items', 'monthNames', 'year', 'month'));
+        return view('admin.fees.invoices.index', compact('items', 'groups', 'monthNames', 'year', 'month'));
     }
 
     public function create()
@@ -134,6 +154,56 @@ class FeeInvoiceController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal buat tagihan: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy(FeeInvoice $invoice)
+    {
+        DB::beginTransaction();
+        try {
+            // fee_payments punya FK cascade ke fee_invoices, jadi aman.
+            $invoice->delete();
+            DB::commit();
+
+            return redirect()
+                ->route('admin.fees.invoices.index')
+                ->with('success', 'Tagihan berhasil dihapus.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Gagal menghapus tagihan: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'selected' => ['required', 'array', 'min:1'],
+            'selected.*' => ['integer', 'exists:fee_invoices,id'],
+        ], [
+            'selected.required' => 'Pilih minimal satu tagihan untuk dihapus.',
+        ]);
+
+        $ids = collect($validated['selected'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'Tidak ada tagihan yang dipilih.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $deleted = FeeInvoice::query()->whereIn('id', $ids)->delete();
+            DB::commit();
+
+            return redirect()
+                ->route('admin.fees.invoices.index')
+                ->with('success', "Berhasil menghapus {$deleted} tagihan terpilih.");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus tagihan terpilih: ' . $e->getMessage());
         }
     }
 

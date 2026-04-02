@@ -26,7 +26,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import com.example.homi.R
 
 /* ===== Tokens ===== */
-private val BlueHeader  = Color(0xFF2F79A0)
+private val BlueHeader  = Color(0xFF2F7FA3) // Theme Blue
 private val BlueBorder  = Color(0xFF2F7FA3)
 private val OrangeTitle = Color(0xFFE69B73)
 private val TextDark    = Color(0xFF0E0E0E)

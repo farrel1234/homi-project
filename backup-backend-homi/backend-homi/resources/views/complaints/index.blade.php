@@ -6,256 +6,142 @@
 <div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="flex flex-col gap-1">
-        <h1 class="homi-title">Laporan Pengaduan</h1>
-        <p class="homi-subtitle">
-            Kelola laporan pengaduan yang dikirim oleh warga Hawai Garden.
-        </p>
+<div class="space-y-8 py-4">
+    {{-- Header & Stats --}}
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-1">
+            <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase">Laporan Pengaduan</h1>
+            <p class="text-slate-500 font-medium">Monitoring dan tindak lanjut keluhan warga Hawai Garden</p>
+        </div>
+        
+        <div class="flex items-center gap-4 bg-white p-2 rounded-[2rem] shadow-sm border border-slate-100">
+            <div class="px-6 py-2 bg-slate-50 rounded-full border border-slate-100">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block leading-none">Total Laporan</span>
+                <span class="text-lg font-black text-slate-900">{{ $items->total() }}</span>
+            </div>
+        </div>
     </div>
 
-    {{-- NOTIFIKASI --}}
-    @if(session('ok'))
-        <div class="homi-card bg-emerald-50 border-emerald-200 text-sm text-emerald-800">
-            {{ session('ok') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="homi-card bg-rose-50 border-rose-200 text-sm text-rose-800">
-            {{ session('error') }}
-        </div>
-    @endif
-    @if($errors->any())
-        <div class="homi-card bg-rose-50 border-rose-200 text-sm text-rose-800">
-            {{ $errors->first() }}
-        </div>
-    @endif
-
-    {{-- PANEL UTAMA --}}
-    <div class="homi-card space-y-4">
-
-        {{-- FILTER BAR --}}
-        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
-            <div class="min-w-0">
-                <h2 class="text-sm font-semibold text-gray-800">
-                    Daftar Pengaduan Warga
-                </h2>
-                <p class="text-[12px] text-gray-500">
-                    Filter berdasarkan status atau cari berdasarkan perihal / nama pelapor.
-                </p>
+    {{-- Filter & Search --}}
+    <div class="homi-card p-6 overflow-visible border-none shadow-xl shadow-slate-200/50">
+        <form action="{{ route('complaints.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4 items-center">
+            <div class="relative w-full lg:w-72 group">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--homi-blue)] transition-colors">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari perihal atau pelapor..." 
+                       class="homi-input pl-12 font-bold">
             </div>
 
-            <form method="GET"
-                  action="{{ route('complaints.index') }}"
-                  class="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center text-sm w-full lg:w-auto">
-
-                {{-- Filter Status (ENUM DB: baru/diproses/selesai) --}}
-                <select name="status"
-                        class="w-full sm:w-44 rounded-xl border-gray-300 px-3 py-2
-                               focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
-                    <option value="">Semua status</option>
-                    <option value="baru"     @selected(request('status')=='baru')>Baru</option>
-                    <option value="diproses" @selected(request('status')=='diproses')>Diproses</option>
-                    <option value="selesai"  @selected(request('status')=='selesai')>Selesai</option>
+            <div class="w-full lg:w-56 group">
+                <select name="status" class="homi-input font-black uppercase tracking-widest text-xs">
+                    <option value="">SEMUA STATUS</option>
+                    <option value="baru" @selected(request('status')=='baru')>LAPORAN BARU</option>
+                    <option value="diproses" @selected(request('status')=='diproses')>DALAM PROSES</option>
+                    <option value="selesai" @selected(request('status')=='selesai')>SUDAH SELESAI</option>
                 </select>
+            </div>
 
-                {{-- Pencarian --}}
-                <input
-                    type="text"
-                    name="q"
-                    value="{{ request('q') }}"
-                    placeholder="Cari perihal / nama pelapor..."
-                    class="w-full sm:w-72 rounded-xl border-gray-300 px-3 py-2
-                           focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
-                >
-
-                <button type="submit"
-                        class="w-full sm:w-auto px-4 py-2 rounded-xl bg-[var(--homi-blue)] text-white hover:opacity-95 font-medium">
-                    Cari
+            <div class="flex items-center gap-2 w-full lg:w-auto">
+                <button type="submit" class="flex-1 lg:flex-none px-8 py-3.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
+                    Filter
                 </button>
-
                 @if(request('status') || request('q'))
-                    <a href="{{ route('complaints.index') }}"
-                       class="text-xs text-gray-500 hover:underline text-center sm:text-left">
-                        Reset
+                    <a href="{{ route('complaints.index') }}" class="px-4 py-3.5 rounded-2xl bg-slate-100 text-slate-500 hover:text-rose-500 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </a>
                 @endif
-            </form>
-        </div>
+            </div>
+        </form>
+    </div>
 
-        {{-- ===== MOBILE: CARD LIST ===== --}}
-        <div class="space-y-3 md:hidden">
-            @forelse($items as $c)
-                @php
-                    $email = $c->user->email ?? null;
-
-                    $badgeClass = match($c->status) {
-                        'baru'     => 'bg-gray-100 text-gray-700 border border-gray-200',
-                        'diproses' => 'bg-sky-50 text-sky-700 border border-sky-200',
-                        'selesai'  => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                        default    => 'bg-gray-50 text-gray-600 border border-gray-200',
-                    };
-
-                    $statusLabel = match($c->status) {
-                        'baru'     => 'Baru',
-                        'diproses' => 'Diproses',
-                        'selesai'  => 'Selesai',
-                        default    => '-',
-                    };
-
-                    $pelapor = $c->nama_pelapor ?? ($c->user->full_name ?? $c->user->username ?? '-');
-                @endphp
-
-                <div class="rounded-xl border border-[var(--homi-border)] bg-white p-4">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <div class="font-semibold text-gray-900 break-words">
-                                {{ $c->perihal ?? '-' }}
-                            </div>
-                            <div class="mt-1 text-xs text-gray-600 break-words">
-                                {{ $pelapor }}
-                            </div>
-                            @if($email)
-                                <div class="text-[11px] text-gray-500 break-words">
-                                    {{ $email }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="shrink-0">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium {{ $badgeClass }}">
-                                {{ $statusLabel }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="mt-3 text-[12px] text-gray-500">
-                        Dibuat: {{ optional($c->created_at)->format('d M Y H:i') ?? '-' }}
-                    </div>
-
-                    <div class="mt-4 flex flex-col sm:flex-row gap-2">
-                        <a href="{{ route('complaints.edit', $c->id) }}"
-                           class="w-full sm:w-auto text-center px-3 py-2 rounded-lg text-xs font-semibold border border-sky-200 text-sky-700 hover:bg-sky-50">
-                            Proses
-                        </a>
-
-                        <form action="{{ route('complaints.destroy', $c->id) }}"
-                              method="POST"
-                              class="w-full sm:w-auto"
-                              onsubmit="return confirm('Yakin hapus laporan ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                    class="w-full sm:w-auto text-center px-3 py-2 rounded-lg text-xs font-semibold border border-rose-200 text-rose-700 hover:bg-rose-50">
-                                Hapus
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @empty
-                <div class="py-10 text-center text-sm text-gray-400">
-                    Belum ada laporan pengaduan.
-                </div>
-            @endforelse
-        </div>
-
-        {{-- ===== TABLET/DESKTOP: TABLE ===== --}}
-        <div class="overflow-x-auto hidden md:block">
-            <table class="homi-table text-sm text-left text-gray-800 min-w-[860px] w-full">
+    {{-- Main Content --}}
+    <div class="homi-card p-0 overflow-hidden border-none shadow-2xl shadow-slate-200">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th>Perihal</th>
-                        <th>Pelapor</th>
-                        <th>Status</th>
-                        <th>Dibuat</th>
-                        <th class="text-right">Aksi</th>
+                    <tr class="bg-slate-50 border-b border-slate-100 italic">
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Perihal Pengaduan</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data Pelapor</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Masuk Pada</th>
+                        <th class="px-8 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-50">
                     @forelse($items as $c)
-                        @php
-                            $email = $c->user->email ?? null;
-
-                            $badgeClass = match($c->status) {
-                                'baru'     => 'bg-gray-100 text-gray-700 border border-gray-200',
-                                'diproses' => 'bg-sky-50 text-sky-700 border border-sky-200',
-                                'selesai'  => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                                default    => 'bg-gray-50 text-gray-600 border border-gray-200',
-                            };
-
-                            $statusLabel = match($c->status) {
-                                'baru'     => 'Baru',
-                                'diproses' => 'Diproses',
-                                'selesai'  => 'Selesai',
-                                default    => '-',
-                            };
-                        @endphp
-
-                        <tr>
-                            <td class="align-top">
-                                <div class="font-medium text-[13px] text-gray-900 max-w-[360px] truncate">
-                                    {{ $c->perihal ?? '-' }}
+                        <tr class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-8 py-6">
+                                <div class="font-black text-slate-900 leading-tight mb-1 max-w-sm">
+                                    {{ $c->perihal ?? 'Tanpa Perihal' }}
                                 </div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">ID: #CP-{{ str_pad($c->id, 4, '0', STR_PAD_LEFT) }}</div>
                             </td>
-
-                            <td class="align-top">
-                                <div class="text-[13px] text-gray-800 max-w-[260px] truncate">
-                                    {{ $c->nama_pelapor ?? ($c->user->full_name ?? $c->user->username ?? '-') }}
-                                </div>
-
-                                @if($email)
-                                    <div class="text-[11px] text-gray-500 max-w-[260px] truncate">
-                                        {{ $email }}
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400 group-hover:bg-white transition-colors">
+                                        {{ strtoupper(substr($c->nama_pelapor ?? ($c->user->full_name ?? $c->user->name ?? '?'), 0, 1)) }}
                                     </div>
-                                @endif
+                                    <div>
+                                        <div class="font-black text-slate-700 leading-none mb-1">
+                                            {{ $c->nama_pelapor ?? ($c->user->full_name ?? $c->user->name ?? $c->user->username ?? '-') }}
+                                        </div>
+                                        <div class="text-[11px] font-bold text-slate-400">
+                                            {{ $c->user->email ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-
-                            <td class="align-top">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium {{ $badgeClass }}">
-                                    {{ $statusLabel }}
+                            <td class="px-8 py-6">
+                                <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-100
+                                    @if($c->status === 'selesai') bg-emerald-50 text-emerald-600 border-emerald-100
+                                    @elseif($c->status === 'diproses') bg-amber-50 text-amber-600 border-amber-100
+                                    @else bg-slate-100 text-slate-500 @endif">
+                                    {{ match($c->status) { 'baru' => 'BARU', 'diproses' => 'DIPROSES', 'selesai' => 'SELESAI', default => '-' } }}
                                 </span>
                             </td>
-
-                            <td class="align-top text-[12px] whitespace-nowrap">
-                                {{ optional($c->created_at)->format('d M Y H:i') ?? '-' }}
+                            <td class="px-8 py-6">
+                                <div class="font-bold text-slate-900 leading-none mb-1">{{ optional($c->created_at)->format('d M Y') }}</div>
+                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ optional($c->created_at)->format('H:i') }} WIB</div>
                             </td>
-
-                            <td class="align-top text-right whitespace-nowrap">
-                                <a href="{{ route('complaints.edit', $c->id) }}"
-                                   class="text-[12px] text-[var(--homi-blue)] hover:underline font-medium">
-                                    Proses
-                                </a>
-
-                                <span class="mx-1 text-gray-300">|</span>
-
-                                <form action="{{ route('complaints.destroy', $c->id) }}"
-                                      method="POST"
-                                      class="inline"
-                                      onsubmit="return confirm('Yakin hapus laporan ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="text-[12px] text-rose-600 hover:underline font-medium">
-                                        Hapus
-                                    </button>
-                                </form>
+                            <td class="px-8 py-6 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('complaints.edit', $c->id) }}" 
+                                       class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-widest hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] hover:shadow-lg hover:shadow-slate-100 transition-all">
+                                        Proses
+                                    </a>
+                                    <form action="{{ route('complaints.destroy', $c->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus laporan pengaduan ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-300 hover:border-rose-200 hover:text-rose-500 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-10 text-center text-sm text-gray-400">
-                                Belum ada laporan pengaduan.
+                            <td colspan="5" class="px-8 py-20 text-center">
+                                <div class="flex flex-col items-center justify-center space-y-4 text-slate-300">
+                                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <p class="font-black uppercase tracking-[0.2em] text-xs">Belum ada pengaduan yang masuk</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        {{-- PAGINASI --}}
-        <div class="pt-1">
-            {{ $items->withQueryString()->links() }}
-        </div>
+        
+        @if($items->hasPages())
+            <div class="px-8 py-6 bg-slate-50 border-t border-slate-100">
+                {{ $items->onEachSide(1)->links() }}
+            </div>
+        @endif
     </div>
+</div>
+
 
 </div>
 @endsection

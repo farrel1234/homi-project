@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-homi-blue: #2F7FA3;
+  --color-homi-dark: #0F172A;
+  --color-homi-accent: #F97316;
+  --color-homi-soft: #D7EAF3;
+  --color-homi-surface: #F8FAFC;
+
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-outfit: "Outfit", sans-serif;
+
+  --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
+  --animate-blob: blob 7s infinite;
+
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+}
+
+.glass-header {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.hero-gradient {
+    background: radial-gradient(circle at 10% 20%, rgba(47, 127, 163, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 40%);
+}
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px -12px rgba(47, 127, 163, 0.15);
+}
+.pricing-glow {
+    box-shadow: 0 0 50px -10px rgba(47, 127, 163, 0.3);
+}
+.interactive-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.interactive-btn:active {
+    transform: scale(0.95);
+}

@@ -67,6 +67,16 @@ class LetterRequestController extends Controller
 
     public function approve(Request $request, LetterRequest $letterRequest)
     {
+        // Update data_input jika ada input baru dari form
+        $data = is_array($letterRequest->data_input) ? $letterRequest->data_input : [];
+        if ($request->has('nomor_surat') && !empty($request->nomor_surat)) $data['nomor_surat'] = $request->nomor_surat;
+        if ($request->has('rt')) $data['rt'] = $request->rt;
+        if ($request->has('rw')) $data['rw'] = $request->rw;
+        if ($request->has('nama_rt')) $data['nama_rt'] = $request->nama_rt;
+
+        $letterRequest->data_input = $data;
+        $letterRequest->save();
+
         $pdfPath = $this->generatePdf($letterRequest);
 
         $letterRequest->update([
@@ -151,12 +161,17 @@ class LetterRequestController extends Controller
 
         // Default nama
         if (empty($data['nama'])) {
-            $data['nama'] = $letterRequest->user->full_name ?? $letterRequest->user->name ?? '';
+            $data['nama'] = $letterRequest->user?->full_name ?? $letterRequest->user?->name ?? 'Warga';
+        }
+        $data['nama_warga'] = $data['nama_warga'] ?? $data['nama'];
+
+        if (empty($data['nik'])) {
+            $data['nik'] = $letterRequest->user?->residentProfile?->nik ?? '';
         }
 
         // Default alamat
         if (empty($data['alamat'])) {
-            $rp = $letterRequest->user->residentProfile ?? null;
+            $rp = $letterRequest->user?->residentProfile ?? null;
             $data['alamat'] = $rp?->alamat ?: 'Perumahan Hawai Garden';
         }
 
@@ -180,7 +195,7 @@ class LetterRequestController extends Controller
 
         $pdf = Pdf::loadHTML($htmlWrapper)->setPaper('A4', 'portrait');
 
-        $userName = str_replace(' ', '_', $letterRequest->user->full_name ?? $letterRequest->user->username ?? 'warga');
+        $userName = str_replace(' ', '_', $letterRequest->user?->full_name ?? $letterRequest->user?->username ?? 'warga');
 
         $typeSlug = Str::slug($letterRequest->type->name ?? 'surat');
 
@@ -214,6 +229,8 @@ class LetterRequestController extends Controller
             'nomor_surat'   => '___/HG/___/' . date('Y'),
             'tanggal_surat' => now()->translatedFormat('d F Y'),
             'nama'          => $user->full_name ?? $user->username ?? '',
+            'nama_warga'    => $user->full_name ?? $user->username ?? '',
+            'nik'           => $resident->nik ?? '',
             'alamat'        => $resident->alamat
                 ?? (($resident && ($resident->blok || $resident->no_rumah))
                     ? trim(($resident->blok ?? '') . ' ' . ($resident->no_rumah ?? ''))

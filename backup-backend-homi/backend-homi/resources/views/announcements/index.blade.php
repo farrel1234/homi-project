@@ -3,158 +3,105 @@
 @section('title', 'Pengumuman')
 
 @section('content')
-<div class="homi-card">
-    {{-- Header --}}
-    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        <div class="min-w-0">
-            <div class="homi-title">Pengumuman</div>
-            <div class="homi-subtitle">
-                Kelola pengumuman yang akan ditampilkan kepada warga di aplikasi HOMI.
-            </div>
+<div class="space-y-8 py-4">
+    {{-- Header & Search --}}
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-1">
+            <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase italic">Pengumuman</h1>
+            <p class="text-slate-500 font-medium">Broadcast informasi penting untuk seluruh warga Hawai Garden</p>
         </div>
-
-        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center w-full lg:w-auto">
-            {{-- Search --}}
-            <form action="{{ route('announcements.index') }}" method="GET"
-                  class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-                <input type="text"
-                       name="q"
-                       value="{{ $q ?? request('q') }}"
-                       placeholder="Cari judul/kategori"
-                       class="border border-[var(--homi-border)] rounded-full px-3 py-2 text-sm w-full sm:w-64
-                              focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                <button type="submit"
-                        class="px-4 py-2 rounded-full bg-[var(--homi-blue)] text-white text-sm font-semibold hover:opacity-95
-                               w-full sm:w-auto">
-                    Cari
+        
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+            <form action="{{ route('announcements.index') }}" method="GET" class="relative group w-full sm:w-auto">
+                <input type="text" name="q" value="{{ $q ?? request('q') }}" placeholder="CARI JUDUL..." 
+                       class="w-full sm:w-64 pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all placeholder:text-slate-300">
+                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[var(--homi-blue)] transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
             </form>
-
-            {{-- Button tambah --}}
-            <a href="{{ route('announcements.create') }}"
-               class="px-4 py-2 rounded-lg bg-[var(--homi-orange)] text-white text-sm font-semibold hover:bg-orange-500
-                      text-center w-full sm:w-auto">
-                + Tambah
+            <a href="{{ route('announcements.create') }}" 
+               class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
+                + Buat Baru
             </a>
         </div>
     </div>
 
-    {{-- Flash --}}
-    @if(session('ok'))
-        <div class="mt-4 p-3 rounded-lg bg-emerald-50 text-emerald-800 text-sm">
-            {{ session('ok') }}
-        </div>
-    @endif
-
-    {{-- ===== MOBILE (Card List) ===== --}}
-    <div class="mt-4 space-y-3 md:hidden">
+    {{-- Main Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse($announcements as $item)
-            <div class="rounded-xl border border-[var(--homi-border)] bg-white p-4">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="font-semibold text-gray-900 truncate">
-                            {{ $item->title }}
+            <div class="homi-card p-0 flex flex-col group border-none shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300">
+                <div class="relative h-48 overflow-hidden rounded-t-[2rem]">
+                    @if($item->image_url)
+                        <img src="{{ $item->image_url }}" alt="Cover" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    @else
+                        <div class="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002-2z"/></svg>
                         </div>
-                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
-                                {{ $item->category ?? '-' }}
-                            </span>
-                            <span>
-                                {{ $item->created_at?->format('d M Y') ?? '-' }}
-                            </span>
-                        </div>
+                    @endif
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+                    <div class="absolute top-4 right-4">
+                        <span class="px-3 py-1.5 rounded-full {{ $item->is_public ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white' }} text-[9px] font-black uppercase tracking-widest shadow-lg">
+                            {{ $item->is_public ? 'PUBLIK' : 'DRAFT' }}
+                        </span>
+                    </div>
+                    <div class="absolute bottom-4 left-6">
+                        <span class="px-3 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest border border-white/30">
+                            {{ $item->category ?? 'UMUM' }}
+                        </span>
                     </div>
                 </div>
 
-                <div class="mt-3 flex flex-col sm:flex-row gap-2">
-                    <a href="{{ route('announcements.edit', $item) }}"
-                       class="px-3 py-2 rounded-lg text-xs font-semibold border border-sky-200 text-sky-700 hover:bg-sky-50
-                              text-center w-full sm:w-auto">
-                        Edit
-                    </a>
+                <div class="p-6 flex-1 flex flex-col space-y-4">
+                    <div class="space-y-2">
+                        <h3 class="text-base font-black text-slate-900 leading-tight uppercase line-clamp-2 italic group-hover:text-[var(--homi-blue)] transition-colors">
+                            {{ $item->title }}
+                        </h3>
+                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">
+                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            {{ $item->created_at?->format('d M Y') }}
+                        </div>
+                    </div>
 
-                    <form action="{{ route('announcements.destroy', $item) }}"
-                          method="POST"
-                          class="w-full sm:w-auto"
-                          onsubmit="return confirm('Yakin ingin menghapus pengumuman ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                                class="px-3 py-2 rounded-lg text-xs font-semibold border border-rose-200 text-rose-700 hover:bg-rose-50
-                                       text-center w-full sm:w-auto">
-                            Hapus
-                        </button>
-                    </form>
+                    <div class="pt-4 border-t border-slate-50 flex items-center justify-between gap-3 mt-auto">
+                        <form action="{{ route('announcements.toggle-active', $item) }}" method="POST" class="flex-1">
+                            @csrf
+                            <button type="submit" class="w-full py-2.5 rounded-xl {{ $item->is_public ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white' }} text-[10px] font-black uppercase tracking-widest transition-all">
+                                {{ $item->is_public ? 'Arsipkan' : 'Publikasikan' }}
+                            </button>
+                        </form>
+                        
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('announcements.edit', $item) }}" 
+                               class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            <form action="{{ route('announcements.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus pengumuman ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-300 hover:border-rose-200 hover:text-rose-500 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         @empty
-            <div class="py-10 text-center text-gray-500">
-                Belum ada pengumuman.
+            <div class="col-span-full py-20 text-center homi-card border-none shadow-2xl shadow-slate-200/50">
+                <div class="flex flex-col items-center justify-center space-y-4 text-slate-300">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M11 5h2M11 9h2m7 7v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1m-6 9l-2 2-2-2m2 2v-4"/></svg>
+                    <p class="font-black uppercase tracking-[0.2em] text-xs">Belum ada pengumuman yang dibuat</p>
+                </div>
             </div>
         @endforelse
     </div>
 
-    {{-- ===== DESKTOP/TABLET (Table) ===== --}}
-    <div class="mt-4 overflow-x-auto hidden md:block">
-        <table class="homi-table min-w-[720px] w-full">
-            <thead>
-                <tr>
-                    <th class="text-left">Judul</th>
-                    <th class="text-left">Kategori</th>
-                    <th class="text-left">Tanggal</th>
-                    <th class="text-center w-44">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($announcements as $item)
-                    <tr>
-                        <td class="font-medium text-gray-800">
-                            <div class="max-w-[520px] truncate">
-                                {{ $item->title }}
-                            </div>
-                        </td>
-                        <td>
-                            {{ $item->category ?? '-' }}
-                        </td>
-                        <td>
-                            {{ $item->created_at?->format('d M Y') ?? '-' }}
-                        </td>
-                        <td>
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('announcements.edit', $item) }}"
-                                   class="px-3 py-2 rounded-lg text-xs font-semibold border border-sky-200 text-sky-700 hover:bg-sky-50">
-                                    Edit
-                                </a>
-
-                                <form action="{{ route('announcements.destroy', $item) }}"
-                                      method="POST"
-                                      onsubmit="return confirm('Yakin ingin menghapus pengumuman ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="px-3 py-2 rounded-lg text-xs font-semibold border border-rose-200 text-rose-700 hover:bg-rose-50">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="py-10 text-center text-gray-500">
-                            Belum ada pengumuman.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Pagination --}}
-    @if(method_exists($announcements, 'links'))
-        <div class="mt-4">
-            {{ $announcements->links() }}
+    @if($announcements->hasPages())
+        <div class="mt-12">
+            {{ $announcements->onEachSide(1)->links() }}
         </div>
     @endif
 </div>
+
+
 @endsection

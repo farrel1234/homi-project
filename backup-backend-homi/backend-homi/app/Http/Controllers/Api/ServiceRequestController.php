@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\RequestType;
 use App\Models\ServiceRequest;
+use App\Services\ServiceRequestPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -75,7 +76,7 @@ class ServiceRequestController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    public function downloadPdf(Request $request, int $id)
+    public function downloadPdf(Request $request, int $id, ServiceRequestPdfService $pdfService)
     {
         $sr = ServiceRequest::findOrFail($id);
 
@@ -87,10 +88,23 @@ class ServiceRequestController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        if (!$sr->pdf_path || !Storage::disk('public')->exists($sr->pdf_path)) {
+        $resolvedPath = $pdfService->resolveExistingPublicPath($sr->pdf_path);
+
+        if (!$resolvedPath && $sr->status === 'approved') {
+            try {
+                $sr->loadMissing(['type.letterType', 'user.residentProfile']);
+                $resolvedPath = $pdfService->generate($sr);
+                $sr->pdf_path = $resolvedPath;
+                $sr->save();
+            } catch (\Throwable $e) {
+                $resolvedPath = null;
+            }
+        }
+
+        if (!$resolvedPath) {
             return response()->json(['message' => 'PDF belum tersedia'], 404);
         }
 
-        return Storage::disk('public')->download($sr->pdf_path);
+        return Storage::disk('public')->download($resolvedPath);
     }
 }

@@ -1,16 +1,20 @@
 // File: app/src/main/java/com/example/homi/ui/screens/AkunScreen.kt
 package com.example.homi.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.ExitToApp
-import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.*
@@ -26,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
+import com.example.homi.ui.components.HomiDialog
 import com.example.homi.data.local.TokenStore
 import com.example.homi.data.remote.ApiClient
 import com.example.homi.data.repository.AccountRepository
@@ -37,7 +42,7 @@ private val BlueMain     = Color(0xFF2F7FA3)
 private val FieldBg      = Color(0xFFF1F2F4)
 private val TextDark     = Color(0xFF0E0E0E)
 private val HintGray     = Color(0xFF8A8A8A)
-private val AccentOrange = Color(0xFFFFA06B)
+private val AccentOrange = Color(0xFFE26A2C)
 private val BorderGray   = Color(0xFFE6E6E6)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
@@ -48,7 +53,7 @@ private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
 fun AkunScreen(
     tokenStore: TokenStore,
     onUbahKataSandi: (() -> Unit)? = null,
-    onProsesPengajuan: (() -> Unit)? = null, // kalau kamu punya halaman ini
+    onEditProfil: (() -> Unit)? = null,
     onLaporkanMasalah: (() -> Unit)? = null,
     onKeluarConfirmed: (() -> Unit)? = null
 ) {
@@ -63,6 +68,10 @@ fun AkunScreen(
     val nameFlow = runCatching { tokenStore.nameFlow }.getOrNull() ?: flow { emit("Warga") }
     val savedName by nameFlow.collectAsState(initial = "Warga")
     val displayName = savedName?.trim().takeIf { !it.isNullOrBlank() } ?: "Warga"
+    
+    val nikFlow = runCatching { tokenStore.nikFlow }.getOrNull() ?: flow { emit("") }
+    val savedNik by nikFlow.collectAsState(initial = "")
+    val displayNik = savedNik?.trim().takeIf { !it.isNullOrBlank() } ?: "NIK belum tersedia"
 
     var showEditName by remember { mutableStateOf(false) }
     var inputName by remember { mutableStateOf("") }
@@ -70,168 +79,245 @@ fun AkunScreen(
 
     var showLogoutConfirm by remember { mutableStateOf(false) }
 
-    // ✅ Auto-sync nama dari server ketika halaman akun kebuka (biar setelah relogin ikut bener)
-    LaunchedEffect(Unit) {
-        runCatching { accountRepo.fetchMyProfileName() }
-            .onSuccess { remoteName ->
-                if (!remoteName.isNullOrBlank()) {
-                    tokenStore.saveName(remoteName)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var uploadingPhoto by remember { mutableStateOf(false) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            scope.launch {
+                uploadingPhoto = true
+                try {
+                    val file = java.io.File(context.cacheDir, "temp_profile.jpg")
+                    context.contentResolver.openInputStream(it)?.use { input ->
+                        file.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    accountRepo.updateProfilePhoto(file)
+                    // Refresh profile to get new photo (if needed)
+                    snackbarHostState.showSnackbar("Foto profil berhasil diperbarui.")
+                } catch (e: Exception) {
+                    snackbarHostState.showSnackbar("Gagal unggah foto: ${e.message}")
+                } finally {
+                    uploadingPhoto = false
                 }
+            }
+        }
+    }
+
+    // ✅ Auto-sync nama & NIK dari server ketika halaman akun kebuka
+    LaunchedEffect(Unit) {
+        runCatching { accountRepo.fetchMyProfileData() }
+            .onSuccess { (remoteName, remoteNik) ->
+                if (remoteName.isNotBlank()) tokenStore.saveName(remoteName)
+                if (remoteNik.isNotBlank()) tokenStore.saveNik(remoteNik)
             }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = Color.White
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BlueMain)
-                .statusBarsPadding()
-                .padding(padding)
+                .background(Color.White)
         ) {
-            Spacer(Modifier.height(10.dp))
-
-            // Header atas
-            Row(
+            // Header Background Blue
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .height(220.dp)
+                    .background(BlueMain)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(top = padding.calculateTopPadding())
             ) {
-                Image(
-                    painter = painterResource(R.drawable.icon_profile),
-                    contentDescription = "Profil",
+                Spacer(Modifier.height(10.dp))
+
+                // User Info Header
+                Row(
                     modifier = Modifier
-                        .size(74.dp)
-                        .clip(CircleShape)
-                )
-
-                Spacer(Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = displayName,
-                        fontFamily = PoppinsSemi,
-                        fontSize = 18.sp,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = "Akun Warga",
-                        fontFamily = PoppinsReg,
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
-
-                // tombol edit nama
-                IconButton(
-                    onClick = {
-                        inputName = displayName
-                        showEditName = true
-                    }
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Ubah Nama",
-                        tint = Color.White
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Sheet putih
-            Surface(
-                color = Color.White,
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 18.dp)
-                ) {
-                    // ===== Menu =====
-                    MenuItemRow(
-                        title = "Sinkronkan Nama",
-                        subtitle = "Ambil nama terbaru dari server",
-                        icon = Icons.Outlined.Sync,
-                        onClick = {
-                            scope.launch {
-                                val msg = runCatching { accountRepo.fetchMyProfileName() }
-                                    .fold(
-                                        onSuccess = { remote ->
-                                            if (!remote.isNullOrBlank()) {
-                                                tokenStore.saveName(remote)
-                                                "Nama berhasil disinkronkan."
-                                            } else {
-                                                "Nama di server kosong / tidak ditemukan."
-                                            }
-                                        },
-                                        onFailure = { e -> e.message ?: "Gagal sinkron nama." }
-                                    )
-                                snackbarHostState.showSnackbar(msg)
+                    Box(contentAlignment = Alignment.BottomEnd) {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uploadingPhoto) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            } else {
+                                Image(
+                                    painter = painterResource(R.drawable.icon_profile),
+                                    contentDescription = "Profil",
+                                    modifier = Modifier.fillMaxSize()
+                                )
                             }
                         }
-                    )
+                        
+                        // Edit Photo Button
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White,
+                            shadowElevation = 4.dp,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable { photoPickerLauncher.launch("image/*") }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = "Ganti Foto",
+                                    tint = BlueMain,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                    }
 
-                    DividerThin()
+                    Spacer(Modifier.width(16.dp))
 
-                    MenuItemRow(
-                        title = "Ubah Kata Sandi",
-                        subtitle = "Perbarui keamanan akun",
-                        icon = Icons.Outlined.Lock,
-                        enabled = onUbahKataSandi != null,
-                        onClick = { onUbahKataSandi?.invoke() }
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = displayName,
+                            fontFamily = PoppinsSemi,
+                            fontSize = 20.sp,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Warga Homi Garden",
+                            fontFamily = PoppinsReg,
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
 
-                    DividerThin()
-
-                    // optional: proses pengajuan
-                    MenuItemRow(
-                        title = "Proses Pengajuan",
-                        subtitle = "Lihat status proses pengajuan",
-                        icon = Icons.Outlined.HelpOutline,
-                        enabled = onProsesPengajuan != null,
-                        onClick = { onProsesPengajuan?.invoke() }
-                    )
-
-                    DividerThin()
-
-                    MenuItemRow(
-                        title = "Laporkan Masalah",
-                        subtitle = "Hubungi admin/pengurus",
-                        icon = Icons.Outlined.HelpOutline,
-                        enabled = onLaporkanMasalah != null,
-                        onClick = { onLaporkanMasalah?.invoke() }
-                    )
-
-                    Spacer(Modifier.height(18.dp))
-
-                    Button(
-                        onClick = { showLogoutConfirm = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentOrange),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
+                    IconButton(
+                        onClick = {
+                            inputName = displayName
+                            showEditName = true
+                        }
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.ExitToApp,
-                            contentDescription = "Keluar",
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Ubah Nama",
                             tint = Color.White
                         )
-                        Spacer(Modifier.width(10.dp))
+                    }
+                }
+
+                // White Sheet Content
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()) // Tambahkan scroll agar aman jika menu banyak
+                            .padding(horizontal = 20.dp, vertical = 24.dp)
+                    ) {
                         Text(
-                            text = "Keluar",
-                            color = Color.White,
+                            "Pengaturan Akun",
                             fontFamily = PoppinsSemi,
-                            fontSize = 15.sp
+                            fontSize = 15.sp,
+                            color = BlueMain,
+                            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp)
                         )
+
+                        MenuItemRow(
+                            title = "Informasi Diri",
+                            subtitle = "Lengkapi NIK, Alamat, TTL, Tipe Rumah",
+                            icon = Icons.Outlined.Edit,
+                            enabled = onEditProfil != null,
+                            onClick = { onEditProfil?.invoke() }
+                        )
+
+                        DividerThin()
+
+                        MenuItemRow(
+                            title = "Ubah Kata Sandi",
+                            subtitle = "Perbarui keamanan akun",
+                            icon = Icons.Outlined.Lock,
+                            enabled = onUbahKataSandi != null,
+                            onClick = { onUbahKataSandi?.invoke() }
+                        )
+
+                        DividerThin()
+
+                        MenuItemRow(
+                            title = "Sinkronkan Data",
+                            subtitle = "Perbarui data dari server",
+                            icon = Icons.Outlined.Sync,
+                            onClick = {
+                                scope.launch {
+                                    val msg = runCatching { accountRepo.fetchMyProfileName() }
+                                        .fold(
+                                            onSuccess = { remote ->
+                                                if (!remote.isNullOrBlank()) {
+                                                    tokenStore.saveName(remote)
+                                                    "Data berhasil disinkronkan."
+                                                } else {
+                                                    "Data di server kosong."
+                                                }
+                                            },
+                                            onFailure = { e -> e.message ?: "Gagal sinkron data." }
+                                        )
+                                    snackbarHostState.showSnackbar(msg)
+                                }
+                            }
+                        )
+                        
+                        DividerThin()
+
+                        MenuItemRow(
+                            title = "Laporkan Masalah",
+                            subtitle = "Bantuan & Dukungan",
+                            icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                            enabled = onLaporkanMasalah != null,
+                            onClick = { onLaporkanMasalah?.invoke() }
+                        )
+
+                        Spacer(Modifier.weight(1f))
+
+                        Button(
+                            onClick = { showLogoutConfirm = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFF1F0)),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
+                                contentDescription = "Keluar",
+                                tint = Color(0xFFDC2626)
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = "Keluar dari Akun",
+                                color = Color(0xFFDC2626),
+                                fontFamily = PoppinsSemi,
+                                fontSize = 16.sp
+                            )
+                        }
+                        
+                        Spacer(Modifier.height(16.dp))
                     }
                 }
             }
@@ -240,120 +326,93 @@ fun AkunScreen(
 
     // ===== Dialog Edit Nama =====
     if (showEditName) {
-        AlertDialog(
+        HomiDialog(
             onDismissRequest = { if (!loadingUpdate) showEditName = false },
-            title = {
-                Text("Ubah Nama", fontFamily = PoppinsSemi)
+            title = "Ubah Nama",
+            description = "Nama ini akan ditampilkan di Beranda & Akun.",
+            icon = Icons.Outlined.Edit,
+            confirmButtonText = "Simpan",
+            onConfirm = {
+                val newNameTrimmed = inputName.trim()
+                if (newNameTrimmed.isBlank()) {
+                    scope.launch { snackbarHostState.showSnackbar("Nama tidak boleh kosong.") }
+                    return@HomiDialog
+                }
+
+                loadingUpdate = true
+                scope.launch {
+                    val msg = runCatching {
+                        // 1) update ke server
+                        accountRepo.updateNameToServer(newNameTrimmed)
+                        // 2) fetch lagi biar sesuai hasil server
+                        val fresh = accountRepo.fetchMyProfileName()
+                        tokenStore.saveName(fresh ?: newNameTrimmed)
+                    }.fold(
+                        onSuccess = {
+                            showEditName = false
+                            "Nama berhasil diubah."
+                        },
+                        onFailure = { e ->
+                            e.message ?: "Gagal mengubah nama."
+                        }
+                    )
+
+                    loadingUpdate = false
+                    snackbarHostState.showSnackbar(msg)
+                }
             },
-            text = {
-                Column {
-                    Text(
-                        "Nama ini akan ditampilkan di Beranda & Akun.",
+            dismissButtonText = "Batal",
+            onDismiss = { showEditName = false },
+            content = {
+                OutlinedTextField(
+                    value = inputName,
+                    onValueChange = { inputName = it },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    textStyle = LocalTextStyle.current.copy(
                         fontFamily = PoppinsReg,
-                        fontSize = 12.sp,
-                        color = HintGray
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    TextField(
-                        value = inputName,
-                        onValueChange = { inputName = it },
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
-                        textStyle = LocalTextStyle.current.copy(
-                            fontFamily = PoppinsReg,
-                            fontSize = 14.sp,
-                            color = TextDark
-                        ),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = FieldBg,
-                            unfocusedContainerColor = FieldBg,
-                            focusedIndicatorColor = BlueMain,
-                            unfocusedIndicatorColor = BlueMain,
-                            cursorColor = BlueMain
-                        ),
-                        placeholder = { Text("Masukkan nama...", fontFamily = PoppinsReg, color = HintGray) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = !loadingUpdate,
-                    onClick = {
-                        val newName = inputName.trim()
-                        if (newName.isBlank()) {
-                            scope.launch { snackbarHostState.showSnackbar("Nama tidak boleh kosong.") }
-                            return@TextButton
-                        }
-
-                        loadingUpdate = true
-                        scope.launch {
-                            val msg = runCatching {
-                                // 1) update ke server
-                                accountRepo.updateNameToServer(newName)
-                                // 2) fetch lagi biar sesuai hasil server
-                                val fresh = accountRepo.fetchMyProfileName()
-                                tokenStore.saveName(fresh?.takeIf { it.isNotBlank() } ?: newName)
-                            }.fold(
-                                onSuccess = {
-                                    showEditName = false
-                                    "Nama berhasil diubah."
-                                },
-                                onFailure = { e ->
-                                    e.message ?: "Gagal mengubah nama."
-                                }
-                            )
-
-                            loadingUpdate = false
-                            snackbarHostState.showSnackbar(msg)
-                        }
-                    }
-                ) {
-                    Text("Simpan", fontFamily = PoppinsSemi, color = BlueMain)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !loadingUpdate,
-                    onClick = { showEditName = false }
-                ) {
-                    Text("Batal", fontFamily = PoppinsReg, color = HintGray)
-                }
+                        fontSize = 14.sp,
+                        color = TextDark
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BlueMain,
+                        unfocusedBorderColor = BorderGray,
+                    ),
+                    placeholder = { Text("Masukkan nama...", fontFamily = PoppinsReg, color = HintGray) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         )
     }
 
     // ===== Dialog Konfirmasi Logout =====
     if (showLogoutConfirm) {
-        AlertDialog(
+        HomiDialog(
             onDismissRequest = { showLogoutConfirm = false },
-            title = { Text("Keluar?", fontFamily = PoppinsSemi) },
-            text = { Text("Kamu yakin ingin keluar dari akun ini?", fontFamily = PoppinsReg) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showLogoutConfirm = false
-                    onKeluarConfirmed?.invoke()
-                }) {
-                    Text("Ya", fontFamily = PoppinsSemi, color = BlueMain)
-                }
+            title = "Keluar?",
+            description = "Kamu yakin ingin keluar dari akun ini?",
+            icon = Icons.AutoMirrored.Outlined.ExitToApp,
+            iconTint = Color(0xFFDC2626),
+            confirmButtonText = "Keluar",
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                showLogoutConfirm = false
+                onKeluarConfirmed?.invoke()
             },
-            dismissButton = {
-                TextButton(onClick = { showLogoutConfirm = false }) {
-                    Text("Batal", fontFamily = PoppinsReg, color = HintGray)
-                }
-            }
+            dismissButtonText = "Batal",
+            onDismiss = { showLogoutConfirm = false }
         )
     }
 }
 
 @Composable
 private fun DividerThin() {
-    Divider(
+    HorizontalDivider(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp),
+            .padding(horizontal = 8.dp),
         thickness = 1.dp,
-        color = BorderGray
+        color = BorderGray.copy(alpha = 0.5f)
     )
 }
 
@@ -368,32 +427,33 @@ private fun MenuItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable(enabled = enabled) { onClick() }
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             shape = CircleShape,
-            color = BlueMain.copy(alpha = if (enabled) 0.12f else 0.06f),
-            modifier = Modifier.size(40.dp)
+            color = if (enabled) BlueMain.copy(alpha = 0.1f) else Color(0xFFF5F5F5),
+            modifier = Modifier.size(44.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
-                    tint = if (enabled) BlueMain else HintGray
+                    tint = if (enabled) BlueMain else HintGray,
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 fontFamily = PoppinsSemi,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 color = if (enabled) TextDark else HintGray
             )
             Text(

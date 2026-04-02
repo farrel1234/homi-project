@@ -126,47 +126,39 @@ fun Riwayat1Screen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgPage)
+            .background(BlueMain)
     ) {
         // ===== Header =====
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(BlueMain)
                 .statusBarsPadding()
-                .padding(top = 14.dp, bottom = 18.dp)
+                .padding(top = 24.dp, bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Riwayat Layanan",
-                    fontFamily = PoppinsSemi,
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "Pantau pengajuan dan pengaduan yang pernah Anda buat",
-                    fontFamily = PoppinsReg,
-                    fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.95f),
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
-                )
-            }
+            Text(
+                text = "Riwayat Layanan",
+                fontFamily = PoppinsSemi,
+                fontSize = 22.sp,
+                color = Color.White
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Pantau pengajuan dan pengaduan yang pernah Anda buat",
+                fontFamily = PoppinsReg,
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.95f),
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
         }
 
-        // ===== Container putih =====
+        // ===== Container abu-abu muda =====
         Card(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset(y = (-14).dp),
-            shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            colors = CardDefaults.cardColors(containerColor = BgPage),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Spacer(Modifier.height(14.dp))
@@ -253,9 +245,10 @@ fun Riwayat1Screen(
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 items(pengajuanData) { sr ->
+                                    val tgl = formatTanggalForList(sr.requestDate ?: "-")
                                     RiwayatCardModern(
                                         title = sr.subject ?: "Pengajuan Layanan",
-                                        dateText = sr.requestDate ?: "-",
+                                        dateText = tgl,
                                         placeText = sr.place ?: "-",
                                         statusRaw = sr.status,
                                         onClick = { onPengajuanSuratClick?.invoke(sr.id) }
@@ -484,16 +477,35 @@ private fun formatTanggalForList(raw: String): String {
     val t = raw.trim()
     if (t.isBlank() || t == "-") return "-"
 
-    // kalau format "9 Januari 2026" (ada huruf), tampilkan apa adanya
-    if (t.any { it.isLetter() }) return t
+    // Jika sudah ada nama bulan (misal "29 Maret 2026"), biarkan saja
+    if (t.contains(Regex("[a-zA-Z]")) && !t.contains("T")) return t
 
-    // kalau ISO timestamp "2026-01-09T..." ambil 10 char dulu
-    val d10 = if (t.length >= 10) t.substring(0, 10) else t
-    if (d10.length == 10 && d10[4] == '-' && d10[7] == '-') {
-        val y = d10.substring(0, 4)
-        val m = d10.substring(5, 7)
-        val d = d10.substring(8, 10)
-        return "$d/$m/$y"
+    // Cek format ISO "2026-03-29..." atau "2026-03-29T..."
+    if (t.length >= 10 && t[4] == '-' && t[7] == '-') {
+        return try {
+            val y = t.substring(0, 4)
+            val m = t.substring(5, 7)
+            val d = t.substring(8, 10).toInt().toString() // "09" jadi "9"
+
+            val bln = when (m) {
+                "01" -> "Januari"
+                "02" -> "Februari"
+                "03" -> "Maret"
+                "04" -> "April"
+                "05" -> "Mei"
+                "06" -> "Juni"
+                "07" -> "Juli"
+                "08" -> "Agustus"
+                "09" -> "September"
+                "10" -> "Oktober"
+                "11" -> "November"
+                "12" -> "Desember"
+                else -> m
+            }
+            "$d $bln $y"
+        } catch (e: Exception) {
+            t
+        }
     }
     return t
 }

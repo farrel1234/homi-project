@@ -48,9 +48,9 @@ fun PengajuanSuratStatusScreen(
     onBack: () -> Unit
 ) {
     // ===== COLORS =====
-    val BlueMain = Color(0xFF2F79A0)
-    val BlueBorder = Color(0xFF2F79A0)
-    val OrangeBtn = Color(0xFFF6A47A)
+    val BlueMain = Color(0xFF2F7FA3) // Theme Blue
+    val BlueBorder = Color(0xFF2F7FA3)
+    val OrangeBtn = Color(0xFFE26A2C) // Theme Orange
     val TextMuted = Color(0xFF6B7280)
     val CardBg = Color.White
 
@@ -70,9 +70,9 @@ fun PengajuanSuratStatusScreen(
     fun normalizeStatus(raw: String?): String {
         val s = raw?.trim()?.lowercase() ?: ""
         return when {
-            s == "approved" || s == "disetujui" -> "approved"
+            s == "approved" || s == "disetujui" || s == "done" || s == "selesai" -> "approved"
             s == "rejected" || s == "ditolak" -> "rejected"
-            s == "pending" || s == "process" || s == "diproses" || s == "in_progress" -> "processing"
+            s == "pending" || s == "process" || s == "diproses" || s == "in_progress" || s == "submitted" -> "processing"
             else -> s.ifBlank { "processing" }
         }
     }
@@ -224,7 +224,7 @@ fun PengajuanSuratStatusScreen(
                                 val canDownload = norm == "approved" && !data.pdfUrl.isNullOrBlank()
 
                                 val nomorPengajuan = "REQ-${id.toString().padStart(4, '0')}"
-                                val tanggalLabel = data.requestDate ?: "-"
+                                val tanggalLabel = formatIsoDate(data.requestDate ?: "-")
 
                                 Column(
                                     modifier = Modifier
@@ -299,9 +299,11 @@ fun PengajuanSuratStatusScreen(
                                                         downloading = true
                                                         try {
                                                             val bytes = repo.downloadPdfBytes(id)
-                                                            val ok = savePdfToDownloads(ctx, "surat_$id.pdf", bytes)
-                                                            if (ok) {
-                                                                Toast.makeText(ctx, "PDF tersimpan di Download/HOMI", Toast.LENGTH_LONG).show()
+                                                            val uri = savePdfToDownloads(ctx, "surat_$id.pdf", bytes)
+                                                            if (uri != null) {
+                                                                Toast.makeText(ctx, "PDF tersimpan di Download/HOMI", Toast.LENGTH_SHORT).show()
+                                                                // ✅ Coba buka PDF setelah download
+                                                                openPdfFile(ctx, uri)
                                                             } else {
                                                                 Toast.makeText(ctx, "Gagal simpan PDF", Toast.LENGTH_LONG).show()
                                                             }
@@ -407,7 +409,7 @@ private fun InfoRow(
     }
 }
 
-fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): Boolean {
+fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): android.net.Uri? {
     return try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = context.contentResolver
@@ -418,14 +420,14 @@ fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): Bo
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
 
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return false
-            resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
+            resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return null
 
             values.clear()
             values.put(MediaStore.MediaColumns.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
 
-            true
+            uri
         } else {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val homiDir = File(downloadsDir, "HOMI")
@@ -440,10 +442,51 @@ fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): Bo
                 arrayOf("application/pdf"),
                 null
             )
-            true
+            android.net.Uri.fromFile(outFile)
         }
     } catch (e: Exception) {
         e.printStackTrace()
-        false
+        null
     }
+}
+
+fun openPdfFile(context: Context, uri: android.net.Uri) {
+    try {
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "Tidak ada aplikasi penampil PDF", Toast.LENGTH_LONG).show()
+    }
+}
+private fun formatIsoDate(t: String): String {
+    if (t.isBlank() || t == "-") return "-"
+    // Jika format "2026-03-29..." (ISO)
+    if (t.length >= 10 && t[4] == '-' && t[7] == '-') {
+        return try {
+            val y = t.substring(0, 4)
+            val m = t.substring(5, 7)
+            val d = t.substring(8, 10).toInt().toString()
+            val bln = when (m) {
+                "01" -> "Januari"
+                "02" -> "Februari"
+                "03" -> "Maret"
+                "04" -> "April"
+                "05" -> "Mei"
+                "06" -> "Juni"
+                "07" -> "Juli"
+                "08" -> "Agustus"
+                "09" -> "September"
+                "10" -> "Oktober"
+                "11" -> "November"
+                "12" -> "Desember"
+                else -> m
+            }
+            "$d $bln $y"
+        } catch (e: Exception) { t }
+    }
+    return t
 }

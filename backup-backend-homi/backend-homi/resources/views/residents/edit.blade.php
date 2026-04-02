@@ -34,65 +34,65 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Full Name <span class="text-rose-600">*</span></label>
+                    <label class="homi-label">Full Name <span class="text-rose-600">*</span></label>
                     <input type="text" name="full_name"
                            value="{{ old('full_name', optional($item->user)->full_name) }}"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
+                           class="homi-input"
                            required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Username</label>
+                    <label class="homi-label">Username</label>
                     <input type="text" name="username"
                            value="{{ old('username', optional($item->user)->username) }}"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="homi-input">
                     <div class="text-[11px] text-gray-500 mt-1">Opsional (boleh dikosongkan).</div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Email <span class="text-rose-600">*</span></label>
+                    <label class="homi-label">Email <span class="text-rose-600">*</span></label>
                     <input type="email" name="email"
                            value="{{ old('email', optional($item->user)->email) }}"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
+                           class="homi-input"
                            required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">No HP</label>
+                    <label class="homi-label">No HP</label>
                     <input type="text" name="phone"
                            value="{{ old('phone', optional($item->user)->phone) }}"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="homi-input">
                 </div>
 
                 {{-- RESIDENT --}}
                 <div class="md:col-span-2 pt-2">
-                    <div class="text-[11px] font-semibold text-gray-500 uppercase">Data Rumah</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1 mb-2">Data Rumah</div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Blok</label>
+                    <label class="homi-label">Blok</label>
                     <input type="text" name="blok"
                            value="{{ old('blok', $item->blok ?? $item->block) }}"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="homi-input">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">No Rumah</label>
+                    <label class="homi-label">No Rumah</label>
                     <input type="text" name="no_rumah"
                            value="{{ old('no_rumah', $item->no_rumah ?? $item->house_number) }}"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="homi-input">
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50">
-                        <input type="checkbox" name="is_public" value="1" class="mt-1"
+                    <label class="flex items-start gap-4 rounded-2xl border border-gray-200 p-4 hover:bg-slate-50 transition cursor-pointer">
+                        <input type="checkbox" name="is_public" value="1" class="mt-1 h-4 w-4 rounded border-gray-300 text-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
                                @checked(old('is_public', (bool)($item->is_public ?? false)))>
                         <div>
-                            <div class="text-sm font-medium text-gray-900">
+                            <div class="text-sm font-bold text-gray-900">
                                 Tampilkan di Direktori Warga (Publik)
                             </div>
-                            <div class="text-[12px] text-gray-500">
-                                Jika aktif, warga lain dapat melihat data rumah ini di menu direktori.
+                            <div class="text-[12px] text-gray-500 leading-relaxed">
+                                Jika aktif, warga lain dapat melihat data rumah ini di menu direktori aplikasi mobile.
                             </div>
                         </div>
                     </label>
@@ -100,13 +100,13 @@
 
             </div>
 
-            <div class="flex flex-wrap gap-2 pt-2">
-                <button class="px-4 py-2 rounded-xl bg-[var(--homi-blue)] text-white text-sm font-semibold hover:bg-sky-800">
+            <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
+                <button type="submit" class="homi-btn homi-btn-primary px-8">
                     Simpan Perubahan
                 </button>
 
                 <a href="{{ route('residents.index') }}"
-                   class="px-3 py-2 rounded-xl border border-gray-200 text-xs text-gray-600 hover:bg-gray-50">
+                   class="homi-btn homi-btn-secondary">
                     Batal
                 </a>
             </div>

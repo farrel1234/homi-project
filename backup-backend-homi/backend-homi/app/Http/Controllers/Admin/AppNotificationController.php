@@ -7,6 +7,7 @@ use App\Models\AppNotification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\FirebaseService;
 
 class AppNotificationController extends Controller
 {
@@ -39,7 +40,7 @@ class AppNotificationController extends Controller
         return view('admin.notifications.create', compact('users'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, FirebaseService $firebaseService)
     {
         $data = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
@@ -56,7 +57,7 @@ class AppNotificationController extends Controller
         if (!empty($data['invoice_id'])) $payload['invoice_id'] = (int)$data['invoice_id'];
         if (!empty($data['period'])) $payload['period'] = $data['period'];
 
-        AppNotification::create([
+        $notif = AppNotification::create([
             'user_id' => (int)$data['user_id'],
             'sent_by' => Auth::id(),
             'title'   => $data['title'],
@@ -65,10 +66,21 @@ class AppNotificationController extends Controller
             'data'    => empty($payload) ? null : $payload,
         ]);
 
+        // Send FCM if token exists
+        $user = User::find($data['user_id']);
+        if ($user && $user->fcm_token) {
+            $firebaseService->sendNotification(
+                $user->fcm_token,
+                $data['title'],
+                $data['message'],
+                $payload
+            );
+        }
+
         return redirect()->route('admin.notifications.index')->with('ok', 'Notifikasi berhasil dikirim.');
     }
 
-    public function sendRiskWarning(Request $request, $userId)
+    public function sendRiskWarning(Request $request, $userId, FirebaseService $firebaseService)
     {
         $user = User::findOrFail($userId);
 
@@ -92,7 +104,7 @@ class AppNotificationController extends Controller
         if (!empty($validated['invoice_id'])) $payload['invoice_id'] = (int)$validated['invoice_id'];
         if ($period) $payload['period'] = $period;
 
-        AppNotification::create([
+        $notif = AppNotification::create([
             'user_id' => (int)$user->id,
             'sent_by' => Auth::id(),
             'title'   => $title,
@@ -100,6 +112,16 @@ class AppNotificationController extends Controller
             'type'    => 'risk_warning',
             'data'    => $payload,
         ]);
+
+        // Send FCM
+        if ($user->fcm_token) {
+            $firebaseService->sendNotification(
+                $user->fcm_token,
+                $title,
+                $msg,
+                $payload
+            );
+        }
 
         return back()->with('ok', 'Notifikasi pengingat berhasil dikirim.');
     }

@@ -16,141 +16,106 @@
 @endphp
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="homi-card">
-        <div class="flex items-start justify-between gap-3">
-            <div>
-                <div class="homi-title">Kirim Notifikasi</div>
-                <div class="homi-subtitle">Notifikasi akan muncul di aplikasi warga (in-app).</div>
+<div class="max-w-3xl mx-auto py-8">
+    <div class="homi-card p-0 overflow-hidden shadow-2xl shadow-slate-200 border-none">
+        {{-- Header --}}
+        <div class="bg-slate-900 p-8 text-white relative">
+            <div class="absolute right-0 top-0 p-8 opacity-10">
+                <svg viewBox="0 0 24 24" class="h-24 w-24 fill-current"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
             </div>
-
-            <a href="{{ route('admin.notifications.index') }}"
-               class="px-4 py-2 rounded-lg border border-[var(--homi-border)] text-sm hover:bg-gray-50">
-                Kembali
-            </a>
+            <div class="relative z-10">
+                <h1 class="text-2xl font-black tracking-tight mb-2 uppercase">Kirim Notifikasi</h1>
+                <p class="text-slate-400 text-sm font-medium">Kirim pesan langsung ke aplikasi mobile warga</p>
+            </div>
         </div>
 
-        @if($errors->any())
-            <div class="mt-4 p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-100">
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('admin.notifications.store') }}" class="mt-6 space-y-4">
+        <form method="POST" action="{{ route('admin.notifications.store') }}" class="p-8 space-y-8">
             @csrf
 
-            {{-- Pilih Warga --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Pilih Warga</label>
-                <select name="user_id"
-                        class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-sky-200">
+            {{-- Row 1: Penerima --}}
+            <div class="space-y-2">
+                <label class="homi-label text-slate-900">Pilih Target Warga</label>
+                <select name="user_id" class="homi-input font-bold">
                     @foreach($users as $u)
                         <option value="{{ $u->id }}" @selected(old('user_id') == $u->id)>
-                            {{ $u->full_name ?? $u->name ?? $u->username ?? '-' }} — {{ $u->email ?? '-' }}
+                            {{ $u->full_name ?? $u->name ?? $u->username ?? '-' }} ({{ $u->email ?? '-' }})
                         </option>
                     @endforeach
                 </select>
-                <div class="text-[12px] text-gray-500 mt-1">
-                    Pilih warga yang akan menerima notifikasi.
-                </div>
             </div>
 
-            {{-- Judul + Kategori --}}
-            <div class="grid md:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Judul Notifikasi</label>
-                    <input type="text" name="title" value="{{ old('title') }}"
-                           placeholder="Contoh: Tagihan iuran bulan Juni sudah terbit"
-                           class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-sky-200"
-                           required>
+            {{-- Row 2: Judul & Tipe --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="homi-label text-slate-900">Judul Pesan</label>
+                    <input type="text" name="title" value="{{ old('title') }}" placeholder="Subject notifikasi..." 
+                           class="homi-input font-bold" required>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
-                    {{-- tetap kirim ke field 'type' biar backend aman --}}
-                    <select name="type"
-                            class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-sky-200">
+                <div class="space-y-2">
+                    <label class="homi-label text-slate-900">Jenis Notifikasi</label>
+                    <select name="type" class="homi-input font-bold">
                         @php $t = old('type', 'general'); @endphp
-                        <option value="general"  @selected($t==='general')>Umum</option>
-                        <option value="invoice"  @selected($t==='invoice')>Tagihan Iuran</option>
-                        <option value="announcement" @selected($t==='announcement')>Pengumuman</option>
-                        <option value="complaint" @selected($t==='complaint')>Pengaduan</option>
+                        <option value="general"  @selected($t==='general')>Umum / Informasi</option>
+                        <option value="invoice"  @selected($t==='invoice')>Penagihan Iuran</option>
+                        <option value="announcement" @selected($t==='announcement')>Pengumuman Baru</option>
+                        <option value="complaint" @selected($t==='complaint')>Update Pengaduan</option>
                     </select>
-                    <div class="text-[12px] text-gray-500 mt-1">
-                        Kategori membantu aplikasi mengelompokkan notifikasi.
-                    </div>
                 </div>
             </div>
 
-            {{-- Pesan --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Isi Pesan</label>
-                <textarea name="message" rows="5"
-                          placeholder="Tulis pesan singkat dan jelas..."
-                          class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
-                                 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                          required>{{ old('message') }}</textarea>
+            {{-- Row 3: Pesan --}}
+            <div class="space-y-2">
+                <label class="homi-label text-slate-900">Isi Notifikasi</label>
+                <textarea name="message" rows="4" placeholder="Tuliskan pesan singkat yang akan muncul di layar HP warga..." 
+                          class="homi-input" required>{{ old('message') }}</textarea>
             </div>
 
-            {{-- Tujuan + Info Tagihan --}}
-            <div class="grid md:grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tujuan Saat Dibuka (opsional)</label>
-                    {{-- tetap pakai field name="route" --}}
-                    <select name="route"
-                            class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-sky-200">
-                        @php $r = old('route', 'TagihanIuran'); @endphp
-                        <option value="" @selected($r==='')>Tidak ada (hanya tampilkan notifikasi)</option>
-                        <option value="TagihanIuran" @selected($r==='TagihanIuran')>Buka halaman Tagihan Iuran</option>
-                        <option value="PengaduanWarga" @selected($r==='PengaduanWarga')>Buka halaman Pengaduan</option>
-                        <option value="Beranda" @selected($r==='Beranda')>Buka Beranda</option>
-                    </select>
-                    <div class="text-[12px] text-gray-500 mt-1">
-                        Jika diklik, warga diarahkan ke halaman tertentu.
+            {{-- Row 4: Aksi & Detail --}}
+            <div class="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="homi-label text-slate-500">Tujuan Halaman (Opsional)</label>
+                        <select name="route" class="homi-input text-xs font-black uppercase tracking-widest">
+                            @php $r = old('route', 'TagihanIuran'); @endphp
+                            <option value="" @selected($r==='')>Hanya Notifikasi</option>
+                            <option value="TagihanIuran" @selected($r==='TagihanIuran')>Halaman Tagihan</option>
+                            <option value="PengaduanWarga" @selected($r==='PengaduanWarga')>Halaman Pengaduan</option>
+                            <option value="Beranda" @selected($r==='Beranda')>Beranda App</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="homi-label text-slate-500">Periode Terkait (Jika Ada)</label>
+                        <div class="relative">
+                            <input type="text" name="period" value="{{ old('period') }}" placeholder="YYYY-MM" 
+                                   class="homi-input font-mono">
+                            @if($periodLabel)
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--homi-blue)] uppercase">
+                                    {{ $periodLabel }}
+                                </span>
+                            @endif
+                        </div>
                     </div>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Bulan Tagihan (opsional)</label>
-                    {{-- tetap kirim ke field 'period' --}}
-                    <input type="text" name="period" value="{{ old('period') }}"
-                           placeholder="Contoh: 2026-06"
-                           class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm">
-                    <div class="text-[12px] text-gray-500 mt-1">
-                        Format: <span class="font-mono">YYYY-MM</span>
-                        @if($periodLabel)
-                            · Terbaca: <span class="font-semibold text-gray-700">{{ $periodLabel }}</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nomor Tagihan (opsional)</label>
-                    {{-- tetap kirim ke field 'invoice_id' --}}
-                    <input type="number" name="invoice_id" value="{{ old('invoice_id') }}"
-                           placeholder="Contoh: 123"
-                           class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm">
-                    <div class="text-[12px] text-gray-500 mt-1">
-                        Kalau tahu nomor tagihannya. Kalau tidak, boleh dikosongkan.
-                    </div>
+                <div class="space-y-2">
+                    <label class="homi-label text-slate-500">Nomor Invoice Terkait (Opsional)</label>
+                    <input type="number" name="invoice_id" value="{{ old('invoice_id') }}" placeholder="ID Invoice" 
+                           class="homi-input">
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 pt-2">
-                <a href="{{ route('admin.notifications.index') }}"
-                   class="px-4 py-2 rounded-lg border border-[var(--homi-border)] text-sm hover:bg-gray-50">
-                    Batal
+            {{-- Actions --}}
+            <div class="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-8 border-t border-slate-100">
+                <a href="{{ route('admin.notifications.index') }}" class="w-full sm:w-auto text-center px-10 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
+                    Kembali
                 </a>
-                <button type="submit"
-                        class="px-4 py-2 rounded-lg bg-[var(--homi-orange)] text-white text-sm font-semibold hover:bg-orange-500">
-                    Kirim
+                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[var(--homi-blue-light)] hover:bg-[var(--homi-blue)] transition-all">
+                    Kirim Sekarang
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
     </div>
 </div>
 @endsection

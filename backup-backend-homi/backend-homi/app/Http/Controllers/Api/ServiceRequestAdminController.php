@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceRequest;
 use App\Services\ServiceRequestPdfService;
-use Illuminate\Http\Request;
+use App\Services\FirebaseService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ServiceRequestAdminController extends Controller
 {
@@ -39,33 +40,55 @@ class ServiceRequestAdminController extends Controller
 
         $sr = ServiceRequest::with(['type.letterType', 'user.residentProfile'])->findOrFail($id);
 
-        // kalau approve → wajib ada template surat, dan wajib generate pdf
+        $pdfGenerated = false;
+        $warning = null;
         if ($data['status'] === 'approved') {
-            if (!$sr->type?->letterType) {
-                return response()->json([
-                    'message' => 'Gagal approve: jenis pengajuan ini belum terhubung ke template surat (request_types.letter_type_id).'
-                ], 422);
-            }
-
             try {
                 $path = $pdfService->generate($sr);
                 $sr->pdf_path = $path;
+                $pdfGenerated = true;
             } catch (\Throwable $e) {
-                return response()->json([
-                    'message' => 'Gagal generate PDF: ' . $e->getMessage()
-                ], 422);
+                $warning = 'Gagal generate PDF: ' . $e->getMessage();
             }
         }
 
-        $sr->status      = $data['status'];
-        $sr->admin_note  = $data['admin_note'] ?? null;
+        $sr->status = $data['status'];
+
+        $adminNote = (string) ($data['admin_note'] ?? '');
+        if ($warning) {
+            $adminNote = trim($adminNote);
+            $adminNote = $adminNote !== '' ? $adminNote . ' | ' . $warning : $warning;
+        }
+        $sr->admin_note = $adminNote !== '' ? $adminNote : null;
+
         $sr->verified_by = $request->user()->id;
         $sr->verified_at = now();
         $sr->save();
 
+        // Send FCM Notification
+        if ($sr->user && $sr->user->fcm_token) {
+            $fcm = new FirebaseService();
+            $statusLabel = match($sr->status) {
+                'processed' => 'Sedang Diproses',
+                'approved'  => 'Disetujui',
+                'rejected'  => 'Ditolak',
+                default     => strtoupper($sr->status)
+            };
+            
+            $fcm->sendNotification(
+                $sr->user->fcm_token,
+                "Update Pengajuan: " . ($sr->type->name ?? 'Surat'),
+                "Status pengajuan Anda kini: {$statusLabel}." . ($sr->status === 'approved' ? " PDF sudah dapat diunduh." : "")
+            );
+        }
+
         return response()->json([
-            'message' => 'Status pengajuan diperbarui',
-            'data'    => $sr->fresh(['type:id,name,letter_type_id', 'user:id,name,email', 'verifier:id,name']),
+            'message' => $data['status'] === 'approved'
+                ? ($pdfGenerated ? 'Pengajuan disetujui dan PDF berhasil dibuat.' : 'Pengajuan disetujui, namun PDF belum dibuat.')
+                : 'Status pengajuan diperbarui',
+            'pdf_generated' => $pdfGenerated,
+            'warning' => $warning,
+            'data' => $sr->fresh(['type:id,name,letter_type_id', 'user:id,name,email', 'verifier:id,name']),
         ]);
     }
 }

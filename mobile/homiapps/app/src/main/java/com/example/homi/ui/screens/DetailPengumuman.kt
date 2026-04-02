@@ -11,6 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,45 +48,98 @@ fun DetailPengumumanScreen(
     val inter = FontFamily(Font(R.font.inter_variablefont_opsz_wght))
 
     val imageUrl = announcement.imageUrl
-        ?.replace("127.0.0.1", "10.0.2.2")
-        ?.replace("localhost", "10.0.2.2")
+        ?.replace("http://127.0.0.1:8000", com.example.homi.data.remote.ApiConfig.HOST)
+        ?.replace("http://localhost:8000", com.example.homi.data.remote.ApiConfig.HOST)
+        ?.replace("http://127.0.0.1", com.example.homi.data.remote.ApiConfig.HOST)
+        ?.replace("http://localhost", com.example.homi.data.remote.ApiConfig.HOST)
 
     val rawDate = announcement.publishedAt ?: announcement.createdAt ?: ""
     val displayDate = formatIsoToId(rawDate)
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEFEFEF))
+            .background(Color.White)
     ) {
-        // ===== Header image =====
-        if (!imageUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Header Image",
-                contentScale = ContentScale.Crop,
+        // ===== IMAGE TOPPER WITH OVERLAY =====
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+        ) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Header Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.img_pengumuman),
+                    contentDescription = "Fallback Header",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Black Gradient Scrim (for text readability)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.6f),
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.4f)
+                            )
+                        )
+                    )
+            )
+
+            // Toolbar Content (Back + Title)
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.img_pengumuman),
-                contentDescription = "Header Image (fallback)",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-            )
+                    .statusBarsPadding()
+                    .padding(top = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    if (onBack != null) {
+                        IconButton(
+                            onClick = { onBack.invoke() },
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.panahkembali),
+                                contentDescription = "Kembali",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Pengumuman",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = poppins,
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
         }
 
-        // ===== Konten putih rounded =====
+        // ===== CONTENT CARD =====
         Card(
             modifier = Modifier
                 .fillMaxSize()
-                .offset(y = (-40).dp),
+                .padding(top = 220.dp), // Adjust this to overlap slightly
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -93,48 +148,66 @@ fun DetailPengumumanScreen(
                     .padding(horizontal = 15.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                // tombol back (simple)
-                if (onBack != null) {
+
+                // Kategori & Tanggal
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CategoryBadge(category = announcement.category ?: "Informasi")
+                    
                     Text(
-                        text = "Kembali",
-                        fontSize = 12.sp,
-                        color = Color(0xFF2F7FA3),
-                        modifier = Modifier
-                            .padding(bottom = 8.dp)
-                            .clickable { onBack.invoke() }
+                        text = displayDate,
+                        fontSize = 11.sp,
+                        color = Color.Gray,
+                        fontFamily = inter
                     )
                 }
 
                 Text(
-                    text = "Pengumuman",
+                    text = announcement.title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = poppins,
                     color = Color.Black,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    lineHeight = 28.sp
                 )
 
-                // tanggal/published
-                Text(
-                    text = displayDate,
-                    fontSize = 10.sp,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center,
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Info Penulis (Author)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
-
-                Text(
-                    text = announcement.title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = inter,
-                    color = Color.Black
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
+                        .padding(bottom = 20.dp)
+                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(Color(0xFF2F7FA3), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("H", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "Admin Homi",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "Pengelola Kawasan Hawaii Garden",
+                            fontSize = 10.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
 
                 // ✅ render HTML content
                 HtmlText(
@@ -142,8 +215,44 @@ fun DetailPengumumanScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
             }
+        }
+    }
+}
+
+@Composable
+fun CategoryBadge(category: String) {
+    val bgColor = when (category) {
+        "Keamanan" -> Color(0xFFFFEBEE)
+        "Kegiatan" -> Color(0xFFE3F2FD)
+        "Pembangunan" -> Color(0xFFF1F8E9)
+        "Keuangan" -> Color(0xFFFFF3E0)
+        else -> Color(0xFFF3E5F5)
+    }
+    val textColor = when (category) {
+        "Keamanan" -> Color(0xFFC62828)
+        "Kegiatan" -> Color(0xFF1565C0)
+        "Pembangunan" -> Color(0xFF2E7D32)
+        "Keuangan" -> Color(0xFFEF6C00)
+        else -> Color(0xFF7B1FA2)
+    }
+
+    Box(
+        modifier = Modifier
+            .background(bgColor, RoundedCornerShape(4.dp))
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(6.dp).background(textColor, RoundedCornerShape(3.dp)))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = category,
+                color = textColor,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
+            )
         }
     }
 }

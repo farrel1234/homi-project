@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\User;
+use App\Models\AppNotification;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
@@ -36,8 +38,13 @@ class ComplaintController extends Controller
 
     public function edit(Complaint $complaint)
     {
-        // sesuaikan kalau admin kamu bukan role_id=1
-        $admins = User::where('role_id', 1)->orderBy('full_name')->get();
+        $admins = User::query()
+            ->where(function ($q) {
+                $q->where('role_id', 1)
+                    ->orWhereIn('role', ['admin', 'superadmin']);
+            })
+            ->orderByRaw('COALESCE(full_name, name) asc')
+            ->get();
 
         return view('complaints.edit', [
             'item'   => $complaint,
@@ -45,11 +52,14 @@ class ComplaintController extends Controller
         ]);
     }
 
-    public function update(Request $request, Complaint $complaint)
+    public function update(Request $request, Complaint $complaint, FirebaseService $firebaseService)
     {
         $data = $request->validate([
             'status'      => ['required', 'in:baru,diproses,selesai'],
             'assigned_to' => ['nullable', 'exists:users,id'],
+            'rt_name'     => ['nullable', 'string', 'max:255'],
+            'rt_number'   => ['nullable', 'string', 'max:50'],
+            'rw_number'   => ['nullable', 'string', 'max:50'],
         ], [
             'status.in' => 'The selected status is invalid.',
         ]);
@@ -60,7 +70,39 @@ class ComplaintController extends Controller
             $data['resolved_at'] = null;
         }
 
+        $oldStatus = $complaint->status;
         $complaint->update($data);
+
+        // Send Notification if status changed
+        if ($oldStatus !== $complaint->status) {
+            $statusLabels = [
+                'baru' => 'Baru',
+                'diproses' => 'Diproses',
+                'selesai' => 'Selesai'
+            ];
+            $newLabel = $statusLabels[$complaint->status] ?? $complaint->status;
+            
+            $title = "Update Pengaduan";
+            $msg = "Status pengaduan Anda '" . ($complaint->perihal ?? 'Layanan') . "' kini: " . $newLabel;
+            
+            AppNotification::create([
+                'user_id' => $complaint->user_id,
+                'sent_by' => auth()->id(),
+                'title'   => $title,
+                'message' => $msg,
+                'type'    => 'complaint_status_updated',
+                'data'    => ['id' => $complaint->id, 'route' => 'DetailPengaduan']
+            ]);
+
+            if ($complaint->user && $complaint->user->fcm_token) {
+                $firebaseService->sendNotification(
+                    $complaint->user->fcm_token,
+                    $title,
+                    $msg,
+                    ['route' => 'DetailPengaduan', 'id' => (string)$complaint->id]
+                );
+            }
+        }
 
         return redirect()
             ->route('complaints.index')

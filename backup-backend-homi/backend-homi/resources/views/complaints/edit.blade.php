@@ -182,6 +182,26 @@
                         </select>
                     </div>
 
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Informasi Tanda Tangan</div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="homi-label">No RT</label>
+                                <input type="text" name="rt_number" class="homi-input" placeholder="001" value="{{ old('rt_number', $item->rt_number) }}">
+                            </div>
+                            <div>
+                                <label class="homi-label">No RW</label>
+                                <input type="text" name="rw_number" class="homi-input" placeholder="005" value="{{ old('rw_number', $item->rw_number) }}">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="homi-label">Nama Ketua RT</label>
+                            <input type="text" name="rt_name" class="homi-input" placeholder="Nama Lengkap Ketua RT" value="{{ old('rt_name', $item->rt_name) }}">
+                        </div>
+                    </div>
+
                     <div class="flex flex-wrap gap-2 pt-1">
                         <button type="submit"
                                 class="px-4 py-2 rounded-lg bg-[var(--homi-orange)] text-white text-sm font-semibold hover:bg-orange-500">

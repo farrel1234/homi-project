@@ -1,0 +1,1 @@
+echo 'payment=' . App\Models\FeePayment::with(['payer:id,full_name,name,username,email,phone','invoice.feeType:id,name','reviewer:id,name,full_name,username,email'])- . PHP_EOL; 

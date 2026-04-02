@@ -16,6 +16,9 @@ class Complaint extends Model
         'status',        // enum bebas: baru/diproses/selesai (atau sesuai yang kalian pakai)
         'resolved_at',
         'assigned_to',
+        'rt_name',
+        'rt_number',
+        'rw_number',
     ];
 
     protected $casts = [

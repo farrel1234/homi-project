@@ -17,6 +17,9 @@ data class AnnouncementDto(
     val title: String,
     val content: String,
 
+    @SerializedName("category")
+    val category: String? = null,
+
     @SerializedName("image_path")
     val imagePath: String? = null,
 

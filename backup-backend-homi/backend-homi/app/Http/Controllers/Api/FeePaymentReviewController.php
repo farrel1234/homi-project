@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FeePayment;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 
 class FeePaymentReviewController extends Controller
@@ -46,6 +47,16 @@ class FeePaymentReviewController extends Controller
             $payment->invoice->update(['status' => 'paid']);
         }
 
+        // Send FCM Notification
+        if ($payment->payer && $payment->payer->fcm_token) {
+            $fcm = new FirebaseService();
+            $fcm->sendNotification(
+                $payment->payer->fcm_token,
+                "Pembayaran Disetujui",
+                "Pembayaran iuran Anda untuk periode {$payment->invoice->period} telah disetujui. Terima kasih!"
+            );
+        }
+
         return response()->json(['message' => 'Payment approved']);
     }
 
@@ -68,6 +79,17 @@ class FeePaymentReviewController extends Controller
 
         if ($payment->invoice) {
             $payment->invoice->update(['status' => 'rejected']);
+        }
+
+        // Send FCM Notification
+        if ($payment->payer && $payment->payer->fcm_token) {
+            $fcm = new FirebaseService();
+            $reason = $request->input('reason') ?? "Data tidak sesuai";
+            $fcm->sendNotification(
+                $payment->payer->fcm_token,
+                "Pembayaran Ditolak",
+                "Pembayaran iuran Anda ditolak. Alasan: {$reason}. Silakan hubungi admin bila perlu."
+            );
         }
 
         return response()->json(['message' => 'Payment rejected']);

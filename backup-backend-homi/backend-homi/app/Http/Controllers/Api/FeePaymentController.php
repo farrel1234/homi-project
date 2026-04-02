@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FeeInvoice;
 use App\Models\FeePayment;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -47,19 +48,61 @@ class FeePaymentController extends Controller
                 'review_status' => 'pending',
             ]);
 
-            // update invoice status (pakai assignment biar aman dari fillable issue)
-            $invoice->status = 'pending';
-            $invoice->save();
+            // --- AUTO VALIDATION OCR ---
+            $ocrService = app(\App\Services\OcrService::class);
+            $ocrResult = $ocrService->validatePayment($payment);
+
+            if ($ocrResult && $ocrResult['match']) {
+                $payment->update([
+                    'review_status' => 'approved',
+                    'reviewed_by'   => 0, // System
+                    'reviewed_at'   => now(),
+                    'note'          => '[AUTO APPROVED] Menemukan nominal sesuai: Rp ' . number_format($ocrResult['amount'], 0, ',', '.')
+                ]);
+
+                $invoice->update(['status' => 'paid']);
+                $isAutoApproved = true;
+            } else {
+                $invoice->update(['status' => 'pending']);
+                $isAutoApproved = false;
+            }
 
             return [
                 'payment' => $payment,
+                'auto_approved' => $isAutoApproved,
+                'ocr_text' => $ocrResult['text'] ?? null
             ];
         });
 
+        // --- SEND FCM NOTIFICATION ---
+        if ($user->fcm_token) {
+            $fcm = new FirebaseService();
+            if ($result['auto_approved']) {
+                $periodStr = $invoice->period instanceof \Carbon\Carbon 
+                    ? $invoice->period->format('F Y') 
+                    : (is_string($invoice->period) ? $invoice->period : 'N/A');
+                
+                $fcm->sendNotification(
+                    $user->fcm_token,
+                    "Pembayaran Iuran Berhasil",
+                    "Pembayaran untuk periode {$periodStr} telah dikonfirmasi otomatis. Terima kasih!"
+                );
+            } else {
+                $fcm->sendNotification(
+                    $user->fcm_token,
+                    "Bukti Pembayaran Terkirim",
+                    "Bukti pembayaran Anda sedang dalam antrean verifikasi admin. Mohon tunggu."
+                );
+            }
+        }
+
         return response()->json([
-            'message' => 'Proof uploaded, waiting for admin review',
+            'message' => $result['auto_approved'] 
+                ? 'Pembayaran Anda berhasil divalidasi dan disetujui otomatis oleh sistem.' 
+                : 'Bukti terkirim. Menunggu verifikasi admin (OCR tidak dapat memvalidasi otomatis).',
             'data' => [
                 'payment_id' => $result['payment']->id,
+                'status'     => $result['payment']->review_status,
                 'proof_url'  => asset('storage/' . $result['payment']->proof_path),
             ],
         ], 201);

@@ -42,9 +42,14 @@ object ApiClient {
 
             // 3) Biar Laravel selalu balikin JSON
             val acceptJsonInterceptor = Interceptor { chain ->
-                val req = chain.request().newBuilder()
+                val builder = chain.request().newBuilder()
                     .header("Accept", "application/json")
-                    .build()
+                val tenantCode = ApiConfig.tenantCode.trim()
+                if (tenantCode.isNotEmpty()) {
+                    builder.header(ApiConfig.TENANT_HEADER, tenantCode)
+                }
+
+                val req = builder.build()
                 chain.proceed(req)
             }
 
@@ -85,5 +90,13 @@ object ApiClient {
 
     fun clear() {
         retrofit = null
+    }
+
+    fun getApiMock(): ApiService {
+        return Retrofit.Builder()
+            .baseUrl("http://localhost/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
     }
 }

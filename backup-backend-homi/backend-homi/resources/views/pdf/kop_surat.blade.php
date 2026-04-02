@@ -3,31 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    @page { margin: 2.5cm 2.5cm 2.5cm 2.5cm; }
+    @page { margin: 1.5cm 2cm 2cm 2cm; }
 
-    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; line-height: 1.5; }
+    body { font-family: "Times New Roman", Times, serif; font-size: 12pt; line-height: 1.3; color: #000; }
 
-    .kop-table { width: 100%; border-collapse: collapse; }
+    .kop-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
     .kop-table td { vertical-align: middle; }
-    .kop-logo { width: 80px; }
-    .kop-logo img { width: 70px; height: auto; display:block; }
+    .kop-logo { width: 80px; text-align: left; }
+    .kop-logo img { width: 80px; height: auto; }
 
-    .kop-text { text-align: center; }
-    .kop-text .l1 { font-weight: 700; font-size: 14px; text-transform: uppercase; }
-    .kop-text .l2 { font-weight: 700; font-size: 13px; text-transform: uppercase; }
-    .kop-text .l3 { font-size: 12px; text-transform: uppercase; }
-    .kop-text .l4 { font-size: 11px; }
+    .kop-text { text-align: center; padding-right: 80px; } /* padding to balance logo */
+    .kop-text .l1 { font-weight: bold; font-size: 16pt; margin: 0; }
+    .kop-text .l2 { font-weight: bold; font-size: 14pt; margin: 0; text-transform: uppercase; }
+    .kop-text .l3 { font-weight: bold; font-size: 14pt; margin: 0; text-transform: uppercase; }
+    .kop-text .l4 { font-size: 9pt; margin-top: 5px; font-style: normal; }
 
-    .line { border-top: 2px solid #000; margin: 10px 0 14px; }
+    .line-double { border-top: 3px solid #000; border-bottom: 1px solid #000; height: 3px; margin: 5px 0 20px 0; }
 
-    /* Style tambahan dari template (kalau ada) */
+    /* Extra CSS from service/template */
     {{ $extraCss ?? '' }}
   </style>
 </head>
 <body>
 
 @php
-  $logoPath = public_path('images/logo.png'); // ganti kalau jpg
+  $logoPath = public_path('images/logo.png');
   $logoData = null;
 
   if (file_exists($logoPath)) {
@@ -45,18 +45,16 @@
       @endif
     </td>
     <td class="kop-text">
-      <div class="l1">{{ $kopLine1 ?? 'PENGELOLA PERUMAHAN HAWAI GARDEN' }}</div>
-      <div class="l2">{{ $kopLine2 ?? 'LAYANAN WARGA' }}</div>
-      <div class="l3">{{ $kopLine3 ?? 'KOTA BATAM' }}</div>
-      <div class="l4">{{ $kopLine4 ?? 'Hawai Garden Batam Center' }}</div>
+      <div class="l1">PEMERINTAH KOTA BATAM</div>
+      <div class="l2">KECAMATAN BATAM KOTA</div>
+      <div class="l3">KELURAHAN BELIAN</div>
+      <div class="l4">Jl. Sudirman No.14, Belian, Kec. Batam Kota, Kota Batam, Kepulauan Riau</div>
     </td>
-    <td class="kop-logo"></td>
   </tr>
 </table>
 
-<div class="line"></div>
+<div class="line-double"></div>
 
-{{-- isi surat dari template_html --}}
 {!! $body !!}
 
 </body>

@@ -24,22 +24,43 @@ interface ApiService {
     @POST("register")
     suspend fun register(@Body body: RegisterRequest): ApiResponse<RegisterData>
 
+    @GET("tenants")
+    suspend fun getPublicTenants(): TenantListResponse
+
     @POST("verify-otp")
     suspend fun verifyOtp(@Body body: VerifyOtpRequest): ApiResponse<VerifyOtpData>
 
-    // ✅ GOOGLE LOGIN
+    @POST("resend-otp")
+    suspend fun resendOtp(@Body body: ForgotPasswordRequest): ApiResponse<ForgotPasswordData>
+
+    @POST("forgot-password")
+    suspend fun forgotPassword(@Body body: ForgotPasswordRequest): ApiResponse<ForgotPasswordData>
+
+    @POST("verify-reset-otp")
+    suspend fun verifyResetOtp(@Body body: VerifyOtpRequest): ApiResponse<VerifyResetOtpData>
+
+    @POST("reset-password")
+    suspend fun resetPassword(@Body body: ResetPasswordRequest): ApiResponse<Any>
+
+    // GOOGLE LOGIN
     @POST("login-google")
     suspend fun loginGoogle(@Body body: GoogleLoginRequest): ApiResponse<VerifyOtpData>
 
+    @POST("login-google")
+    suspend fun loginGoogleRaw(@Body body: GoogleLoginRequest): Response<ResponseBody>
+
+    // ANNOUNCEMENTS
     @GET("announcements")
     suspend fun getAnnouncements(): AnnouncementsResponse
 
     @GET("announcements/{id}")
     suspend fun getAnnouncementDetail(@Path("id") id: Long): AnnouncementDetailResponse
 
+    // DIRECTORY
     @GET("directory")
     suspend fun getDirectory(@Query("q") q: String? = null): DirectoryResponse
 
+    // COMPLAINTS
     @GET("complaints")
     suspend fun getComplaints(): ComplaintsResponse
 
@@ -56,6 +77,7 @@ interface ApiService {
         @Part foto: MultipartBody.Part?
     ): CreateComplaintResponse
 
+    // SERVICE REQUESTS
     @GET("request-types")
     suspend fun getRequestTypes(): RequestTypesResponse
 
@@ -72,6 +94,7 @@ interface ApiService {
     @GET("service-requests/{id}/download")
     suspend fun downloadServiceRequestPdf(@Path("id") id: Long): Response<ResponseBody>
 
+    // FEES
     @GET("fees/invoices")
     suspend fun getFeeInvoices(): FeeInvoicesResponse
 
@@ -86,6 +109,7 @@ interface ApiService {
         @Part("note") note: RequestBody? = null
     ): PayInvoiceResponse
 
+    // NOTIFICATIONS
     @GET("notifications")
     suspend fun getNotifications(@Query("page") page: Int = 1): NotificationListResponse
 
@@ -98,6 +122,7 @@ interface ApiService {
     @POST("notifications/read-all")
     suspend fun readAllNotifications(): BasicMessageResponse
 
+    // PROFILE
     @POST("change-password")
     suspend fun changePassword(@Body req: ChangePasswordRequest): OkResponse
 
@@ -112,4 +137,13 @@ interface ApiService {
 
     @GET("me")
     suspend fun getMe(): Response<ResponseBody>
+
+    @POST("me/fcm-token")
+    suspend fun updateFcmToken(@Body body: Map<String, String>): Response<ResponseBody>
+
+    @Multipart
+    @POST("me/photo")
+    suspend fun updateProfilePhoto(
+        @Part photo: MultipartBody.Part
+    ): Response<ResponseBody>
 }

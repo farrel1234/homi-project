@@ -1,37 +1,68 @@
 @extends('layouts.app')
+
 @section('title','Tambah Unit')
+@section('page_title','Tambah Unit')
+@section('page_subtitle','Tambahkan data unit baru')
 
 @section('content')
-<div class="max-w-md mx-auto p-6">
-  <h1 class="text-xl font-semibold mb-4">Tambah Unit</h1>
-
-  @if($errors->any())
-    <div class="bg-red-100 text-red-700 p-3 mb-4 rounded">
-      <ul class="list-disc ml-5">
-        @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-      </ul>
-    </div>
-  @endif
-
-  <form action="{{ route('units.store') }}" method="POST" class="space-y-3">
-    @csrf
+<div class="mx-auto max-w-2xl space-y-5">
     <div>
-      <label class="block text-sm mb-1">Kode <span class="text-red-600">*</span></label>
-      <input type="text" name="code" value="{{ old('code') }}" class="w-full border rounded p-2" placeholder="mis: D1-07" required>
-    </div>
-    <div>
-      <label class="block text-sm mb-1">Blok</label>
-      <input type="text" name="block" value="{{ old('block') }}" class="w-full border rounded p-2" placeholder="opsional">
-    </div>
-    <div>
-      <label class="block text-sm mb-1">Lantai</label>
-      <input type="number" name="floor" value="{{ old('floor') }}" class="w-full border rounded p-2" placeholder="opsional">
+        <div class="homi-title">Tambah Unit</div>
+        <div class="homi-subtitle">Isi informasi unit secara ringkas dan jelas.</div>
     </div>
 
-    <div class="flex items-center gap-3 pt-2">
-      <button class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
-      <a href="{{ route('units.index') }}" class="text-slate-600 hover:underline">Batal</a>
+    @if($errors->any())
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
+    <div class="homi-card">
+        <form action="{{ route('units.store') }}" method="POST" class="space-y-4">
+            @csrf
+            <div>
+                <label for="code" class="mb-1 block text-sm font-semibold text-slate-700">Kode Unit <span class="text-rose-600">*</span></label>
+                <input id="code"
+                       type="text"
+                       name="code"
+                       value="{{ old('code') }}"
+                       placeholder="Contoh: D1-07"
+                       required
+                       class="w-full rounded-lg border px-3 py-2.5 text-sm">
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="block" class="mb-1 block text-sm font-semibold text-slate-700">Blok</label>
+                    <input id="block"
+                           type="text"
+                           name="block"
+                           value="{{ old('block') }}"
+                           placeholder="Opsional"
+                           class="w-full rounded-lg border px-3 py-2.5 text-sm">
+                </div>
+                <div>
+                    <label for="floor" class="mb-1 block text-sm font-semibold text-slate-700">Lantai</label>
+                    <input id="floor"
+                           type="number"
+                           name="floor"
+                           value="{{ old('floor') }}"
+                           placeholder="Opsional"
+                           class="w-full rounded-lg border px-3 py-2.5 text-sm">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
+                <a href="{{ route('units.index') }}"
+                   class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                    Batal
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg bg-[var(--homi-orange)] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e67949]">
+                    Simpan Unit
+                </button>
+            </div>
+        </form>
     </div>
-  </form>
 </div>
 @endsection

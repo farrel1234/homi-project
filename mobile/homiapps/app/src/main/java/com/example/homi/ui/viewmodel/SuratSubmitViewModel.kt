@@ -31,6 +31,8 @@ class SuratSubmitViewModel(
         subject: String,
         payload: Map<String, String>
     ) {
+        if (_state.value.loading) return
+
         val reporter = payload["nama"]
             ?: payload["namaPelapor"]
             ?: payload["nama_pelapor"]
@@ -41,7 +43,8 @@ class SuratSubmitViewModel(
         val place = payload["alamat"]
             ?: payload["alamatPelapor"]
             ?: payload["alamat_pelapor"]
-            ?: "Hawai Garden"
+            ?: payload["lokasi_layanan"]
+            ?: "Perumahan"
 
         viewModelScope.launch {
             _state.value = SuratSubmitState(loading = true)
@@ -49,6 +52,56 @@ class SuratSubmitViewModel(
             try {
                 val newId = repo.submitSurat(
                     requestTypeId = requestTypeId,
+                    subject = subject,
+                    reporterName = reporter,
+                    requestDateIso = todayIso(),
+                    place = place,
+                    dataInput = payload
+                )
+
+                _state.value = SuratSubmitState(createdId = newId)
+            } catch (e: Exception) {
+                _state.value = SuratSubmitState(
+                    error = e.message ?: "Gagal submit"
+                )
+            }
+        }
+    }
+
+    fun submitByTypeKeywords(
+        fallbackRequestTypeId: Int,
+        typeKeywords: List<String>,
+        subject: String,
+        payload: Map<String, String>
+    ) {
+        if (_state.value.loading) return
+
+        val reporter = payload["nama"]
+            ?: payload["namaPelapor"]
+            ?: payload["nama_pelapor"]
+            ?: payload["nama_lengkap"]
+            ?: payload["reporter_name"]
+            ?: "Warga"
+
+        val place = payload["alamat"]
+            ?: payload["alamatPelapor"]
+            ?: payload["alamat_pelapor"]
+            ?: payload["lokasi_layanan"]
+            ?: "Perumahan"
+
+        viewModelScope.launch {
+            _state.value = SuratSubmitState(loading = true)
+
+            try {
+                val resolved = runCatching {
+                    repo.resolveRequestTypeId(
+                        keywords = typeKeywords,
+                        letterOnly = true
+                    )
+                }.getOrNull()
+
+                val newId = repo.submitSurat(
+                    requestTypeId = resolved ?: fallbackRequestTypeId,
                     subject = subject,
                     reporterName = reporter,
                     requestDateIso = todayIso(),

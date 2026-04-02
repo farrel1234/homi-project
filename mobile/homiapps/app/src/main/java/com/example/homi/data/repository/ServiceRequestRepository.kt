@@ -1,12 +1,34 @@
 package com.example.homi.data.repository
 
 import com.example.homi.data.model.CreateServiceRequestBody
+import com.example.homi.data.model.RequestTypeDto
 import com.example.homi.data.model.ServiceRequestDto
 import com.example.homi.data.remote.ApiService
 
 class ServiceRequestRepository(
     private val api: ApiService
 ) {
+    suspend fun getRequestTypes(): List<RequestTypeDto> =
+        api.getRequestTypes().data
+
+    suspend fun resolveRequestTypeId(
+        keywords: List<String>,
+        letterOnly: Boolean = true
+    ): Int? {
+        if (keywords.isEmpty()) return null
+
+        val lowers = keywords.map { it.trim().lowercase() }.filter { it.isNotBlank() }
+        if (lowers.isEmpty()) return null
+
+        val all = getRequestTypes()
+        val source = if (letterOnly) all.filter { it.letterTypeId != null } else all
+
+        return source.firstOrNull { t ->
+            val name = t.name.lowercase()
+            lowers.any { kw -> name.contains(kw) }
+        }?.id
+    }
+
     private fun snakeToCamel(key: String): String {
         val k = key.trim()
         if (!k.contains('_')) return k

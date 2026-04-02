@@ -11,10 +11,11 @@ class AnnouncementController extends Controller
     // GET /api/announcements
     public function index(Request $request)
     {
-        // misal ambil hanya yang sudah publish, urut terbaru,
-        // boleh tambahkan pagination bila perlu
+        $tenantId = $request->user()->tenant_id;
+
         $announcements = Announcement::whereNotNull('published_at')
-            ->orderByDesc('is_pinned')    // pinned diatas
+            ->where('tenant_id', $tenantId)
+            ->orderByDesc('is_pinned')
             ->orderByDesc('published_at')
             ->get();
 
@@ -63,6 +64,7 @@ class AnnouncementController extends Controller
 
         $announcement = Announcement::create([
             'title'        => $data['title'],
+            'tenant_id'    => $user->tenant_id,
             'content'      => $data['content'],
             'is_pinned'    => $request->boolean('is_pinned'),
             'published_at' => now(),
@@ -70,9 +72,27 @@ class AnnouncementController extends Controller
             'image_path'   => $imagePath,
         ]);
 
+        // 🔥 Broadcast Kirim Push Notification FCM ke semua user di tenant yang sama
+        $firebase = new \App\Services\FirebaseService();
+        $users = \App\Models\User::where('tenant_id', $user->tenant_id)
+            ->whereNotNull('fcm_token')
+            ->get();
+        
+        $bodyText = strlen($announcement->content) > 60 
+            ? substr($announcement->content, 0, 60) . '...' 
+            : $announcement->content;
+
+        foreach ($users as $u) {
+            $firebase->sendNotification(
+                $u->fcm_token,
+                "Pengumuman Baru: " . $announcement->title,
+                $bodyText
+            );
+        }
+
         return response()->json([
             'status'  => true,
-            'message' => 'Pengumuman berhasil dibuat.',
+            'message' => 'Pengumuman berhasil dibuat dan notifikasi dikirim.',
             'data'    => $announcement,
         ], 201);
     }

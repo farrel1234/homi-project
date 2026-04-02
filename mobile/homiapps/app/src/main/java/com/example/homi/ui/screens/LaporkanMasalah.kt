@@ -65,35 +65,27 @@ fun LaporkanMasalahScreen(
     }
 
     Box(Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(R.drawable.bg_dashboard),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(BlueMain)
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            Spacer(Modifier.height(12.dp))
-
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // ✅ Panah kembali seperti mockup (tanpa background)
-                Image(
-                    painter = painterResource(R.drawable.panahkembali),
-                    contentDescription = "Kembali",
-                    modifier = Modifier
-                        .size(22.dp)
-                        .align(Alignment.CenterStart)
-                        .clickable { onBack() }
-                )
+                IconButton(onClick = { onBack() }) {
+                    Icon(
+                        painter = painterResource(R.drawable.panahkembali),
+                        contentDescription = "Kembali",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
 
                 Text(
                     text = "Laporkan Masalah",
@@ -101,13 +93,11 @@ fun LaporkanMasalahScreen(
                     fontFamily = PoppinsSemi,
                     fontSize = 22.sp,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 40.dp)
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(Modifier.width(40.dp))
             }
 
-            Spacer(Modifier.height(6.dp))
             Text(
                 text = "Laporkan yaaa kalau ada masalah dengan aplikasi kami",
                 color = Color.White.copy(alpha = 0.9f),

@@ -3,135 +3,105 @@
 @section('title','Pengajuan Surat')
 
 @section('content')
-<div class="space-y-6">
-
-    {{-- HEADER --}}
-    <div class="flex flex-col gap-1">
-        <h1 class="homi-title">Pengajuan Surat</h1>
-        <p class="homi-subtitle">
-            Kelola pengajuan surat yang diajukan warga. Admin dapat memproses dan mengunduh surat dalam bentuk PDF.
-        </p>
+<div class="space-y-8 py-4">
+    {{-- Header & Search --}}
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-1">
+            <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase italic">Arsip Surat</h1>
+            <p class="text-slate-500 font-medium">Manajemen dokumen dan surat resmi Hawai Garden</p>
+        </div>
+        
+        <form action="{{ route('letter-requests.index') }}" method="GET" class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <select name="status" class="w-full sm:w-auto pl-5 pr-10 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all">
+                <option value="">SEMUA STATUS</option>
+                <option value="submitted" @selected($status=='submitted')>DIAJUKAN</option>
+                <option value="processed" @selected($status=='processed')>DIPROSES</option>
+                <option value="approved" @selected($status=='approved')>DISETUJUI</option>
+                <option value="rejected" @selected($status=='rejected')>DITOLAK</option>
+            </select>
+            
+            <div class="relative group w-full sm:w-64">
+                <input type="text" name="q" value="{{ $q }}" placeholder="CARI WARGA / JENIS..." 
+                       class="w-full pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all placeholder:text-slate-300">
+                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[var(--homi-blue)] transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </button>
+            </div>
+        </form>
     </div>
 
-    {{-- NOTIFIKASI --}}
-    @if(session('ok'))
-        <div class="homi-card bg-emerald-50 border-emerald-200 text-sm text-emerald-800">
-            {{ session('ok') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="homi-card bg-rose-50 border-rose-200 text-sm text-rose-800">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    {{-- PANEL UTAMA --}}
-    <div class="homi-card space-y-4">
-
-        {{-- FILTER BAR --}}
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-                <h2 class="text-sm font-semibold text-gray-800">
-                    Daftar Pengajuan Surat
-                </h2>
-                <p class="text-[12px] text-gray-500">
-                    Filter berdasarkan status atau cari berdasarkan nama warga / jenis surat.
-                </p>
-            </div>
-
-            <form method="GET"
-                  action="{{ route('letter-requests.index') }}"
-                  class="flex flex-col md:flex-row gap-2 md:items-center text-sm">
-                <select name="status"
-                        class="rounded-xl border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
-                    <option value="">Semua status</option>
-                    <option value="submitted"  @selected($status=='submitted')>Diajukan</option>
-                    <option value="processed"  @selected($status=='processed')>Diproses</option>
-                    <option value="approved"   @selected($status=='approved')>Disetujui</option>
-                    <option value="rejected"   @selected($status=='rejected')>Ditolak</option>
-                </select>
-
-                <input type="text"
-                       name="q"
-                       value="{{ $q }}"
-                       placeholder="Cari nama warga / jenis surat..."
-                       class="w-full md:w-72 rounded-xl border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
-
-                <button
-                    class="px-4 py-2 rounded-xl bg-[var(--homi-blue)] text-white hover:bg-sky-800 font-medium">
-                    Cari
-                </button>
-
-                @if($status || $q)
-                    <a href="{{ route('letter-requests.index') }}"
-                       class="text-xs text-gray-500 hover:underline">
-                        Reset
-                    </a>
-                @endif
-            </form>
-        </div>
-
-        {{-- TABEL --}}
+    {{-- Main Content --}}
+    <div class="homi-card p-0 overflow-hidden border-none shadow-2xl shadow-slate-200">
         <div class="overflow-x-auto">
-            <table class="homi-table text-sm text-left text-gray-800">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th>Warga</th>
-                        <th>Jenis Surat</th>
-                        <th>Status</th>
-                        <th>Diajukan</th>
-                        <th class="text-right">Aksi</th>
+                    <tr class="bg-slate-50 border-b border-slate-100 italic">
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data Pemohon</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Spesifikasi Surat</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status Verifikasi</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Tanggal Masuk</th>
+                        <th class="px-8 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-50">
                     @forelse($items as $req)
-                        <tr>
-                            <td class="align-top">
-                                <div class="font-medium text-[13px] text-gray-900">
-                                    {{ $req->user->full_name ?? $req->user->username ?? '-' }}
-                                </div>
-                                <div class="text-[11px] text-gray-500">
-                                    {{ $req->user->email ?? '-' }}
+                        @php
+                            $u = $req->user;
+                            $name = $u?->full_name ?? $u?->username ?? 'Warga';
+                        @endphp
+                        <tr class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-[var(--homi-blue)]/10 text-[var(--homi-blue)] flex items-center justify-center font-black text-xs">
+                                        {{ strtoupper(substr($name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-black text-slate-900 leading-none mb-1">{{ $name }}</div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">{{ $u?->email ?? '-' }}</div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="align-top">
-                                <div class="text-[13px] text-gray-800">
-                                    {{ $req->type->name ?? '-' }}
-                                </div>
-                                <div class="text-[11px] text-gray-400">
-                                    ID: {{ $req->id }}
-                                </div>
+                            <td class="px-8 py-6">
+                                <div class="font-black text-slate-800 text-xs italic">{{ $req->type->name ?? 'TIPE TIDAK DIKENAL' }}</div>
+                                <div class="text-[9px] font-black text-slate-300 uppercase tracking-[0.15em] mt-0.5">ID: {{ $req->id }}</div>
                             </td>
-                            <td class="align-top">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold {{ $req->status_badge_class }}">
+                            <td class="px-8 py-6">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest italic shadow-sm {{ $req->status_badge_class }}">
                                     {{ $req->status_label }}
                                 </span>
                             </td>
-                            <td class="align-top text-[12px]">
-                                {{ $req->created_at->format('d M Y H:i') }}
+                            <td class="px-8 py-6 text-right">
+                                <div class="font-black text-slate-900 text-sm italic">{{ $req->created_at->format('d M Y') }}</div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic leading-none">{{ $req->created_at->format('H:i') }} WIB</div>
                             </td>
-                            <td class="align-top text-right whitespace-nowrap">
-                                <a href="{{ route('letter-requests.show', $req->id) }}"
-                                   class="text-[12px] text-[var(--homi-blue)] hover:underline font-medium">
+                            <td class="px-8 py-6 text-right">
+                                <a href="{{ route('letter-requests.show', $req->id) }}" 
+                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
                                     Detail
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-sm text-gray-400">
-                                Belum ada pengajuan surat.
+                            <td colspan="5" class="px-8 py-20 text-center">
+                                <div class="flex flex-col items-center justify-center space-y-4 text-slate-300">
+                                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    <p class="font-black uppercase tracking-[0.2em] text-xs">Belum ada pengajuan surat yang masuk</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        {{-- PAGINASI --}}
-        <div class="pt-1">
-            {{ $items->withQueryString()->links() }}
-        </div>
+        
+        @if($items->hasPages())
+            <div class="px-8 py-6 bg-slate-50 border-t border-slate-100">
+                {{ $items->onEachSide(1)->links() }}
+            </div>
+        @endif
     </div>
 </div>
+
 @endsection

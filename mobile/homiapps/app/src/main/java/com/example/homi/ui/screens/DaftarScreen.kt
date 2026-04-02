@@ -1,5 +1,7 @@
 package com.example.homi.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,13 +9,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -21,8 +28,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
@@ -42,30 +47,25 @@ fun DaftarScreen(
         job: String,
         houseType: String,
         housing: String,
-        block: String,
+        blok: String,
         houseNumber: String
     ) -> Unit,
+    preName: String = "",
+    preEmail: String = "",
+    googleId: String = ""
 ) {
     // Theme HOMI
     val poppins = FontFamily(Font(R.font.poppins_semibold))
-    val blue = Color(0xFF256D85)
+    val blue = Color(0xFF2F7FA3) // BlueMain
     val orange = Color(0xFFFFA06B)
-    val bg = Color(0xFFF6FAFC)
+    val bg = Color(0xFF2F7FA3) // Background to match the Topper
 
     // Form state
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf(preName) }
+    var email by remember { mutableStateOf(preEmail) }
 
-    // NB profile
-    var job by remember { mutableStateOf("") }
-    var housing by remember { mutableStateOf("Hawai Garden") }
-    var block by remember { mutableStateOf("") }
-    var houseNumber by remember { mutableStateOf("") }
-
-    // Rumah dropdown
-    val houseTypes = remember { listOf("Tipe 36", "Tipe 45", "Tipe 54", "Tipe 60", "Lainnya") }
-    var houseType by remember { mutableStateOf("") }
-    var houseTypeExpanded by remember { mutableStateOf(false) }
+    // Minimal profile info for registration
+    var tenantCode by remember { mutableStateOf("") } // Kode tenant rahasia
 
     // Password
     var password by remember { mutableStateOf("") }
@@ -89,23 +89,18 @@ fun DaftarScreen(
                 isEmailValid &&
                 isPassValid &&
                 password == confirmPassword &&
-                job.isNotBlank() &&
-                housing.isNotBlank() &&
-                houseType.isNotBlank() &&
-                block.isNotBlank() &&
-                houseNumber.isNotBlank()
+                tenantCode.isNotBlank()
 
     val tfColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFFF5F5F5),
-        unfocusedContainerColor = Color(0xFFF5F5F5),
+        focusedContainerColor = Color(0xFFFBFBFB),
+        unfocusedContainerColor = Color(0xFFFBFBFB),
         focusedBorderColor = blue,
-        unfocusedBorderColor = Color.Gray,
+        unfocusedBorderColor = Color.LightGray,
         cursorColor = blue
     )
 
     fun extractApiMessage(raw: String?): String? {
         if (raw.isNullOrBlank()) return null
-        // cari "message":"...."
         val regex = Regex("\"message\"\\s*:\\s*\"(.*?)\"")
         val match = regex.find(raw) ?: return null
         return match.groupValues.getOrNull(1)
@@ -132,344 +127,217 @@ fun DaftarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(pad)
-                .imePadding()
-                .navigationBarsPadding()
-                .verticalScroll(scroll)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .statusBarsPadding()
         ) {
-            Spacer(Modifier.height(4.dp))
+            // TOPPER THEME
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onGoLogin) {
+                    Image(
+                        painter = painterResource(id = R.drawable.panahkembali),
+                        contentDescription = "Kembali",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Text(
+                    text = "Daftar Warga Baru",
+                    fontFamily = poppins,
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.width(40.dp))
+            }
 
             Text(
-                text = "Daftar",
-                fontSize = 24.sp,
-                fontFamily = poppins,
-                fontWeight = FontWeight.Bold,
-                color = blue
-            )
-            Text(
-                text = "Buat akun HOMI untuk mengakses layanan warga.",
+                text = "Silakan lengkapi data diri Anda untuk bergabung bersama komunitas Hawaii Garden.",
+                fontFamily = FontFamily(Font(R.font.poppins_regular)),
                 fontSize = 12.sp,
-                fontFamily = poppins,
-                color = Color(0xFF4B5563)
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
             )
 
             Spacer(Modifier.height(16.dp))
 
             Card(
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-
-                    // Nama
-                    OutlinedTextField(
-                        value = fullName,
-                        onValueChange = { fullName = it },
-                        label = { Text("Nama Lengkap", fontFamily = poppins) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = tfColors,
-                        enabled = !loading,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focus.moveFocus(FocusDirection.Down) }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding()
+                        .verticalScroll(scroll)
+                        .padding(start = 24.dp, end = 24.dp, top = 24.dp)
+                ) {
+                        Text(
+                            "Data Akun",
+                            fontFamily = poppins,
+                            fontSize = 16.sp,
+                            color = orange,
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
-                    )
 
-                    Spacer(Modifier.height(12.dp))
-
-                    // Email
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email", fontFamily = poppins) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = tfColors,
-                        enabled = !loading,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focus.moveFocus(FocusDirection.Down) }
-                        ),
-                        supportingText = {
-                            if (email.isNotBlank() && !isEmailValid) {
-                                Text("Format email tidak valid", color = Color.Red, fontSize = 11.sp)
-                            }
-                        }
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Tipe Rumah (dropdown)
-                    ExposedDropdownMenuBox(
-                        expanded = houseTypeExpanded,
-                        onExpandedChange = { if (!loading) houseTypeExpanded = !houseTypeExpanded },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                        // Nama
                         OutlinedTextField(
-                            value = houseType,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Tipe Rumah", fontFamily = poppins) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = houseTypeExpanded)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
+                            value = fullName,
+                            onValueChange = { fullName = it },
+                            label = { Text("Nama Lengkap") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = tfColors,
-                            enabled = !loading
+                            enabled = !loading,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) })
                         )
-                        ExposedDropdownMenu(
-                            expanded = houseTypeExpanded,
-                            onDismissRequest = { houseTypeExpanded = false }
-                        ) {
-                            houseTypes.forEach { item ->
-                                DropdownMenuItem(
-                                    text = { Text(item, fontFamily = poppins) },
-                                    onClick = {
-                                        houseType = item
-                                        houseTypeExpanded = false
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Email
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email Aktif") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = tfColors,
+                            enabled = !loading,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
+                            supportingText = { if (email.isNotBlank() && !isEmailValid) Text("Format email tidak valid", color = Color.Red, fontSize = 11.sp) }
+                        )
+
+                        Spacer(Modifier.height(32.dp))
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
+                        Spacer(Modifier.height(24.dp))
+                        
+                        Text(
+                            "Keamanan Akun",
+                            fontFamily = poppins,
+                            fontSize = 16.sp,
+                            color = orange,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Kode Registrasi (Tenant Code)
+                        OutlinedTextField(
+                            value = tenantCode,
+                            onValueChange = { tenantCode = it },
+                            label = { Text("Kode Registrasi") },
+                            placeholder = { Text("Masukkan kode dari pengelola") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = tfColors,
+                            enabled = !loading,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
+                            supportingText = { Text("Wajib diisi sesuai kode perumahan Anda", fontSize = 11.sp) }
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Password
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text("Buat Kata Sandi") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = tfColors,
+                            enabled = !loading,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
+                            supportingText = { if (password.isNotBlank() && !isPassValid) Text("Password minimal 6 karakter", color = Color.Red, fontSize = 11.sp) }
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Konfirmasi
+                        OutlinedTextField(
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            label = { Text("Ulangi Kata Sandi") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = tfColors,
+                            enabled = !loading,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
+                            supportingText = { if (confirmPassword.isNotBlank() && confirmPassword != password) Text("Konfirmasi kata sandi tidak cocok", color = Color.Red, fontSize = 11.sp) }
+                        )
+
+                        Spacer(Modifier.height(32.dp))
+
+                        Button(
+                            onClick = {
+                                focus.clearFocus()
+                                if (!isFormValid || loading) return@Button
+                                loading = true
+                                scope.launch {
+                                    try {
+                                        authRepo.register(
+                                            fullName.trim(),
+                                            email.trim(),
+                                            password,
+                                            tenantCode.trim(),
+                                            googleId.ifBlank { null }
+                                        )
+                                        loading = false
+                                        onGoOtp(email.trim(), "", "", "", "", "")
+                                    } catch (e: Throwable) {
+                                        loading = false
+                                        showError(e)
                                     }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Pekerjaan
-                    OutlinedTextField(
-                        value = job,
-                        onValueChange = { job = it },
-                        label = { Text("Pekerjaan", fontFamily = poppins) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = tfColors,
-                        enabled = !loading,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focus.moveFocus(FocusDirection.Down) }
-                        )
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Perumahan
-                    OutlinedTextField(
-                        value = housing,
-                        onValueChange = { housing = it },
-                        label = { Text("Perumahan", fontFamily = poppins) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = tfColors,
-                        enabled = !loading,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focus.moveFocus(FocusDirection.Down) }
-                        )
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Blok & Nomor Rumah (2 kolom)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedTextField(
-                            value = block,
-                            onValueChange = { block = it },
-                            label = { Text("Blok", fontFamily = poppins) },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = tfColors,
-                            enabled = !loading,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = { focus.moveFocus(FocusDirection.Down) }
-                            )
-                        )
-                        OutlinedTextField(
-                            value = houseNumber,
-                            onValueChange = { houseNumber = it },
-                            label = { Text("Nomor", fontFamily = poppins) },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = tfColors,
-                            enabled = !loading,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = { focus.moveFocus(FocusDirection.Down) }
-                            )
-                        )
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Password
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Kata Sandi", fontFamily = poppins) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = tfColors,
-                        enabled = !loading,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focus.moveFocus(FocusDirection.Down) }
-                        ),
-                        supportingText = {
-                            if (password.isNotBlank() && !isPassValid) {
-                                Text("Password minimal 6 karakter", color = Color.Red, fontSize = 11.sp)
-                            }
-                        }
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Konfirmasi Password
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = { Text("Konfirmasi Kata Sandi", fontFamily = poppins) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = tfColors,
-                        enabled = !loading,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = { focus.clearFocus() }
-                        ),
-                        supportingText = {
-                            if (confirmPassword.isNotBlank() && confirmPassword != password) {
-                                Text("Konfirmasi tidak sama", color = Color.Red, fontSize = 11.sp)
-                            }
-                        }
-                    )
-
-                    Spacer(Modifier.height(18.dp))
-
-                    Button(
-                        onClick = {
-                            focus.clearFocus()
-                            if (!isFormValid || loading) return@Button
-
-                            loading = true
-                            scope.launch {
-                                try {
-                                    authRepo.register(
-                                        name = fullName.trim(),
-                                        email = email.trim(),
-                                        password = password
-                                    )
-                                    loading = false
-                                    snackbar.showSnackbar("OTP dikirim ke email. Silakan verifikasi.")
-                                    onGoOtp(
-                                        email.trim(),
-                                        job.trim(),
-                                        houseType.trim(),
-                                        housing.trim(),
-                                        block.trim(),
-                                        houseNumber.trim()
-                                    )
-                                } catch (e: Throwable) {
-                                    loading = false
-                                    showError(e)
                                 }
+                            },
+                            enabled = isFormValid && !loading,
+                            colors = ButtonDefaults.buttonColors(containerColor = orange),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp)
+                        ) {
+                            if (loading) {
+                                CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = Color.White)
+                                Spacer(Modifier.width(12.dp))
                             }
-                        },
-                        enabled = isFormValid && !loading,
-                        colors = ButtonDefaults.buttonColors(containerColor = orange),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                    ) {
-                        if (loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.White
-                            )
-                            Spacer(Modifier.width(10.dp))
+                            Text("Daftar Sekarang", color = Color.White, fontFamily = poppins, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
-                        Text(
-                            text = if (loading) "Memproses..." else "Konfirmasi",
-                            color = Color.White,
-                            fontFamily = poppins,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
 
-                    Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(24.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            "Sudah punya akun?",
-                            fontSize = 11.sp,
-                            fontFamily = poppins,
-                            color = Color.Black
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = "Masuk",
-                            fontSize = 11.sp,
-                            fontFamily = poppins,
-                            fontWeight = FontWeight.Bold,
-                            color = blue,
-                            textDecoration = TextDecoration.Underline,
-                            modifier = Modifier.clickable(enabled = !loading) { onGoLogin() }
-                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                            Text("Sudah punya akun?", fontSize = 14.sp, color = Color.Gray)
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "Masuk di sini",
+                                fontSize = 14.sp,
+                                fontFamily = poppins,
+                                color = blue,
+                                modifier = Modifier.clickable(enabled = !loading) { onGoLogin() }
+                            )
+                        }
+
+                        Spacer(Modifier.height(48.dp)) // Fix cut-off at bottom
                     }
                 }
             }
-
-            Spacer(Modifier.height(18.dp))
-        }
     }
-}
-
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-private fun DaftarScreenPreview() {
-    MaterialTheme { /* preview only */ }
 }

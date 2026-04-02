@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('app_notification_reads')) {
+            return;
+        }
+
         Schema::create('app_notification_reads', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->index();

@@ -58,346 +58,239 @@
     $groups = $groups->sortKeysDesc();
 @endphp
 
-<div class="space-y-5">
+<div class="space-y-6">
 
     {{-- Judul Halaman --}}
-    <div>
-        <div class="homi-title">Pembayaran Iuran Warga</div>
-        <div class="homi-subtitle">
-            Data pembayaran dipisah per bulan berdasarkan periode tagihan.
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="homi-title">Monitoring Iuran Warga</h1>
+            <p class="homi-subtitle">Kelola dan review konfirmasi pembayaran dari seluruh warga</p>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Data:</span>
+            <span class="text-sm font-black text-[var(--homi-blue)]">{{ $payments->total() }}</span>
         </div>
     </div>
 
-    {{-- Notifikasi --}}
     @if (session('success'))
-        <div class="p-3 rounded-lg bg-emerald-50 text-emerald-800 text-sm border border-emerald-100">
+        <div class="p-4 rounded-xl bg-emerald-50 text-emerald-800 text-sm border border-emerald-100 flex items-center gap-3">
+             <svg viewBox="0 0 24 24" class="h-5 w-5 text-emerald-500 fill-none stroke-current stroke-2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
             {{ session('success') }}
         </div>
     @endif
-    @if (session('error'))
-        <div class="p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-100">
-            {{ session('error') }}
-        </div>
-    @endif
-    @if ($errors->any())
-        <div class="p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-100">
-            {{ $errors->first() }}
-        </div>
-    @endif
 
-    {{-- Panel Utama --}}
-    <div class="homi-card space-y-4">
-
-        {{-- Filter --}}
-        <form method="GET" action="{{ route('payments.index') }}"
-              class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-
-            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 w-full lg:w-auto">
-                <div class="text-sm font-semibold text-gray-700">Filter:</div>
-
-                <select name="status"
-                        class="w-full sm:w-52 border border-[var(--homi-border)] rounded-full px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-sky-200">
-                    <option value="">Semua status</option>
-                    <option value="pending"  @selected((request('status')) === 'pending')>Belum Diproses</option>
-                    <option value="paid"     @selected((request('status')) === 'paid')>Disetujui</option>
-                    <option value="failed"   @selected((request('status')) === 'failed')>Ditolak</option>
-                </select>
-
-                <input type="text"
-                       name="q"
-                       value="{{ request('q') }}"
-                       placeholder="Cari nama warga / keterangan"
-                       class="w-full sm:w-72 border border-[var(--homi-border)] rounded-full px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-sky-200">
-
-                <button type="submit"
-                        class="w-full sm:w-auto px-4 py-2 rounded-full bg-[var(--homi-blue)] text-white text-sm font-semibold hover:opacity-95">
-                    Tampilkan
-                </button>
-
-                @if(request('q') || request('status'))
-                    <a href="{{ route('payments.index') }}" class="text-xs text-gray-500 hover:underline text-center sm:text-left">
-                        Reset
-                    </a>
-                @endif
-            </div>
-
-            <div class="text-xs text-gray-500">
-                Total data:
-                <span class="font-semibold text-gray-700">{{ $payments->total() }}</span>
-            </div>
-        </form>
-
-        {{-- Bulk action --}}
-        <form method="POST" action="{{ route('payments.bulk') }}" class="space-y-3">
-            @csrf
-
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                <div class="text-sm font-semibold text-gray-700">
-                    Aksi untuk data terpilih:
+    {{-- Filter Panel --}}
+    <div class="homi-card">
+        <form method="GET" action="{{ route('payments.index') }}" class="flex flex-col lg:flex-row lg:items-end gap-4">
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="space-y-1">
+                    <label class="homi-label">Status Pembayaran</label>
+                    <select name="status" class="homi-input">
+                        <option value="">Semua Status</option>
+                        <option value="pending" @selected(request('status') === 'pending')>Menunggu Review</option>
+                        <option value="paid" @selected(request('status') === 'paid')>Telah Disetujui</option>
+                        <option value="failed" @selected(request('status') === 'failed')>Ditolak</option>
+                    </select>
                 </div>
-
-                <div class="flex-1 flex flex-col sm:flex-row gap-2 sm:items-center">
-                    <input type="text"
-                           name="reason"
-                           placeholder="Catatan admin (opsional)..."
-                           class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-sky-200">
-
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <button type="submit" name="action" value="approve"
-                                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600">
-                            Setujui
-                        </button>
-
-                        <button type="submit" name="action" value="reject"
-                                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600">
-                            Tolak
-                        </button>
+                <div class="md:col-span-1 lg:col-span-2 space-y-1">
+                    <label class="homi-label">Cari Warga / Keterangan</label>
+                    <div class="relative group">
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Masukkan nama warga atau ID transaksi..." class="homi-input pr-10">
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--homi-blue)] transition-colors">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        </div>
                     </div>
                 </div>
             </div>
+            <div class="flex items-center gap-2">
+                <button type="submit" class="homi-btn homi-btn-primary px-8">Filter</button>
+                @if(request('q') || request('status'))
+                    <a href="{{ route('payments.index') }}" class="homi-btn homi-btn-secondary px-4 text-rose-600 border-rose-100 bg-rose-50/50">Reset</a>
+                @endif
+            </div>
+        </form>
+    </div>
 
-            {{-- Global select all --}}
-            <div class="flex items-center gap-2 text-xs text-gray-600">
-                <input type="checkbox" class="select-all rounded border-gray-300">
-                <span>Pilih semua pada halaman ini</span>
+    {{-- Bulk action --}}
+    <form method="POST" action="{{ route('payments.bulk') }}" class="space-y-6">
+        @csrf
+
+        <div class="bg-slate-900 rounded-3xl p-5 shadow-xl border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sticky top-4 z-20">
+            <div class="flex items-center gap-4">
+                <div class="checkbox-wrapper bg-white/10 p-2 rounded-xl border border-white/10">
+                    <input type="checkbox" class="select-all h-5 w-5 rounded border-white/20 bg-white/5 text-[var(--homi-blue)] focus:ring-offset-slate-900">
+                </div>
+                <div>
+                    <div class="text-white font-bold text-sm tracking-wide">Aksi Massal</div>
+                    <div class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Pilih data untuk diproses sekaligus</div>
+                </div>
             </div>
 
-            {{-- LIST PER BULAN --}}
-            <div class="space-y-4">
-                @forelse($groups as $pKey => $list)
-                    @php
-                        $labelBulan = period_label_from_key($pKey);
-                        $countBulan = $list->count();
-                    @endphp
+            <div class="flex-1 max-w-2xl flex flex-col sm:flex-row gap-3">
+                <input type="text" name="reason" placeholder="Berikan catatan singkat (opsional)..." 
+                       class="w-full bg-white/5 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-[var(--homi-blue)] focus:border-transparent">
+                
+                <div class="flex gap-2">
+                    <button type="submit" name="action" value="approve" 
+                            class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-black uppercase tracking-wider hover:bg-emerald-600 transition shadow-[0_4px_12px_rgba(16,185,129,0.3)]">
+                        Terima
+                    </button>
+                    <button type="submit" name="action" value="reject" 
+                            class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-rose-500 text-white text-xs font-black uppercase tracking-wider hover:bg-rose-600 transition shadow-[0_4px_12px_rgba(244,63,94,0.3)]">
+                        Tolak
+                    </button>
+                </div>
+            </div>
+        </div>
 
-                    <div class="border border-[var(--homi-border)] rounded-xl overflow-hidden bg-white">
-                        {{-- Header bulan --}}
-                        <div class="px-4 py-3 bg-orange-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div class="text-sm font-semibold text-gray-800">
-                                {{ $labelBulan }}
-                                <span class="ml-2 text-xs font-normal text-gray-500">({{ $countBulan }} data)</span>
+        {{-- LIST PER BULAN --}}
+        <div class="space-y-8">
+            @forelse($groups as $pKey => $list)
+                @php
+                    $labelBulan = period_label_from_key($pKey);
+                    $countBulan = $list->count();
+                @endphp
+
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-2">
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 rounded-2xl bg-[var(--homi-blue)] flex items-center justify-center text-white shadow-lg shadow-sky-200">
+                                <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current stroke-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                             </div>
-
-                            {{-- Select all per bulan --}}
-                            <label class="inline-flex items-center gap-2 text-xs text-gray-600">
-                                <input type="checkbox" class="select-month rounded border-gray-300" data-month="{{ $pKey }}">
-                                Pilih bulan ini
-                            </label>
+                            <div>
+                                <h3 class="font-black text-slate-800 text-lg leading-none">{{ $labelBulan }}</h3>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-1">{{ $countBulan }} Data Pembayaran</p>
+                            </div>
                         </div>
+                        
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer group">
+                            <input type="checkbox" class="select-month h-4 w-4 rounded border-slate-300 text-[var(--homi-blue)]" data-month="{{ $pKey }}">
+                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest group-hover:text-slate-900">Pilih Semua</span>
+                        </label>
+                    </div>
 
-                        {{-- ===== MOBILE: CARD LIST ===== --}}
-                        <div class="p-4 space-y-3 md:hidden">
-                            @foreach($list as $payment)
-                                @php
-                                    $payer   = $payment->payer ?? $payment->user;
-                                    $name    = $payer->full_name ?? $payer->name ?? $payer->username ?? '-';
-                                    $email   = $payer->email ?? null;
-
-                                    $invoice = $payment->invoice;
-                                    $feeName = $invoice?->feeType?->name ?? '-';
-                                    $trxId   = $invoice?->trx_id ?? '-';
-
-                                    $amount  = $invoice?->amount;
-                                    $dueDate = $invoice?->due_date;
-
-                                    $rs = $payment->review_status; // pending/approved/rejected
-                                    $label = [
-                                        'pending'  => 'Belum Diproses',
-                                        'approved' => 'Disetujui',
-                                        'rejected' => 'Ditolak',
-                                    ][$rs] ?? ($rs ?? '-');
-
-                                    $badgeClass = match ($rs) {
-                                        'pending'  => 'bg-amber-100 text-amber-800',
-                                        'approved' => 'bg-emerald-100 text-emerald-800',
-                                        'rejected' => 'bg-rose-100 text-rose-800',
-                                        default    => 'bg-gray-100 text-gray-700',
-                                    };
-
-                                    $paidAt = $payment->created_at;
-
-                                    $monthKeyRow = period_key(optional($invoice)->period);
-                                @endphp
-
-                                <div class="rounded-xl border border-[var(--homi-border)] bg-white p-4">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0">
-                                            <div class="font-semibold text-gray-900 break-words">{{ $name }}</div>
-                                            @if($email)
-                                                <div class="text-[11px] text-gray-500 break-words">{{ $email }}</div>
-                                            @endif
-                                        </div>
-
-                                        <div class="shrink-0 flex items-center gap-2">
-                                            <input type="checkbox"
-                                                   name="selected[]"
-                                                   value="{{ $payment->id }}"
-                                                   class="row-checkbox rounded border-gray-300"
-                                                   data-month="{{ $monthKeyRow }}">
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
-                                        <div>
-                                            <div class="text-[11px] text-gray-500">Iuran</div>
-                                            <div class="font-semibold text-gray-900">{{ $feeName }}</div>
-                                            <div class="text-[11px] text-gray-500 mt-1">TRX: <span class="font-mono">{{ $trxId }}</span></div>
-                                        </div>
-
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <div class="text-[11px] text-gray-500">Jumlah</div>
-                                                <div class="font-semibold text-gray-900">{{ money_idr($amount) }}</div>
-                                            </div>
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold {{ $badgeClass }}">
-                                                {{ $label }}
-                                            </span>
-                                        </div>
-
-                                        <div class="flex items-center justify-between text-[12px] text-gray-600">
-                                            <span>Jatuh tempo: {{ $dueDate ? \Carbon\Carbon::parse($dueDate)->format('d M Y') : '-' }}</span>
-                                            <span>Dibayar: {{ $paidAt ? $paidAt->format('d M Y H:i') : '-' }}</span>
-                                        </div>
-
-                                        <div class="text-[12px] text-gray-700 break-words">
-                                            <span class="text-gray-500">Catatan:</span> {{ $payment->note ?? '-' }}
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <a href="{{ route('payments.show', $payment->id) }}"
-                                           class="w-full inline-flex justify-center items-center px-3 py-2 rounded-lg text-xs font-semibold border border-sky-200 text-sky-700 hover:bg-sky-50">
-                                            Lihat detail
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{-- ===== DESKTOP: TABLE ===== --}}
-                        <div class="overflow-x-auto hidden md:block">
-                            <table class="homi-table min-w-[1100px]" style="border:0; border-radius:0;">
+                    <div class="homi-card p-0 overflow-hidden border-slate-200">
+                        {{-- ===== DESKTOP TABLE ===== --}}
+                        <div class="hidden md:block overflow-x-auto">
+                            <table class="homi-table w-full">
                                 <thead>
                                     <tr>
-                                        <th class="text-left w-20">Pilih</th>
-                                        <th class="text-left">Warga</th>
-                                        <th class="text-left">Iuran</th>
-                                        <th class="text-left">Jumlah</th>
-                                        <th class="text-left">Jatuh Tempo</th>
-                                        <th class="text-left">Status</th>
-                                        <th class="text-left">Dibayar</th>
-                                        <th class="text-left">Catatan</th>
+                                        <th class="w-12 text-center">Sel</th>
+                                        <th>Warga</th>
+                                        <th>Keterangan Iuran</th>
+                                        <th class="text-right">Nominal</th>
+                                        <th class="text-center">Status</th>
                                         <th class="text-right">Aksi</th>
                                     </tr>
                                 </thead>
-
                                 <tbody>
                                     @foreach($list as $payment)
                                         @php
                                             $payer   = $payment->payer ?? $payment->user;
                                             $name    = $payer->full_name ?? $payer->name ?? $payer->username ?? '-';
                                             $email   = $payer->email ?? null;
-
                                             $invoice = $payment->invoice;
                                             $feeName = $invoice?->feeType?->name ?? '-';
                                             $trxId   = $invoice?->trx_id ?? '-';
-
                                             $amount  = $invoice?->amount;
-                                            $dueDate = $invoice?->due_date;
-
-                                            $rs = $payment->review_status; // pending/approved/rejected
-                                            $label = [
-                                                'pending'  => 'Belum Diproses',
-                                                'approved' => 'Disetujui',
-                                                'rejected' => 'Ditolak',
-                                            ][$rs] ?? ($rs ?? '-');
-
-                                            $badgeClass = match ($rs) {
-                                                'pending'  => 'bg-amber-100 text-amber-800',
-                                                'approved' => 'bg-emerald-100 text-emerald-800',
-                                                'rejected' => 'bg-rose-100 text-rose-800',
-                                                default    => 'bg-gray-100 text-gray-700',
-                                            };
-
-                                            $paidAt = $payment->created_at;
-
+                                            $rs = $payment->review_status;
                                             $monthKeyRow = period_key(optional($invoice)->period);
                                         @endphp
-
-                                        <tr>
-                                            <td class="whitespace-nowrap">
-                                                <input type="checkbox"
-                                                       name="selected[]"
-                                                       value="{{ $payment->id }}"
-                                                       class="row-checkbox rounded border-gray-300"
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="text-center">
+                                                <input type="checkbox" name="selected[]" value="{{ $payment->id }}" 
+                                                       class="row-checkbox h-4 w-4 rounded border-slate-300 text-[var(--homi-blue)]" 
                                                        data-month="{{ $monthKeyRow }}">
                                             </td>
-
                                             <td>
-                                                <div class="font-semibold text-gray-900 text-sm">{{ $name }}</div>
-                                                @if($email)
-                                                    <div class="text-[11px] text-gray-500">{{ $email }}</div>
-                                                @endif
+                                                <div class="font-bold text-slate-800">{{ $name }}</div>
+                                                <div class="text-[10px] text-slate-500 font-mono">{{ $email ?? $payer->phone ?? '-' }}</div>
                                             </td>
-
                                             <td>
-                                                <div class="font-semibold text-gray-900 text-sm">{{ $feeName }}</div>
-                                                <div class="text-[11px] text-gray-500 mt-1">
-                                                    TRX: <span class="font-mono">{{ $trxId }}</span>
-                                                </div>
+                                                <div class="text-sm font-semibold text-slate-700">{{ $feeName }}</div>
+                                                <div class="text-[10px] text-slate-400 font-mono">TRX: {{ $trxId }}</div>
                                             </td>
-
-                                            <td class="whitespace-nowrap font-semibold text-gray-900">
+                                            <td class="text-right font-black text-slate-900">
                                                 {{ money_idr($amount) }}
                                             </td>
-
-                                            <td class="whitespace-nowrap text-sm text-gray-700">
-                                                {{ $dueDate ? \Carbon\Carbon::parse($dueDate)->format('d M Y') : '-' }}
-                                            </td>
-
-                                            <td>
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold {{ $badgeClass }}">
-                                                    {{ $label }}
+                                            <td class="text-center">
+                                                <span class="homi-badge scale-90 {{ 
+                                                    match($rs) {
+                                                        'pending' => 'homi-badge-pending',
+                                                        'approved' => 'homi-badge-success',
+                                                        'rejected' => 'homi-badge-danger',
+                                                        default => 'homi-badge-info'
+                                                    }
+                                                }}">
+                                                    {{ match($rs) { 'pending' => 'Pending', 'approved' => 'Selesai', 'rejected' => 'Ditolak', default => $rs } }}
                                                 </span>
                                             </td>
-
-                                            <td class="whitespace-nowrap text-sm text-gray-700">
-                                                {{ $paidAt ? $paidAt->format('d M Y H:i') : '-' }}
-                                            </td>
-
-                                            <td class="text-sm text-gray-700">
-                                                {{ $payment->note ?? '-' }}
-                                            </td>
-
-                                            <td class="text-right whitespace-nowrap">
-                                                <a href="{{ route('payments.show', $payment->id) }}"
-                                                   class="px-3 py-2 rounded-lg text-xs font-semibold border border-sky-200 text-sky-700 hover:bg-sky-50">
-                                                    Lihat detail
-                                                </a>
+                                            <td class="text-right">
+                                                <a href="{{ route('payments.show', $payment->id) }}" 
+                                                   class="homi-btn homi-btn-secondary py-1 text-[11px]">Detail</a>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
-                    </div>
 
-                @empty
-                    <div class="py-8 text-center text-gray-500">
-                        Belum ada data pembayaran.
+                        {{-- ===== MOBILE CARD LIST ===== --}}
+                        <div class="md:hidden divide-y divide-slate-100">
+                            @foreach($list as $payment)
+                                @php
+                                    $payer   = $payment->payer ?? $payment->user;
+                                    $name    = $payer->full_name ?? $payer->name ?? $payer->username ?? '-';
+                                    $invoice = $payment->invoice;
+                                    $feeName = $invoice?->feeType?->name ?? '-';
+                                    $amount  = $invoice?->amount;
+                                    $rs = $payment->review_status;
+                                    $monthKeyRow = period_key(optional($invoice)->period);
+                                @endphp
+                                <div class="p-4 flex flex-col gap-3 relative">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <input type="checkbox" name="selected[]" value="{{ $payment->id }}" 
+                                                   class="row-checkbox h-5 w-5 rounded border-slate-300 text-[var(--homi-blue)]" 
+                                                   data-month="{{ $monthKeyRow }}">
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-slate-800 truncate">{{ $name }}</div>
+                                                <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ $feeName }}</div>
+                                            </div>
+                                        </div>
+                                        <span class="homi-badge scale-75 origin-right {{ 
+                                                    match($rs) {
+                                                        'pending' => 'homi-badge-pending',
+                                                        'approved' => 'homi-badge-success',
+                                                        'rejected' => 'homi-badge-danger',
+                                                        default => 'homi-badge-info'
+                                                    }
+                                                }}">
+                                            {{ match($rs) { 'pending' => 'Pending', 'approved' => 'Paid', 'rejected' => 'Fail', default => $rs } }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-lg font-black text-[var(--homi-blue)]">{{ money_idr($amount) }}</div>
+                                        <a href="{{ route('payments.show', $payment->id) }}" class="text-xs font-bold text-sky-600 underline">Lihat Detail &rarr;</a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-                @endforelse
-            </div>
+                </div>
+            @empty
+                <div class="p-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                    <svg viewBox="0 0 24 24" class="h-12 w-12 mx-auto text-slate-300 opacity-50 mb-3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum ada riwayat pembayaran</p>
+                </div>
+            @endforelse
+        </div>
 
-            {{-- Pagination --}}
-            <div class="pt-1">
-                {{ $payments->links() }}
-            </div>
-        </form>
-    </div>
+        {{-- Pagination --}}
+        <div class="mt-8 flex justify-center">
+            {{ $payments->links() }}
+        </div>
+    </form>
 </div>
 
 @push('scripts')

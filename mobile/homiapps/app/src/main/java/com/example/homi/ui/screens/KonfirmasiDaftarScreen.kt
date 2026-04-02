@@ -26,6 +26,7 @@ import com.example.homi.data.local.TokenStore
 import com.example.homi.data.remote.ApiClient
 import com.example.homi.data.repository.AuthRepository
 import com.example.homi.navigation.Routes
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,15 +48,10 @@ fun KonfirmasiDaftarScreen(
     // data dari savedStateHandle (yang kamu set dari DaftarScreen via NavHost)
     val prev = navController.previousBackStackEntry?.savedStateHandle
     val email = prev?.get<String>("register_email").orEmpty()
-    val job = prev?.get<String>("register_job").orEmpty()
-    val houseType = prev?.get<String>("register_house_type").orEmpty()
-    val housing = prev?.get<String>("register_housing").orEmpty()
-
-    // ✅ ambil block & nomor rumah juga
-    val block = prev?.get<String>("register_block").orEmpty()
-    val houseNumber = prev?.get<String>("register_house_number").orEmpty()
 
     var loading by remember { mutableStateOf(false) }
+    var resendLoading by remember { mutableStateOf(false) }
+    var resendCountdown by remember { mutableStateOf(0) }
 
     // OTP 6 digit
     val digits = remember { mutableStateListOf("", "", "", "", "", "") }
@@ -65,6 +61,13 @@ fun KonfirmasiDaftarScreen(
     val repo = remember { AuthRepository(api) }
 
     fun otpValue(): String = digits.joinToString("")
+
+    LaunchedEffect(resendCountdown) {
+        if (resendCountdown > 0) {
+            delay(1000)
+            resendCountdown--
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -175,25 +178,6 @@ fun KonfirmasiDaftarScreen(
                                     tokenStore.saveToken(verified.token)
                                     tokenStore.saveName(verified.user.name)
 
-                                    // ✅ simpan profil NB (tetap 3 field dulu)
-                                    if (job.isNotBlank() && houseType.isNotBlank() && housing.isNotBlank()) {
-                                        repo.saveNaiveBayesProfile(
-                                            houseType = houseType,
-                                            job = job,
-                                            housing = housing,
-                                            block = block,
-                                            houseNumber = houseNumber,
-                                            upsertCall = api::upsertResidentProfileMap
-                                        )
-
-                                    }
-
-                                    // NOTE:
-                                    // block & houseNumber SUDAH kamu punya di sini:
-                                    // block = "$block", houseNumber = "$houseNumber"
-                                    // Kalau mau otomatis masuk direktori di backend,
-                                    // nanti kita tambahin endpoint + repo method khusus untuk simpan blok/no_rumah.
-
                                     loading = false
                                     snackbar.showSnackbar("Verifikasi berhasil!")
 
@@ -232,27 +216,47 @@ fun KonfirmasiDaftarScreen(
 
                     Spacer(Modifier.height(10.dp))
 
-                    TextButton(
-                        onClick = { navController.popBackStack() },
-                        modifier = Modifier.align(Alignment.End)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Kembali", fontFamily = poppins, color = blue)
+                        TextButton(
+                            enabled = email.isNotBlank() && resendCountdown == 0 && !resendLoading && !loading,
+                            onClick = {
+                                resendLoading = true
+                                scope.launch {
+                                    try {
+                                        repo.resendRegisterOtp(email)
+                                        resendCountdown = 30
+                                        snackbar.showSnackbar("OTP baru sudah dikirim.")
+                                    } catch (e: Exception) {
+                                        snackbar.showSnackbar(e.message ?: "Gagal kirim ulang OTP.")
+                                    } finally {
+                                        resendLoading = false
+                                    }
+                                }
+                            }
+                        ) {
+                            val label = when {
+                                resendLoading -> "Mengirim..."
+                                resendCountdown > 0 -> "Kirim ulang (${resendCountdown}s)"
+                                else -> "Kirim Ulang OTP"
+                            }
+                            Text(label, fontFamily = poppins, color = blue)
+                        }
+
+                        TextButton(
+                            onClick = { navController.popBackStack() },
+                        ) {
+                            Text("Kembali", fontFamily = poppins, color = blue)
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // kecil aja buat debug (boleh hapus)
-            if (block.isNotBlank() || houseNumber.isNotBlank()) {
-                Text(
-                    text = "Alamat: Blok $block No $houseNumber",
-                    fontFamily = poppins,
-                    fontSize = 11.sp,
-                    color = Color(0xFF6B7280),
-                    modifier = Modifier.padding(start = 2.dp)
-                )
-            }
         }
     }
 

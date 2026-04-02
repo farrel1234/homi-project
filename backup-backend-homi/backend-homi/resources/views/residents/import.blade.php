@@ -47,7 +47,7 @@
             <div>
                 <label class="block text-sm font-medium mb-1">File CSV</label>
                 <input type="file" name="file" accept=".csv,text/csv"
-                       class="block w-full text-sm border border-gray-200 rounded-lg p-2 bg-white">
+                       class="block w-full rounded-xl">
                 <div class="text-[12px] text-gray-500 mt-1">
                     Maks 2MB. Baris dengan email yang sudah ada akan dilewati.
                 </div>

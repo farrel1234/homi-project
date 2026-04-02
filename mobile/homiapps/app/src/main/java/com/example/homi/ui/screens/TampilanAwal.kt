@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,56 +36,65 @@ fun TampilanAwalScreen(
             contentScale = ContentScale.Crop
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
+        var visible by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        androidx.compose.runtime.LaunchedEffect(Unit) { visible = true }
+
+        androidx.compose.animation.AnimatedVisibility(
+            visible = visible,
+            enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(1000)) + 
+                    androidx.compose.animation.slideInVertically(initialOffsetY = { it / 2 }),
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = "Selamat Datang",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = poppins,
-                color = Color.White
-            )
-            Row {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
+            ) {
                 Text(
-                    text = "di ",
+                    text = "Selamat Datang",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = poppins,
                     color = Color.White
                 )
-                Text(
-                    text = "Homi",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = laBelleAurore,
-                    color = Color(0xFFF7C0A2)
-                )
-            }
+                Row {
+                    Text(
+                        text = "di ",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = poppins,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Homi",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = laBelleAurore,
+                        color = Color(0xFFF7C0A2)
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(70.dp))
+                Spacer(modifier = Modifier.height(70.dp))
 
-            // 🔹 area klik kanan-bawah
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNextClicked() },   // ← aktifkan klik
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                Text(
-                    text = "Selanjutnya",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = poppins,
-                    color = Color.White,
+                Box(
                     modifier = Modifier
-                        .padding(end = 8.dp, bottom = 8.dp)
-                        .clickable { onNextClicked() }   // ← teks juga bisa diklik
-                )
+                        .fillMaxWidth()
+                        .clickable { onNextClicked() },
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    Text(
+                        text = "Selanjutnya",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = poppins,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(end = 8.dp, bottom = 8.dp)
+                            .clickable { onNextClicked() }
+                    )
+                }
             }
         }
     }

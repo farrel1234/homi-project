@@ -31,10 +31,10 @@ import com.example.homi.R
 import kotlinx.coroutines.delay
 
 /* ========= THEME ========= */
-private val BlueMain = Color(0xFF2F79A0)
+private val BlueMain = Color(0xFF2F7FA3)
 private val BlueLine = Color(0xFFFFFFFF)
-private val BlueBorder = Color(0xFF2F79A0)
-private val AccentOrange = Color(0xFFFF9966)
+private val BlueBorder = Color(0xFF2F7FA3)
+private val AccentOrange = Color(0xFFE26A2C)
 private val TextPrimary = Color(0xFF0E0E0E)
 private val TextMuted = Color(0xFF8A8A8A)
 private val DangerRed = Color(0xFFE53935)
@@ -157,19 +157,18 @@ fun ProsesPengaduanScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(icBack),
-                contentDescription = "Kembali",
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .clickable(enabled = onBack != null) { onBack?.invoke() }
-            )
+            IconButton(onClick = { onBack?.invoke() }) {
+                Icon(
+                    painter = painterResource(icBack),
+                    contentDescription = "Kembali",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
-            Spacer(Modifier.width(8.dp))
             Text(
                 text = "Pengaduan Layanan",
                 fontFamily = PoppinsSemi,
@@ -178,7 +177,7 @@ fun ProsesPengaduanScreen(
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.width(24.dp))
+            Spacer(Modifier.width(40.dp))
         }
 
         Spacer(Modifier.height(8.dp))

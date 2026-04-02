@@ -15,6 +15,7 @@ class Announcement extends Model
      */
     protected $fillable = [
         'title',
+        'tenant_id',
         'category',
         'content',
         'body',

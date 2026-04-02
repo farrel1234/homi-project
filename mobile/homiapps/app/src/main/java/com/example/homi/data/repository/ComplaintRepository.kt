@@ -21,7 +21,8 @@ class ComplaintRepository(private val api: ApiService) {
 
     suspend fun detail(id: Long): ComplaintDto {
         val res = api.getComplaintDetail(id)
-        return res.data ?: res.complaint ?: error("Detail pengaduan tidak ditemukan")
+        return res.data ?: res.complaint
+        ?: throw IllegalStateException("Detail pengaduan tidak ditemukan")
     }
 
     /**

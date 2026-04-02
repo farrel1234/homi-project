@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services") // ✅ TAMBAH INI
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -20,7 +20,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -94,6 +95,16 @@ dependencies {
 
     // ✅ Desugaring dependency
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
+    // ✅ Security Crypto untuk EncryptedSharedPreferences
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    
+    // ✅ Firebase Cloud Messaging (BOM)
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
+
+    // ✅ LeakCanary untuk mendeteksi memory leaks di environment debug
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 
     // Tests
     testImplementation(libs.junit)

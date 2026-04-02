@@ -3,7 +3,9 @@ package com.example.homi.ui.screens
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -32,8 +35,6 @@ import com.example.homi.ui.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import kotlin.math.max
-import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,13 +42,16 @@ fun LoginScreen(
     vm: AuthViewModel,
     onLoginSuccess: () -> Unit,
     onRegisterClicked: () -> Unit = {},
-    onForgotPasswordClicked: () -> Unit = {}
+    onForgotPasswordClicked: () -> Unit = {},
+    onGoGoogleRegister: (email: String, name: String, gid: String) -> Unit = { _, _, _ -> }
 ) {
     val poppins = FontFamily(Font(R.font.poppins_semibold))
     val state by vm.state.collectAsState()
 
     var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var tenantCode by remember { mutableStateOf(state.tenantCode) }
+    var tenantExpanded by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
@@ -57,11 +61,22 @@ fun LoginScreen(
     LaunchedEffect(state.error) {
         if (state.error != null) errorText = state.error
     }
+    LaunchedEffect(state.tenantCode) {
+        if (state.tenantCode.isNotBlank() && state.tenantCode != tenantCode) {
+            tenantCode = state.tenantCode
+        }
+    }
+
+    LaunchedEffect(state.needsGoogleRegister) {
+        if (state.needsGoogleRegister) {
+            onGoGoogleRegister(state.googleEmail, state.googleName, state.googleId)
+            vm.clearGoogleRegister()
+        }
+    }
 
     // ===================== GOOGLE SIGN IN SETUP =====================
     val context = LocalContext.current
     val activity = context as Activity
-
     val webClientId = context.getString(R.string.google_web_client_id)
 
     val gso = remember(webClientId) {
@@ -70,9 +85,7 @@ fun LoginScreen(
             .requestIdToken(webClientId)
             .build()
     }
-
     val googleClient = remember { GoogleSignIn.getClient(activity, gso) }
-
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -80,7 +93,6 @@ fun LoginScreen(
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken
-
             if (idToken.isNullOrBlank()) {
                 errorText = "Gagal mengambil token Google (idToken kosong)."
             } else {
@@ -93,7 +105,7 @@ fun LoginScreen(
     }
     // ================================================================
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.login),
             contentDescription = "Background",
@@ -101,219 +113,277 @@ fun LoginScreen(
             contentScale = ContentScale.Crop
         )
 
-        val topPad = run {
-            val raw = (maxHeight.value * 0.48f).dp
-            min(420f, max(260f, raw.value)).dp
-        }
-
-        val scroll = rememberScrollState()
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .imePadding()
-                .verticalScroll(scroll)
-                .padding(horizontal = 24.dp)
-                .padding(top = topPad, bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Masuk",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = poppins,
-                color = Color(0xFF256D85),
+            // Flexible space at top to push content down
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Login Sheet
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
+                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+                color = Color.White.copy(alpha = 0.95f),
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Masuk",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = poppins,
+                        color = Color(0xFF256D85),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp)
+                    )
 
-            OutlinedTextField(
-                value = identifier,
-                onValueChange = { identifier = it },
-                label = { Text("Email", fontFamily = poppins) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                enabled = !state.loading,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedIndicatorColor = Color(0xFF256D85),
-                    unfocusedIndicatorColor = Color.Gray,
-                    cursorColor = Color(0xFF256D85)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Kata sandi", fontFamily = poppins) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                enabled = !state.loading,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedIndicatorColor = Color(0xFF256D85),
-                    unfocusedIndicatorColor = Color.Gray,
-                    cursorColor = Color(0xFF256D85)
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation =
-                    if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(
-                        enabled = !state.loading,
-                        onClick = { passwordVisible = !passwordVisible }
+                    // Dropdown Perumahan
+                    ExposedDropdownMenuBox(
+                        expanded = tenantExpanded,
+                        onExpandedChange = { tenantExpanded = !tenantExpanded },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            painter = painterResource(
-                                id = if (passwordVisible) R.drawable.show else R.drawable.hide
+                        OutlinedTextField(
+                            value = state.tenants.find { it.code == tenantCode }?.name ?: tenantCode,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Pilih Perumahan", fontFamily = poppins) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tenantExpanded) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF256D85),
+                                unfocusedBorderColor = Color.Gray,
+                                focusedContainerColor = Color(0xFFF8F8F8),
+                                unfocusedContainerColor = Color(0xFFF8F8F8)
                             ),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = Color.Gray
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
                         )
-                    }
-                }
-            )
 
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                text = "Lupa kata sandi?",
-                fontSize = 12.sp,
-                fontFamily = poppins,
-                color = Color.Gray,
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 4.dp)
-                    .clickable(enabled = !state.loading) { onForgotPasswordClicked() }
-            )
-
-            errorText?.let {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = it,
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Spacer(Modifier.height(18.dp))
-
-            Button(
-                onClick = {
-                    val email = identifier.trim()
-                    val pass = password.trim()
-                    when {
-                        email.isBlank() || pass.isBlank() ->
-                            errorText = "Isi email dan password dulu."
-                        pass.length < 6 ->
-                            errorText = "Password minimal 6 karakter."
-                        !email.contains("@") ->
-                            errorText = "Masukkan email yang valid."
-                        else -> {
-                            errorText = null
-                            vm.login(email, pass)
+                        ExposedDropdownMenu(
+                            expanded = tenantExpanded,
+                            onDismissRequest = { tenantExpanded = false },
+                            modifier = Modifier.background(Color.White)
+                        ) {
+                            if (state.tenants.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Memuat...", fontFamily = poppins) },
+                                    onClick = { tenantExpanded = false }
+                                )
+                            }
+                            state.tenants.forEach { t ->
+                                DropdownMenuItem(
+                                    text = { 
+                                        Column {
+                                            Text(t.name, fontFamily = poppins, fontWeight = FontWeight.Bold)
+                                            Text(t.code, fontSize = 10.sp, color = Color.Gray)
+                                        }
+                                    },
+                                    onClick = {
+                                        tenantCode = t.code
+                                        tenantExpanded = false
+                                        errorText = null
+                                    }
+                                )
+                            }
                         }
                     }
-                },
-                enabled = !state.loading,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA06B)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                if (state.loading) {
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(18.dp),
-                        color = Color.White
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = identifier,
+                        onValueChange = { identifier = it },
+                        label = { Text("Email", fontFamily = poppins) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !state.loading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF256D85),
+                            unfocusedBorderColor = Color.Gray,
+                            focusedContainerColor = Color(0xFFF8F8F8),
+                            unfocusedContainerColor = Color(0xFFF8F8F8)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(Modifier.width(10.dp))
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Kata sandi", fontFamily = poppins) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !state.loading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF256D85),
+                            unfocusedBorderColor = Color.Gray,
+                            focusedContainerColor = Color(0xFFF8F8F8),
+                            unfocusedContainerColor = Color(0xFFF8F8F8)
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation =
+                            if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(
+                                enabled = !state.loading,
+                                onClick = { passwordVisible = !passwordVisible }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (passwordVisible) R.drawable.show else R.drawable.hide
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        text = "Lupa kata sandi?",
+                        fontSize = 13.sp,
+                        fontFamily = poppins,
+                        color = Color(0xFF256D85),
+                        textAlign = TextAlign.End,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 4.dp)
+                            .clickable(enabled = !state.loading) { onForgotPasswordClicked() }
+                    )
+
+                    errorText?.let {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = it,
+                            color = Color.Red,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Button(
+                        onClick = {
+                            val tenant = tenantCode.trim()
+                            val email = identifier.trim()
+                            val pass = password.trim()
+                            when {
+                                tenant.isBlank() -> errorText = "Isi kode perumahan dulu."
+                                email.isBlank() || pass.isBlank() -> errorText = "Isi email dan password dulu."
+                                pass.length < 6 -> errorText = "Password minimal 6 karakter."
+                                !email.contains("@") -> errorText = "Masukkan email yang valid."
+                                else -> {
+                                    errorText = null
+                                    vm.setTenantCode(tenant)
+                                    vm.login(email, pass)
+                                }
+                            }
+                        },
+                        enabled = !state.loading,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA06B)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                    ) {
+                        if (state.loading) {
+                            CircularProgressIndicator(
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White
+                            )
+                            Spacer(Modifier.width(10.dp))
+                        }
+                        Text(
+                            text = if (state.loading) "Memproses..." else "Masuk",
+                            color = Color.White,
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            val tenant = tenantCode.trim()
+                            if (tenant.isBlank()) {
+                                errorText = "Isi kode perumahan dulu sebelum login Google."
+                                return@OutlinedButton
+                            }
+                            vm.setTenantCode(tenant)
+                            errorText = null
+                            googleClient.signOut()
+                            googleLauncher.launch(googleClient.signInIntent)
+                        },
+                        enabled = !state.loading,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color.LightGray),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_google),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            text = "Lanjutkan dengan Google",
+                            fontFamily = poppins,
+                            color = Color(0xFF222222),
+                            fontSize = 15.sp
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Belum punya akun?",
+                            fontSize = 13.sp,
+                            fontFamily = poppins,
+                            color = Color.Black
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = "Daftar",
+                            fontSize = 13.sp,
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF256D85),
+                            textDecoration = TextDecoration.Underline,
+                            modifier = Modifier.clickable(enabled = !state.loading) { onRegisterClicked() }
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
                 }
-                Text(
-                    text = if (state.loading) "Memproses..." else "Masuk",
-                    color = Color.White,
-                    fontFamily = poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp
-                )
             }
-
-            Spacer(Modifier.height(14.dp))
-
-            // ✅ tombol google profesional (tanpa ElevatedCard)
-            OutlinedButton(
-                onClick = {
-                    errorText = null
-                    googleClient.signOut() // biar selalu pilih akun
-                    googleLauncher.launch(googleClient.signInIntent)
-                },
-                enabled = !state.loading,
-                shape = RoundedCornerShape(12.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFF222222)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = "Lanjutkan dengan Google",
-                    fontFamily = poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Belum punya akun?",
-                    fontSize = 10.sp,
-                    fontFamily = poppins,
-                    color = Color.Black
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = "Daftar",
-                    fontSize = 10.sp,
-                    fontFamily = poppins,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Blue,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable(enabled = !state.loading) { onRegisterClicked() }
-                )
-            }
-
-            Spacer(Modifier.height(18.dp))
         }
     }
-}
-
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    MaterialTheme { }
 }

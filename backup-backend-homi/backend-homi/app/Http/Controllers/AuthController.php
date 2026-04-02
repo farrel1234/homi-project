@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Resident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\OtpMail;
@@ -18,10 +19,17 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email',
-            'password' => 'required|min:6',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email',
+            'password'    => 'required|min:6',
+            'tenant_code' => 'required|string', // Kode registrasi rahasia
         ]);
+
+        // Verifikasi tenant_code (registration_code)
+        $tenant = $request->attributes->get('tenant');
+        if (! $tenant || $tenant->registration_code !== $request->tenant_code) {
+            return $this->errorResponse('Kode registrasi salah. Silakan hubungi pengelola perumahan.', 422);
+        }
 
         $email = strtolower(trim($request->email));
         $name  = trim($request->name);
@@ -33,20 +41,27 @@ class AuthController extends Controller
 
         if ($existing && ! $existing->is_verified) {
             $existing->name = $name;
-            $existing->password = $request->password; // casts hashed aktif -> auto hash
+            $existing->password = $request->password;
             $existing->otp_code = (string) $otp;
             $existing->otp_purpose = 'register';
             $existing->otp_expires_at = $expiresAt;
+            $existing->tenant_id = $tenant->id;
+            if ($request->filled('google_id')) {
+                $existing->google_id = $request->google_id;
+            }
             $existing->save();
 
-            Mail::to($existing->email)->send(new OtpMail($otp, $existing->name));
+            $mailSent = $this->trySendOtp($existing->email, $otp, $existing->name);
 
             return $this->successResponse(
                 data: [
                     'user' => $existing,
-                    'otp'  => $otp, // DEV only
+                    'otp'  => $otp,
+                    'mail_sent' => $mailSent,
                 ],
-                message: 'Akun belum terverifikasi. OTP baru sudah dikirim, silakan verifikasi.',
+                message: $mailSent
+                    ? 'Akun belum terverifikasi. OTP baru sudah dikirim, silakan verifikasi.'
+                    : 'OTP dibuat (lihat log). Email gagal terkirim, periksa konfigurasi SMTP.',
                 status: 200
             );
         }
@@ -55,7 +70,7 @@ class AuthController extends Controller
             return $this->errorResponse('Email sudah terdaftar dan terverifikasi. Silakan login.', 422);
         }
 
-        $user = User::create([
+        $userData = [
             'name'           => $name,
             'email'          => $email,
             'password'       => $request->password,
@@ -63,18 +78,42 @@ class AuthController extends Controller
             'otp_code'       => (string) $otp,
             'otp_purpose'    => 'register',
             'otp_expires_at' => $expiresAt,
-        ]);
+            'tenant_id'      => $tenant->id,
+        ];
+        if ($request->filled('google_id')) {
+            $userData['google_id'] = $request->google_id;
+        }
 
-        Mail::to($user->email)->send(new OtpMail($otp, $user->name));
+        $user = User::create($userData);
+
+        $mailSent = $this->trySendOtp($user->email, $otp, $user->name);
 
         return $this->successResponse(
             data: [
                 'user' => $user,
-                'otp'  => $otp, // DEV only
+                'otp'  => $otp,
+                'mail_sent' => $mailSent,
             ],
-            message: 'Register berhasil. OTP telah dikirim, silakan verifikasi.',
+            message: $mailSent
+                ? 'Register berhasil. OTP telah dikirim, silakan verifikasi.'
+                : 'Register berhasil. OTP dibuat (lihat log). Email gagal terkirim, periksa SMTP.',
             status: 201
         );
+    }
+
+    /**
+     * Helper: kirim OTP via email, return false kalau gagal (SMTP belum dikonfigurasi).
+     */
+    private function trySendOtp(string $email, int $otp, string $name): bool
+    {
+        try {
+            Mail::to($email)->send(new OtpMail($otp, $name));
+            return true;
+        } catch (\Throwable $e) {
+            \Log::warning("[OTP] Gagal kirim email ke {$email}: {$e->getMessage()}");
+            \Log::info("[OTP-FALLBACK] Email={$email} OTP={$otp}");
+            return false;
+        }
     }
 
     // =========================================================
@@ -142,6 +181,14 @@ class AuthController extends Controller
         $user->otp_expires_at = null;
         $user->otp_purpose = null;
         $user->save();
+
+        // Buat profil resident otomatis agar admin bisa melihat di dashboard
+        Resident::firstOrCreate([
+            'user_id' => $user->id,
+        ], [
+            'is_public' => true,
+            'alamat'    => null,
+        ]);
 
         $token = $user->createToken('mobile')->plainTextToken;
 
@@ -229,15 +276,18 @@ class AuthController extends Controller
         return $this->errorResponse('Data akun Google tidak lengkap.', 422);
     }
 
-    // ✅ PENTING: HANYA BOLEH LOGIN kalau email sudah terdaftar di HOMI
     $user = User::where('email', $email)->first();
 
+    // User belum terdaftar -> kirim flag needs_registration
     if (! $user) {
-        // ini “permission”-nya: akun google yg belum didaftarkan admin/tidak terdaftar → ditolak
-        return $this->errorResponse(
-            'Akun Google ini belum terdaftar sebagai warga. Silakan daftar/konfirmasi ke admin perumahan.',
-            403
-        );
+        return response()->json([
+            'success' => false,
+            'needs_registration' => true,
+            'google_email' => $email,
+            'google_name'  => $name,
+            'google_id'    => $googleSub,
+            'message' => 'Akun belum terdaftar. Silakan lengkapi pendaftaran.',
+        ], 200);
     }
 
     // Kalau kamu mau tetap wajib verified (kalau akun hasil daftar email+OTP)
@@ -278,22 +328,42 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'      => 'nullable|string|max:255',
+            'full_name' => 'nullable|string|max:255',
+            'phone'     => 'nullable|string|max:30',
         ]);
 
         $user = $request->user();
-        $user->name = $request->name;
+
+        if ($request->filled('name')) {
+            $user->name = $request->name;
+        }
+        
+        if ($request->filled('full_name')) {
+            $user->full_name = $request->full_name;
+            // Update 'name' if still empty or generic
+            if (!$user->name || $user->name === 'Warga' || $user->name === $user->email) {
+                $user->name = $request->full_name;
+            }
+        }
+
+        if ($request->filled('phone')) {
+            $user->phone = $request->phone;
+        }
+
         $user->save();
 
         return $this->successResponse(
             data: [
                 'user' => [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
-                    'email' => $user->email,
+                    'id'        => $user->id,
+                    'name'      => $user->name,
+                    'full_name' => $user->full_name,
+                    'email'     => $user->email,
+                    'phone'     => $user->phone,
                 ]
             ],
-            message: 'Nama berhasil diperbarui'
+            message: 'Profil berhasil diperbarui'
         );
     }
 
@@ -450,13 +520,66 @@ class AuthController extends Controller
         return $this->successResponse(
             data: [
                 'user' => [
-                    'id'    => $request->user()->id,
-                    'name'  => $request->user()->name,
-                    'email' => $request->user()->email,
+                    'id'        => $request->user()->id,
+                    'name'      => $request->user()->name,
+                    'full_name' => $request->user()->full_name,
+                    'email'     => $request->user()->email,
+                    'phone'     => $request->user()->phone,
                 ]
             ],
             message: 'Data profil user'
         );
+    }
+
+    // =========================================================
+    //  UPDATE FCM TOKEN
+    // =========================================================
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $user->fcm_token = $request->fcm_token;
+        $user->save();
+
+        return $this->successResponse(
+            data: null,
+            message: 'FCM Token berhasil diperbarui'
+        );
+    }
+
+    // =========================================================
+    //  UPDATE PROFILE PHOTO
+    // =========================================================
+    public function updatePhoto(Request $request)
+    {
+        $request->validate([
+            'photo' => 'required|image|max:2048', // max 2MB
+        ]);
+
+        $user = $request->user();
+
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($user->profile_photo_path && \Storage::disk('public')->exists($user->profile_photo_path)) {
+                \Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            $path = $request->file('photo')->store('profile_photos', 'public');
+            $user->profile_photo_path = $path;
+            $user->save();
+
+            return $this->successResponse(
+                data: [
+                    'profile_photo_url' => asset('storage/' . $path)
+                ],
+                message: 'Foto profil berhasil diperbarui'
+            );
+        }
+
+        return $this->errorResponse('Gagal mengunggah foto', 400);
     }
 
     // =========================================================

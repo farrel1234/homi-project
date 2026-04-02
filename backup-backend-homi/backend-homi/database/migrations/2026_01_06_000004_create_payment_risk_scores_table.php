@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('payment_risk_scores')) {
+            return;
+        }
+
         Schema::create('payment_risk_scores', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->index();

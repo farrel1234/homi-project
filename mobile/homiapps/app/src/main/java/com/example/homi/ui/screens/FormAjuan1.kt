@@ -3,7 +3,6 @@
 package com.example.homi.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -27,6 +27,17 @@ import androidx.compose.ui.unit.sp
 import com.example.homi.R
 import com.example.homi.navigation.Routes
 
+private val BlueMain = Color(0xFF2F7FA3)
+private val BlueDark = Color(0xFF1A5E7B)
+private val AccentOrange = Color(0xFFF7A477)
+private val TextDark = Color(0xFF1E293B)
+private val HintGray = Color(0xFF94A3B8)
+private val SuccessGreen = Color(0xFF22C55E)
+private val ErrorRed = Color(0xFFEF4444)
+
+private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
+private val PoppinsReg = FontFamily(Font(R.font.poppins_regular))
+
 private data class SuratChoice(
     val title: String,
     val desc: String,
@@ -38,9 +49,6 @@ fun FormAjuan1(
     onBack: () -> Unit = {},
     onKonfirmasi: (String) -> Unit = {}
 ) {
-    val poppins = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
-    val poppinsSemi = try { FontFamily(Font(R.font.poppins_semibold)) } catch (_: Exception) { FontFamily.Default }
-
     val items = remember {
         listOf(
             SuratChoice(
@@ -76,144 +84,146 @@ fun FormAjuan1(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF2F79A0)),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                Brush.verticalGradient(listOf(BlueMain, BlueDark))
+            )
     ) {
-        Spacer(modifier = Modifier.height(40.dp))
-
-        Box(
+        // ===== Header (Premium Gradient Style) =====
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp)
+                .statusBarsPadding()
+                .padding(top = 16.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.panahkembali),
-                contentDescription = "Kembali",
-                modifier = Modifier
-                    .size(26.dp)
-                    .align(Alignment.CenterStart)
-                    .clickable { onBack() }
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.panahkembali),
+                        contentDescription = "Kembali",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Text(
+                    text = "Pengajuan Surat",
+                    fontFamily = PoppinsSemi,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = "Pilih jenis surat yang ingin Anda ajukan.\nLengkapi data sesuai instansi yang dituju.",
+                fontFamily = PoppinsReg,
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 12.sp,
+                lineHeight = 18.sp,
+                modifier = Modifier.padding(horizontal = 32.dp),
+                textAlign = TextAlign.Center
             )
         }
 
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "Pengajuan Surat",
-            fontFamily = poppinsSemi,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White,
-            fontSize = 22.sp
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "Pilih jenis surat yang ingin kamu ajukan.\nNanti kamu akan diarahkan ke formulir sesuai pilihan.",
-            fontFamily = poppins,
-            color = Color.White,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
-            modifier = Modifier.padding(horizontal = 32.dp),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(22.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Color.White,
-                    shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
-                )
-                .padding(horizontal = 22.dp, vertical = 18.dp)
+        // ===== White Container Card =====
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            color = Color.White
         ) {
-            Card(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        BorderStroke(1.dp, Color(0xFF1C6BA4)),
-                        RoundedCornerShape(18.dp)
-                    ),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
+                Text(
+                    text = "Pilih Kategori Surat",
+                    fontFamily = PoppinsSemi,
+                    color = TextDark,
+                    fontSize = 15.sp
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = "Ketuk untuk memilih salah satu:",
+                    fontFamily = PoppinsReg,
+                    color = HintGray,
+                    fontSize = 12.sp
+                )
+
+                Spacer(Modifier.height(18.dp))
+
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Jenis Surat",
-                        fontFamily = poppinsSemi,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1C6BA4),
-                        fontSize = 14.sp
-                    )
-
-                    Spacer(Modifier.height(6.dp))
-
-                    Text(
-                        text = "Pilih salah satu surat di bawah ini:",
-                        fontFamily = poppins,
-                        color = Color(0xFF64748B),
-                        fontSize = 12.sp
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
                     items.forEach { item ->
                         SuratChoiceCard(
                             title = item.title,
                             desc = item.desc,
                             selected = (selectedRoute == item.route),
-                            onClick = { selectedRoute = item.route },
-                            poppins = poppins,
-                            poppinsSemi = poppinsSemi
-                        )
-                        Spacer(Modifier.height(10.dp))
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    val canContinue = selectedRoute != null
-
-                    Button(
-                        onClick = { selectedRoute?.let { onKonfirmasi(it) } },
-                        enabled = canContinue,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFA06B),
-                            disabledContainerColor = Color(0xFFFFA06B).copy(alpha = 0.45f)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp)
-                            .padding(horizontal = 6.dp)
-                    ) {
-                        Text(
-                            text = "Lanjut Isi Form",
-                            fontFamily = poppinsSemi,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                            fontSize = 14.sp
+                            onClick = { selectedRoute = item.route }
                         )
                     }
+                    Spacer(Modifier.height(20.dp))
+                }
 
-                    Spacer(Modifier.height(6.dp))
+                // Action Footer
+                Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                Spacer(Modifier.height(16.dp))
 
+                val canContinue = selectedRoute != null
+
+                Button(
+                    onClick = { selectedRoute?.let { onKonfirmasi(it) } },
+                    enabled = canContinue,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BlueMain,
+                        disabledContainerColor = BlueMain.copy(alpha = 0.45f)
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
                     Text(
-                        text = if (canContinue) "Kamu bisa lanjut ke formulir." else "Pilih jenis surat dulu ya.",
-                        fontFamily = poppins,
-                        color = if (canContinue) Color(0xFF16A34A) else Color(0xFFEF4444),
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 6.dp)
+                        text = "Lanjut Isi Form",
+                        fontFamily = PoppinsSemi,
+                        color = Color.White,
+                        fontSize = 15.sp
                     )
+                }
 
-                    Spacer(Modifier.height(10.dp))
+                if (!canContinue) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Silakan pilih salah satu kategori di atas.",
+                        fontFamily = PoppinsReg,
+                        color = ErrorRed,
+                        fontSize = 11.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Anda dapat melanjutkan ke pengisian data.",
+                        fontFamily = PoppinsReg,
+                        color = SuccessGreen,
+                        fontSize = 11.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -225,18 +235,17 @@ private fun SuratChoiceCard(
     title: String,
     desc: String,
     selected: Boolean,
-    onClick: () -> Unit,
-    poppins: FontFamily,
-    poppinsSemi: FontFamily
+    onClick: () -> Unit
 ) {
-    val borderColor = if (selected) Color(0xFF1C6BA4) else Color(0xFFE5E7EB)
-    val bgColor = if (selected) Color(0xFF1C6BA4).copy(alpha = 0.06f) else Color(0xFFF3F4F6)
+    val borderColor = if (selected) BlueMain else Color(0xFFF1F5F9)
+    val bgColor = if (selected) BlueMain.copy(alpha = 0.05f) else Color(0xFFF8FAFC)
+    val iconColor = if (selected) BlueMain else HintGray
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor),
         border = BorderStroke(1.dp, borderColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -244,34 +253,43 @@ private fun SuratChoiceCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Radio-like indicator
             Box(
                 modifier = Modifier
-                    .size(12.dp)
+                    .size(20.dp)
                     .background(
-                        color = if (selected) Color(0xFF1C6BA4) else Color.Transparent,
+                        color = if (selected) BlueMain else Color.Transparent,
                         shape = RoundedCornerShape(99.dp)
                     )
-                    .border(1.5.dp, Color(0xFF1C6BA4), RoundedCornerShape(99.dp))
-            )
+                    .border(1.5.dp, if (selected) BlueMain else HintGray, RoundedCornerShape(99.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (selected) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(Color.White, RoundedCornerShape(99.dp))
+                    )
+                }
+            }
 
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    fontFamily = poppinsSemi,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1C6BA4),
+                    fontFamily = PoppinsSemi,
+                    color = if (selected) BlueMain else TextDark,
                     fontSize = 14.sp
                 )
-                Spacer(Modifier.height(3.dp))
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = desc,
-                    fontFamily = poppins,
-                    color = Color(0xFF64748B),
+                    fontFamily = PoppinsReg,
+                    color = HintGray,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
                 )
@@ -282,6 +300,6 @@ private fun SuratChoiceCard(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewFormAjuan1Best() {
+fun PreviewFormAjuan1Premium() {
     MaterialTheme { FormAjuan1() }
 }

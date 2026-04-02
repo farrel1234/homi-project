@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,41 +37,51 @@ fun TampilanAwalScreen2(
             contentScale = ContentScale.Crop
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
+        var visible by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        androidx.compose.runtime.LaunchedEffect(Unit) { visible = true }
+
+        androidx.compose.animation.AnimatedVisibility(
+            visible = visible,
+            enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(1000)) + 
+                    androidx.compose.animation.slideInVertically(initialOffsetY = { it / 2 }),
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = "Optimalisasi Layanan Warga dalam Satu Aplikasi",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = poppins,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(90.dp))
-
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNextClicked() }, // ⬅️ klik ke Login
-                contentAlignment = Alignment.BottomEnd
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
-                    text = "Selanjutnya",
-                    fontSize = 14.sp,
+                    text = "Optimalisasi Layanan Warga dalam Satu Aplikasi",
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = poppins,
                     color = Color.White,
-                    modifier = Modifier
-                        .padding(end = 8.dp, bottom = 8.dp)
-                        .clickable { onNextClicked() }   // ← opsional
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(90.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNextClicked() },
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    Text(
+                        text = "Selanjutnya",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = poppins,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(end = 8.dp, bottom = 8.dp)
+                            .clickable { onNextClicked() }
+                    )
+                }
             }
         }
     }

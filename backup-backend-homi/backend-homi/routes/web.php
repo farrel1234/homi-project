@@ -13,24 +13,22 @@ use App\Http\Controllers\Admin\{
     QuickPaymentValidationController,
     FeeInvoiceController,
     FeeQrController,
+    PaymentOcrController,
     ServiceRequestController as AdminServiceRequestController,
-    AppNotificationController
+    AppNotificationController,
+    TenantController,
+    StaffController
 };
 
 /*
 |--------------------------------------------------------------------------
-| DEFAULT ROUTES (biar root ga 404)
+| DEFAULT ROUTES (Portal Utama)
 |--------------------------------------------------------------------------
-| / dan /admin akan diarahkan otomatis ke login admin (atau dashboard kalau sudah login)
+| / menampilkan landing page portal
 */
 Route::get('/', function () {
-    // kalau sudah login, langsung ke dashboard
-    if (auth()->check()) {
-        return redirect()->route('admin.dashboard');
-    }
-    // kalau belum login, ke halaman login admin
-    return redirect()->route('admin.login');
-});
+    return view('welcome');
+})->name('portal');
 
 Route::get('/admin', function () {
     if (auth()->check()) {
@@ -60,6 +58,8 @@ Route::prefix('admin')->group(function () {
 
         // ===================== PENGUMUMAN =====================
         Route::resource('announcements', AnnouncementController::class);
+        Route::post('announcements/{announcement}/toggle-active', [AnnouncementController::class, 'toggleActive'])
+            ->name('announcements.toggle-active');
 
         // ===================== DATA WARGA =====================
         // IMPORTANT: taruh IMPORT routes SEBELUM resource residents
@@ -91,6 +91,9 @@ Route::prefix('admin')->group(function () {
         Route::post('service-requests/{serviceRequest}/approve', [AdminServiceRequestController::class, 'approve'])
             ->name('service-requests.approve');
 
+        Route::get('service-requests/{serviceRequest}/preview', [AdminServiceRequestController::class, 'preview'])
+            ->name('service-requests.preview');
+
         Route::post('service-requests/{serviceRequest}/reject', [AdminServiceRequestController::class, 'reject'])
             ->name('service-requests.reject');
 
@@ -103,6 +106,10 @@ Route::prefix('admin')->group(function () {
         Route::post('payments/{payment}/reject',  [PaymentController::class, 'reject'])->name('payments.reject');
         Route::post('payments/{payment}/cancel',  [PaymentController::class, 'cancel'])->name('payments.cancel');
         Route::post('payments/bulk',              [PaymentController::class, 'bulk'])->name('payments.bulk');
+
+        // OCR Scan
+        Route::post('payments/{payment}/scan-ocr', [PaymentOcrController::class, 'scan'])
+            ->name('payments.scan-ocr');
 
         Route::post('payments/{id}/quick-approve', [QuickPaymentValidationController::class, 'approve'])
             ->name('payments.quick-approve');
@@ -124,6 +131,8 @@ Route::prefix('admin')->group(function () {
             Route::get('invoices', [FeeInvoiceController::class, 'index'])->name('invoices.index');
             Route::get('invoices/create', [FeeInvoiceController::class, 'create'])->name('invoices.create');
             Route::post('invoices', [FeeInvoiceController::class, 'store'])->name('invoices.store');
+            Route::post('invoices/bulk-destroy', [FeeInvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-destroy');
+            Route::delete('invoices/{invoice}', [FeeInvoiceController::class, 'destroy'])->name('invoices.destroy');
         });
 
         // ===================== NOTIFICATIONS =====================
@@ -135,6 +144,14 @@ Route::prefix('admin')->group(function () {
             Route::post('/send-risk/{userId}', [AppNotificationController::class, 'sendRiskWarning'])
                 ->name('send-risk');
         });
+
+        // ===================== STAFF MANAGEMENT =====================
+        Route::resource('staff', StaffController::class)
+            ->names('admin.staff')
+            ->parameters(['staff' => 'staff']);
+
+        // ===================== TENANTS =====================
+        Route::resource('tenants', TenantController::class);
 
     });
 });

@@ -6,12 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Resident;
 use App\Models\Announcement;
 use App\Models\Payment;
-use App\Models\LetterRequest;
+use App\Models\ServiceRequest;
+use App\Models\FeeInvoice;
+use App\Models\Complaint;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // Parameter tunggakan
+        $atRiskDays = 14;
+        $highRiskDays = 30;
+
         // ========== CARD RINGKASAN ATAS ==========
 
         // Total warga
@@ -30,8 +36,13 @@ class DashboardController extends Controller
             ->sum('fee_invoices.amount');
 
         // Pengajuan layanan
-        $serviceRequestCount  = LetterRequest::count();
-        $serviceRequestsToday = LetterRequest::whereDate('created_at', now()->toDateString())->count();
+        $serviceRequestCount  = ServiceRequest::count();
+        $serviceRequestsToday = ServiceRequest::whereDate('created_at', now()->toDateString())->count();
+
+        // Pengaduan warga
+        $complaintCount = Complaint::count();
+        $complaintsToday = Complaint::whereDate('created_at', now()->toDateString())->count();
+        $pendingComplaintsCount = Complaint::where('status', 'baru')->count();
 
         // ========== PENGUMUMAN UTAMA + LAINNYA ==========
 
@@ -105,6 +116,57 @@ class DashboardController extends Controller
             'data'   => $statusData,
         ];
 
+        // ========== DATA TUNGGAKAN (ARREARS SUMMARY) ==========
+        $unpaidInvoices = FeeInvoice::query()
+            ->where('status', 'unpaid')
+            ->where('due_date', '<', now())
+            ->get();
+
+        $atRiskCount = 0;
+        $highRiskCount = 0;
+        $totalArrearsAmount = 0;
+        $userArrears = [];
+
+        foreach ($unpaidInvoices as $inv) {
+            $daysOverdue = now()->diffInDays($inv->due_date);
+            $totalArrearsAmount += $inv->amount;
+
+            if ($daysOverdue >= $highRiskDays) {
+                $highRiskCount++;
+            } elseif ($daysOverdue >= $atRiskDays) {
+                $atRiskCount++;
+            }
+
+            if (!isset($userArrears[$inv->user_id])) {
+                $userArrears[$inv->user_id] = [
+                    'name' => $inv->user->full_name ?? $inv->user->name ?? 'Warga',
+                    'blok' => $inv->user->residentProfile->blok ?? '-',
+                    'no_rumah' => $inv->user->residentProfile->no_rumah ?? '-',
+                    'amount' => 0,
+                    'days_overdue' => 0,
+                    'action_url' => route('admin.fees.invoices.index', ['user_id' => $inv->user_id])
+                ];
+            }
+
+            $userArrears[$inv->user_id]['amount'] += $inv->amount;
+            $userArrears[$inv->user_id]['days_overdue'] = max($userArrears[$inv->user_id]['days_overdue'], $daysOverdue);
+        }
+
+        // Sort by amount descending and take top 5
+        usort($userArrears, fn($a, $b) => $b['amount'] <=> $a['amount']);
+        $topArrears = array_slice($userArrears, 0, 5);
+
+        $arrearsSummary = [
+            'at_risk_count' => $atRiskCount,
+            'high_risk_count' => $highRiskCount,
+            'at_risk_days' => $atRiskDays,
+            'high_risk_days' => $highRiskDays,
+            'total_arrears_amount' => $totalArrearsAmount,
+            'top_arrears' => $topArrears,
+            'cta_url' => route('admin.notifications.create', ['type' => 'arrears_warning']),
+            'cta_label' => 'Kirim Pengingat'
+        ];
+
         // ========== KIRIM KE VIEW ==========
         return view('dashboard.index', compact(
             'totalResidents',
@@ -113,11 +175,15 @@ class DashboardController extends Controller
             'totalPendingAmount',
             'serviceRequestCount',
             'serviceRequestsToday',
+            'complaintCount',
+            'complaintsToday',
+            'pendingComplaintsCount',
             'mainAnnouncement',
             'nextAnnouncements',
             'latestPayments',
             'chartMonthly',
             'chartStatus',
+            'arrearsSummary'
         ));
     }
 }

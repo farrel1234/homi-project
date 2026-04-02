@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HOMI - Elevate Your Neighborhood Management</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-homi-surface font-sans text-homi-dark antialiased selection:bg-homi-blue selection:text-white">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-header">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 group cursor-pointer">
+                <div class="w-11 h-11 bg-homi-blue rounded-2xl flex items-center justify-center p-2 shadow-xl shadow-blue-200/40 group-hover:rotate-6 transition-transform">
+                    <img src="./images/homi-logo.png" alt="HOMI" class="w-full h-full object-contain brightness-0 invert">
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-black tracking-tighter text-homi-dark leading-none">HOMI</span>
+                    <span class="text-[10px] uppercase tracking-widest text-homi-blue font-bold">Smart Neighborhood</span>
+                </div>
+            </div>
+
+            <div class="hidden lg:flex items-center space-x-10 text-sm font-bold text-gray-500 uppercase tracking-widest">
+                <a href="#features" class="hover:text-homi-blue transition-colors">Fitur</a>
+                <a href="#advantages" class="hover:text-homi-blue transition-colors">Kelebihan</a>
+                <a href="#pricing" class="hover:text-homi-blue transition-colors">Harga</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <a href="https://admin.homi.id/login" class="interactive-btn px-6 py-2.5 border-2 border-homi-blue text-homi-blue rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-homi-blue hover:text-white transition-all">
+                    Login Admin
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-40 pb-20 px-6 hero-gradient overflow-hidden">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-homi-blue/10 rounded-full blur-[100px] animate-blob"></div>
+        <div class="absolute bottom-20 right-10 w-72 h-72 bg-homi-accent/10 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
+
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="opacity-0 animate-fade-in-up">
+                <div class="inline-flex items-center space-x-2 px-4 py-2 bg-blue-50/50 text-homi-blue rounded-full border border-blue-100 mb-8">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span class="text-xs font-black uppercase tracking-widest">Next-Gen Management Portal</span>
+                </div>
+                
+                <h1 class="text-5xl lg:text-[5.5rem] font-outfit font-black leading-[0.95] text-homi-dark mb-8 tracking-tighter">
+                    Kelola <span class="text-transparent bg-clip-text bg-gradient-to-r from-homi-blue to-teal-500">Perumahan</span> <br/> Tanpa Batas.
+                </h1>
+                
+                <p class="text-xl text-gray-500 mb-12 leading-relaxed max-w-xl font-medium">
+                    HOMI mentransformasi cara Anda mengelola perumahan. Dari automasi iuran hingga layanan E-Surat mandiri, semuanya dalam satu genggaman.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-5">
+                    <a href="#pricing" class="interactive-btn group w-full sm:w-auto px-10 py-5 bg-homi-blue text-white rounded-3xl font-black text-lg shadow-2xl shadow-blue-200 flex items-center justify-center gap-3">
+                        Lihat Penawaran
+                        <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                    </a>
+                    <a href="mailto:pbl.512hebat@gmail.com" class="interactive-btn w-full sm:w-auto px-10 py-5 bg-white text-homi-dark border-2 border-gray-100 rounded-3xl font-black text-lg hover:border-homi-blue transition-colors flex items-center justify-center gap-3">
+                        Minta Demo
+                    </a>
+                </div>
+
+                <div class="mt-16 flex items-center gap-8 grayscale opacity-50">
+                    <img src="./images/homi-logo.png" alt="Partner" class="h-8 object-contain">
+                    <div class="w-px h-6 bg-gray-200"></div>
+                    <span class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Trusted by Modern Estates</span>
+                </div>
+            </div>
+
+            <div class="relative hidden lg:block opacity-0 animate-fade-in-up" style="animation-delay: 0.2s">
+                <div class="absolute -inset-10 bg-gradient-to-tr from-homi-blue/10 to-homi-accent/5 rounded-[6rem] blur-3xl -z-10"></div>
+                
+                <div class="relative flex items-center justify-center">
+                    <!-- Dashboard Desktop Backdrop (Admin Console) -->
+                    <div class="relative w-[750px] h-[450px] bg-white rounded-[2.5rem] p-2 shadow-2xl border border-slate-100 overflow-hidden -rotate-2 -translate-x-16 translate-y-12 group/dash">
+                        <img src="./images/homi-dashboard.png" alt="Homi Admin Dashboard" class="w-full h-full object-cover object-top rounded-[2rem] group-hover/dash:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-slate-900/10 to-transparent"></div>
+                    </div>
+
+                    <!-- Phone Frame Floating In Front (Mobile App) -->
+                    <div class="absolute translate-x-32 -translate-y-8">
+                        <div class="relative w-[300px] h-[600px] bg-slate-900 rounded-[3.5rem] p-4 shadow-[0_50px_100px_-20px_rgba(47,127,163,0.5)] border-[8px] border-slate-800 overflow-hidden group/phone ring-4 ring-white/10">
+                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
+                            <img src="./images/homi-mobile.png" alt="Homi Mobile App" class="w-full h-full object-contain bg-[#2A7596] rounded-[2.5rem] group-hover/phone:scale-105 transition-transform duration-700">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating Badge -->
+                <div class="absolute -bottom-12 -right-8 bg-white p-6 rounded-[2.5rem] shadow-2xl animate-float border border-slate-50 z-30">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                            <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black uppercase text-slate-400 leading-none mb-1 tracking-widest">Efficiency</p>
+                            <p class="text-base font-bold text-slate-900 leading-none italic">Sistem Automasi Warga</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section id="features" class="py-32 px-6 bg-white border-t border-slate-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-20 gap-8">
+                <div class="max-w-xl">
+                    <h2 class="text-4xl lg:text-5xl font-outfit font-black tracking-tighter italic mb-4">Fitur Pintar. <br/> Perumahan Makin Cetar.</h2>
+                    <p class="text-lg text-gray-500 font-medium leading-relaxed">Dirancang untuk memangkas birokrasi manual dan meningkatkan kepuasan warga.</p>
+                </div>
+                <div class="hidden lg:block pb-2">
+                    <div class="flex -space-x-3">
+                        <div class="w-12 h-12 rounded-full border-4 border-white bg-slate-100"></div>
+                        <div class="w-12 h-12 rounded-full border-4 border-white bg-slate-200"></div>
+                        <div class="w-12 h-12 rounded-full border-4 border-white bg-slate-300"></div>
+                        <div class="w-12 h-12 rounded-full border-4 border-white bg-homi-blue flex items-center justify-center text-xs font-black text-white">+8</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Feature 1 -->
+                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                    <div class="w-16 h-16 bg-blue-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-homi-blue group-hover:text-white transition-colors duration-500">
+                        <i data-lucide="layout-dashboard" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-black mb-4 tracking-tight uppercase">Admin Dashboard</h4>
+                    <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Pantau seluruh aktivitas lingkungan, tunggakan warga, hingga laporan masuk dalam satu layar terpusat.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                    <div class="w-16 h-16 bg-amber-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-homi-accent group-hover:text-white transition-colors duration-500 text-homi-accent">
+                        <i data-lucide="scan-line" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-black mb-4 tracking-tight uppercase">OCR Scan Validation</h4>
+                    <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Validasi bukti transfer iuran warga secara otomatis menggunakan kecerdasan buatan (OCR Space Integration).</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                    <div class="w-16 h-16 bg-emerald-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-500 text-emerald-600">
+                        <i data-lucide="file-text" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-black mb-4 tracking-tight uppercase">Smart E-Surat</h4>
+                    <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Warga mengajukan surat dari ponsel, admin klik setuju, dan PDF siap didownload secara otomatis.</p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                    <div class="w-16 h-16 bg-rose-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-500 text-rose-500">
+                        <i data-lucide="message-square" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-black mb-4 tracking-tight uppercase">Aduan Real-time</h4>
+                    <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Warga bisa melaporkan kerusakan fasilitas dengan foto & lokasi yang langsung diterima dashboard admin.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advantages Section -->
+    <section id="advantages" class="py-32 px-6 bg-homi-dark text-white relative overflow-hidden">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20">
+            <div class="lg:w-1/2">
+                <h2 class="text-4xl lg:text-5xl font-outfit font-black italic mb-10 leading-tight tracking-tighter">Kenapa Harus <br/> Menggunakan HOMI?</h2>
+                <div class="space-y-10">
+                    <div class="flex items-start gap-6 group">
+                        <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-homi-dark transition-all duration-500">
+                            <i data-lucide="zap" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-xl font-black uppercase mb-2 tracking-widest text-homi-blue">Operasional Kilat</h5>
+                            <p class="text-gray-400 font-medium leading-relaxed capitalize">Hemat waktu hingga 70% untuk urusan administrasi surat-menyurat dan iuran warga setiap bulannya.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-6 group">
+                        <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-homi-dark transition-all duration-500">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-xl font-black uppercase mb-2 tracking-widest text-homi-blue">Zero Error Finance</h5>
+                            <p class="text-gray-400 font-medium leading-relaxed capitalize">Pencatatan keuangan otomatis yang transparan, mengurangi resiko kesalahan manusia & fraud.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-6 group">
+                        <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-homi-dark transition-all duration-500">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-xl font-black uppercase mb-2 tracking-widest text-homi-blue">Premium Lifestyle</h5>
+                            <p class="text-gray-400 font-medium leading-relaxed capitalize">Meningkatkan nilai profesionalisme perumahan Anda di mata warga maupun calon pembeli properti.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-1/2 relative">
+                <div class="absolute inset-0 bg-homi-blue/20 rounded-full blur-[120px] -z-10"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="pt-12 space-y-4">
+                        <div class="bg-white/5 p-8 rounded-[3rem] border border-white/10 text-center backdrop-blur">
+                            <p class="text-4xl font-black font-outfit text-white mb-2 tracking-tighter">100%</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Paperless</p>
+                        </div>
+                        <div class="bg-white/5 p-8 rounded-[3rem] border border-white/10 text-center backdrop-blur">
+                            <p class="text-4xl font-black font-outfit text-white mb-2 tracking-tighter">24/7</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Security Monitoring</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-white/5 p-8 rounded-[3rem] border border-white/10 text-center backdrop-blur">
+                            <p class="text-4xl font-black font-outfit text-white mb-2 tracking-tighter">5X</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Faster Responses</p>
+                        </div>
+                        <div class="bg-white/5 p-8 rounded-[3rem] border border-white/10 text-center backdrop-blur">
+                            <p class="text-4xl font-black font-outfit text-white mb-2 tracking-tighter">Zero</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Lost Documents</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-32 px-6 bg-white relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-20">
+                <h2 class="text-5xl font-outfit font-black italic tracking-tighter mb-6">Investasi Cerdas Untuk <br/> Perumahan Anda.</h2>
+                <p class="text-lg text-gray-500 font-medium capitalize">Satu sistem, ribuan manfaat. Pilih paket sesuai jumlah unit rumah.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+                <!-- Starter Plan -->
+                <div class="interactive-btn p-10 rounded-[4rem] bg-slate-50 border border-slate-100 flex flex-col items-center text-center group">
+                    <span class="px-4 py-1 bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Up to 100 Houses</span>
+                    <h3 class="text-xl font-black uppercase mb-2 tracking-widest">Starter</h3>
+                    <div class="flex flex-col mb-8">
+                        <div class="flex items-baseline justify-center">
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 100k</span>
+                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                        </div>
+                        <div class="text-blue-500 text-[10px] font-bold mt-1">Atau Rp 799k / Tahun</div>
+                    </div>
+                    <ul class="space-y-4 mb-10 text-xs text-gray-500 font-semibold text-left w-full">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> Dashboard Admin Cluster</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> Validasi Iuran OCR</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> E-Surat & Pengaduan</li>
+                        <li class="flex items-center gap-2 opacity-30"><i data-lucide="x" class="w-3 h-3"></i> Mobile APP (Add-on Only)</li>
+                    </ul>
+                    <a href="mailto:pbl.512hebat@gmail.com?subject=Minat%20Paket%20Starter" class="mt-auto w-full py-4 bg-white border-2 border-slate-200 text-slate-900 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:border-homi-blue hover:text-homi-blue transition-all">
+                        Pilih Starter
+                    </a>
+                </div>
+
+                <!-- Professional Plan (POPULER) -->
+                <div class="interactive-btn p-10 rounded-[4rem] bg-homi-blue text-white relative flex flex-col items-center text-center pricing-glow ring-4 ring-blue-50">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-homi-accent text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">POPULER</div>
+                    <span class="px-4 py-1 bg-white/10 text-blue-200 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Up to 300 Houses</span>
+                    <h3 class="text-xl font-black uppercase mb-2 tracking-widest italic">Professional</h3>
+                    <div class="flex flex-col mb-8 text-white">
+                        <div class="flex items-baseline justify-center">
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 250k</span>
+                            <span class="text-blue-100 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                        </div>
+                        <div class="text-teal-300 text-[10px] font-bold mt-1 uppercase italic">Hemat! Rp 2.4Jt / Tahun</div>
+                    </div>
+                    <ul class="space-y-4 mb-10 text-xs text-blue-50 font-semibold text-left w-full">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-teal-300"></i> Semua Fitur Starter</li>
+                        <li class="flex items-center gap-2"><i data-lucide="sparkles" class="w-3 h-3 text-amber-300"></i> Mobile APP Eksklusif (APK)</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-teal-300"></i> Support Prioritas WA</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-teal-300"></i> Custom Domain (Optional)</li>
+                    </ul>
+                    <a href="mailto:pbl.512hebat@gmail.com?subject=Minat%20Paket%20Pro" class="mt-auto w-full py-4 bg-white text-homi-blue rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-slate-50 transition-all">
+                        Ambil Paket Pro
+                    </a>
+                </div>
+
+                <!-- Elite Plan -->
+                <div class="interactive-btn p-10 rounded-[4rem] bg-homi-dark text-white border border-white/5 flex flex-col items-center text-center group">
+                    <span class="px-4 py-1 bg-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">500+ Houses / Unlimited</span>
+                    <h3 class="text-xl font-black uppercase mb-2 tracking-widest">Elite / Enterprise</h3>
+                    <div class="flex flex-col mb-8">
+                        <div class="flex items-baseline justify-center">
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 500k</span>
+                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                        </div>
+                        <div class="text-homi-blue text-[10px] font-bold mt-1">Special Deal for Long-term</div>
+                    </div>
+                    <ul class="space-y-4 mb-10 text-xs text-gray-400 font-semibold text-left w-full">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-homi-blue"></i> White Label / Custom Logo</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-homi-blue"></i> Multi-Perumahan Dashboard</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-homi-blue"></i> Dedicated Server Instance</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-homi-blue"></i> Training & Onboarding On-site</li>
+                    </ul>
+                    <a href="mailto:pbl.512hebat@gmail.com?subject=Inquiry%20Enterprise%20Elite" class="mt-auto w-full py-4 bg-transparent border-2 border-white/10 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-white hover:text-homi-dark transition-all">
+                        Hubungi Sales
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-16 text-center">
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Butuh solusi untuk 1000+ unit? <a href="mailto:pbl.512hebat@gmail.gcom" class="text-homi-blue underline decoration-2 underline-offset-4">Konsultasi Gratis Sekarang</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pre-Footer CTA -->
+    <section class="py-32 px-6 relative overflow-hidden bg-slate-50">
+        <div class="absolute inset-0 opacity-40">
+            <svg class="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                <path d="M0 100 C 20 0 50 0 100 100 Z" fill="rgba(47, 127, 163, 0.05)"/>
+            </svg>
+        </div>
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="w-20 h-20 bg-homi-blue rounded-[2.5rem] flex items-center justify-center p-4 shadow-2xl shadow-blue-200/50 mx-auto mb-10">
+                <img src="./images/homi-logo.png" class="w-full h-full object-contain brightness-0 invert">
+            </div>
+            <h2 class="text-4xl lg:text-5xl font-outfit font-black italic tracking-tighter mb-10 text-slate-900 leading-tight">Siap Mempersembahkan <br/> Lifestyle Modern untuk Warga?</h2>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-5">
+                <a href="mailto:pbl.512hebat@gmail.com" class="interactive-btn group h-16 w-full sm:w-64 bg-homi-dark text-white rounded-[2rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3">
+                    Bicara dengan Sales
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+                <a href="https://admin.homi.id/login" class="interactive-btn h-16 w-full sm:w-64 border-2 border-slate-950 text-slate-950 rounded-[2rem] font-black uppercase tracking-widest text-xs flex items-center justify-center">
+                    Masuk ke Panel Admin
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white pt-24 pb-12 px-6 border-t border-slate-100">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+            <div class="lg:col-span-2">
+                <div class="flex items-center space-x-3 mb-8">
+                    <img src="./images/homi-logo.png" alt="HOMI" class="h-10">
+                    <span class="text-2xl font-black uppercase tracking-tighter">HOMI Smart Portal</span>
+                </div>
+                <p class="text-gray-400 font-medium max-w-sm leading-relaxed capitalize">Solusi SaaS (Software as a Service) terbaik bagi pengelola perumahan yang memimpikan efisiensi, transparansi, dan kemudahan akses layanan.</p>
+            </div>
+            
+            <div>
+                <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-8 leading-none">The System</h6>
+                <ul class="space-y-5 text-sm font-bold text-gray-500">
+                    <li><a href="#features" class="hover:text-homi-blue transition-colors italic">Fitur Lengkap</a></li>
+                    <li><a href="#advantages" class="hover:text-homi-blue transition-colors italic">Kelebihan Platform</a></li>
+                    <li><a href="https://admin.homi.id/login" class="hover:text-homi-blue transition-colors text-homi-blue italic underline decoration-2 underline-offset-4">Developer Login</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-8 leading-none">Contact Us</h6>
+                <ul class="space-y-5 text-sm font-bold text-gray-500 underline-offset-4 decoration-2">
+                    <li><a href="mailto:pbl.512hebat@gmail.com" class="hover:text-homi-blue transition-colors">pbl.512hebat@gmail.com</a></li>
+                    <li><a href="#" class="hover:text-homi-blue transition-colors italic leading-relaxed">Politeknik Negeri Batam, Batam, Indonesia</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto pt-10 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-300">© 2026 HOMI Project. Advanced Resident Management System.</p>
+            <div class="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60">
+                <a href="#" class="hover:text-homi-blue italic transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-homi-blue italic transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

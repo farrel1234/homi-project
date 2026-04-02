@@ -60,8 +60,12 @@ Route::get('/__debug/php', function (): JsonResponse {
 |--------------------------------------------------------------------------
 */
 Route::post('register', [AuthController::class, 'register']);
+Route::post('resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('login', [AuthController::class, 'login']);
+
+// Public List Tenant
+Route::get('tenants', [\App\Http\Controllers\Api\TenantController::class, 'index']);
 
 // Google login (versi controller API)
 Route::post('auth/google', [GoogleAuthController::class, 'login']);
@@ -69,6 +73,7 @@ Route::post('auth/google', [GoogleAuthController::class, 'login']);
 // Forgot password
 Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('verify-reset-otp', [AuthController::class, 'verifyResetOtp']);
+Route::post('reset-password', [AuthController::class, 'resetPassword']);
 
 // Google login (versi AuthController yang dipakai Android kamu sekarang)
 Route::post('login-google', [AuthController::class, 'loginGoogle']);
@@ -87,6 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('me', [AuthController::class, 'updateProfile']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('change-password', [AuthController::class, 'changePassword']);
+    Route::post('fcm-token', [AuthController::class, 'updateFcmToken']);
+    Route::post('me/photo', [AuthController::class, 'updatePhoto']);
 
     // =========================
     // WARGA ISI ALAMAT SENDIRI

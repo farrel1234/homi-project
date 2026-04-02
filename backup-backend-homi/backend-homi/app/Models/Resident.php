@@ -13,6 +13,9 @@ class Resident extends Model
         'blok',
         'no_rumah',
         'alamat',
+        'nama_rt',
+        'no_rt',
+        'no_rw',
         'is_public',
     ];
 

@@ -2,299 +2,206 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'HOMI Admin')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    {{-- Tailwind CDN --}}
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-        :root {
-            --homi-blue: #2F79A0;
-            --homi-orange: #F8A477;
-            --homi-bg: #F5F6F8;
-            --homi-border: #E2E8F0;
-        }
-
-        body { background-color: var(--homi-bg); }
-
-        .homi-card {
-            background: #ffffff;
-            border-radius: 14px;
-            border: 1px solid var(--homi-border);
-            padding: 1.25rem;
-            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
-        }
-
-        table.homi-table {
-            border-collapse: separate;
-            border-spacing: 0;
-            width: 100%;
-            border: 1px solid var(--homi-border);
-            border-radius: 12px;
-            overflow: hidden;
-            background: #ffffff;
-        }
-
-        table.homi-table thead tr {
-            background: #FFF4ED;
-            color: #374151;
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        table.homi-table thead th {
-            padding: 12px;
-            border-bottom: 1px solid var(--homi-border);
-        }
-
-        table.homi-table tbody td {
-            padding: 14px 12px;
-            font-size: 13px;
-            color: #374151;
-        }
-
-        table.homi-table tbody tr:hover { background: #FFF7F0; }
-
-        .homi-title { font-size: 20px; font-weight: 600; color: #111827; }
-        .homi-subtitle { font-size: 13px; color: #6B7280; }
-    </style>
+    <title>@yield('title', 'HOMI Admin')</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-
 <body class="min-h-screen">
-
 @php
     $navItems = [
-        ['label' => 'Dashboard',       'route' => 'admin.dashboard',              'active' => ['admin.dashboard']],
-        ['label' => 'Data Warga',      'route' => 'residents.index',              'active' => ['residents.*']],
-        ['label' => 'Pengumuman',      'route' => 'announcements.index',          'active' => ['announcements.*']],
-        ['label' => 'Pengaduan',       'route' => 'complaints.index',             'active' => ['complaints.*']],
-        ['label' => 'Pengajuan Surat', 'route' => 'service-requests.index',       'active' => ['service-requests.*']],
-
-        ['label' => 'Pembayaran',      'route' => 'payments.index',               'active' => ['payments.*']],
-
-        // ✅ sesuai web.php yang bener
-        ['label' => 'Notifikasi',      'route' => 'admin.notifications.index',    'active' => ['admin.notifications.*']],
-        ['label' => 'Tagihan Iuran',   'route' => 'admin.fees.invoices.index',    'active' => ['admin.fees.invoices.*']],
-        ['label' => 'QR Iuran',        'route' => 'admin.fees.qr.index',          'active' => ['admin.fees.qr.*']],
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard'], 'icon' => 'dashboard'],
+        ['label' => 'Data Warga', 'route' => 'residents.index', 'active' => ['residents.*'], 'icon' => 'residents'],
+        ['label' => 'Pengumuman', 'route' => 'announcements.index', 'active' => ['announcements.*'], 'icon' => 'announcements'],
+        ['label' => 'Pengaduan', 'route' => 'complaints.index', 'active' => ['complaints.*'], 'icon' => 'complaints'],
+        ['label' => 'Pengajuan Surat & Layanan', 'route' => 'service-requests.index', 'active' => ['service-requests.*'], 'icon' => 'services'],
+        ['label' => 'Pembayaran', 'route' => 'payments.index', 'active' => ['payments.*'], 'icon' => 'payments'],
+        ['label' => 'Notifikasi', 'route' => 'admin.notifications.index', 'active' => ['admin.notifications.*'], 'icon' => 'notifications'],
+        ['label' => 'Tagihan Iuran', 'route' => 'admin.fees.invoices.index', 'active' => ['admin.fees.invoices.*'], 'icon' => 'invoices'],
+        ['label' => 'QR Iuran', 'route' => 'admin.fees.qr.index', 'active' => ['admin.fees.qr.*'], 'icon' => 'qr'],
     ];
+
+    if (auth()->check() && auth()->user()->isSuperAdmin()) {
+        $navItems[] = ['label' => 'Manajemen Staff', 'route' => 'admin.staff.index', 'active' => ['admin.staff.*'], 'icon' => 'residents'];
+        $navItems[] = ['label' => 'Manajemen Tenant', 'route' => 'tenants.index', 'active' => ['tenants.*'], 'icon' => 'tenants'];
+    }
+
+    $displayName = auth()->check()
+        ? (auth()->user()->full_name ?? auth()->user()->name ?? 'Admin')
+        : 'Admin';
+
+    $displayEmail = auth()->check()
+        ? (auth()->user()->email ?? '-')
+        : '-';
 @endphp
 
-<div class="flex min-h-screen">
+<div class="min-h-screen lg:flex">
+    <div id="sidebar-overlay" class="fixed inset-0 z-40 hidden bg-slate-900/45 backdrop-blur-[1px] lg:hidden"></div>
 
-    {{-- ===== SIDEBAR DESKTOP ===== --}}
-    <aside class="hidden md:flex md:flex-col w-64 bg-[var(--homi-orange)] text-white border-r border-orange-300">
-
-        {{-- Brand --}}
-        <div class="p-4 border-b border-orange-300">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/homi-logo.png') }}"
-                     alt="HOMI Logo"
-                     class="w-10 h-10 rounded-full object-cover bg-white">
-                <div class="leading-tight">
-                    <div class="font-semibold">HOMI Admin</div>
-                    <div class="text-xs text-white/80">Hawai Garden</div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Nav --}}
-        <nav class="flex-1 p-3 space-y-1">
-            @foreach($navItems as $item)
-                @php
-                    $isActive = false;
-                    foreach (($item['active'] ?? [$item['route']]) as $p) {
-                        if (\Illuminate\Support\Facades\Route::is($p)) { $isActive = true; break; }
-                    }
-
-                    // jangan bikin href '#', karena bikin item terlihat "disabled"
-                    // tapi tetap aman: kalau route belum ada, jatuh ke /admin/dashboard
-                    $href = \Illuminate\Support\Facades\Route::has($item['route'])
-                        ? route($item['route'])
-                        : route('admin.dashboard');
-                @endphp
-
-                <a href="{{ $href }}"
-                   class="block px-3 py-2 rounded-lg font-medium text-sm
-                          {{ $isActive ? 'bg-white text-[var(--homi-orange)]' : 'text-white hover:bg-orange-200/40' }}">
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
-        </nav>
-
-        {{-- User / Logout --}}
-        <div class="p-4 border-t border-orange-300">
-            @auth
-                @php
-                    $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
-                @endphp
-
+    <aside id="app-sidebar"
+           class="fixed inset-y-0 left-0 z-50 w-[285px] -translate-x-full border-r border-sky-800/30
+                  bg-gradient-to-b from-[#0d5f84] via-[#1f6f8b] to-[#287f9f]
+                  text-white shadow-2xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0">
+        <div class="flex h-full flex-col">
+            <div class="border-b border-white/15 px-5 py-5">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-white text-[var(--homi-blue)] flex items-center justify-center font-bold uppercase">
-                        {{ strtoupper(substr($displayName, 0, 1)) }}
+                    <div class="h-12 w-12 overflow-hidden rounded-2xl bg-white/90 ring-2 ring-white/40">
+                        <img src="{{ asset('images/homi-logo.png') }}" alt="HOMI" class="h-full w-full object-cover">
                     </div>
-                    <div class="min-w-0">
-                        <div class="text-sm font-semibold truncate">{{ $displayName }}</div>
-                        <div class="text-[11px] text-white/80 truncate">{{ Auth::user()->email }}</div>
+                    <div>
+                        <p class="text-[10px] uppercase tracking-[0.18em] text-white/70">Admin Console</p>
+                        <h1 class="text-lg font-bold leading-tight">HOMI</h1>
+                        <p class="text-xs text-white/80">{{ session('tenant_name', 'Multi-Tenant System') }}</p>
                     </div>
-                </div>
-
-                <form method="POST" action="{{ route('admin.logout') }}" class="logout-form mt-3">
-                    @csrf
-                    <button type="button"
-                            class="w-full px-3 py-2 rounded-lg bg-white text-[var(--homi-orange)] font-semibold text-sm hover:bg-orange-50 logout-trigger">
-                        Keluar
-                    </button>
-                </form>
-            @endauth
-        </div>
-
-    </aside>
-
-    {{-- ===== MOBILE SIDEBAR (DRAWER) ===== --}}
-    <div id="sidebar-overlay" class="md:hidden fixed inset-0 bg-black/30 hidden z-40"></div>
-
-    <aside id="mobile-sidebar"
-           class="md:hidden fixed top-0 left-0 h-full w-72 bg-[var(--homi-orange)] text-white border-r border-orange-300 z-50
-                  transform -translate-x-full transition-transform duration-200 ease-out">
-
-        <div class="p-4 border-b border-orange-300 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/homi-logo.png') }}"
-                     alt="HOMI Logo"
-                     class="w-10 h-10 rounded-full object-cover bg-white">
-                <div class="leading-tight">
-                    <div class="font-semibold">HOMI Admin</div>
-                    <div class="text-xs text-white/80">Hawai Garden</div>
                 </div>
             </div>
 
-            <button id="sidebar-close"
-                    class="w-9 h-9 rounded-full bg-white text-[var(--homi-orange)] font-bold">
-                ✕
-            </button>
-        </div>
-
-        <nav class="p-3 space-y-1">
-            @foreach($navItems as $item)
-                @php
-                    $isActive = false;
-                    foreach (($item['active'] ?? [$item['route']]) as $p) {
-                        if (\Illuminate\Support\Facades\Route::is($p)) { $isActive = true; break; }
-                    }
-
-                    $href = \Illuminate\Support\Facades\Route::has($item['route'])
-                        ? route($item['route'])
-                        : route('admin.dashboard');
-                @endphp
-
-                <a href="{{ $href }}"
-                   class="block px-3 py-2 rounded-lg font-medium text-sm
-                          {{ $isActive ? 'bg-white text-[var(--homi-orange)]' : 'text-white hover:bg-orange-200/40' }}">
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
-        </nav>
-
-        @auth
-            @php
-                $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
-            @endphp
-
-            <div class="p-4 border-t border-orange-300 mt-auto">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-white text-[var(--homi-blue)] flex items-center justify-center font-bold uppercase">
-                        {{ strtoupper(substr($displayName, 0, 1)) }}
-                    </div>
-                    <div class="min-w-0">
-                        <div class="text-sm font-semibold truncate">{{ $displayName }}</div>
-                        <div class="text-[11px] text-white/80 truncate">{{ Auth::user()->email }}</div>
-                    </div>
-                </div>
-
-                <form method="POST" action="{{ route('admin.logout') }}" class="logout-form mt-3">
-                    @csrf
-                    <button type="button"
-                            class="w-full px-3 py-2 rounded-lg bg-white text-[var(--homi-orange)] font-semibold text-sm hover:bg-orange-50 logout-trigger">
-                        Keluar
-                    </button>
-                </form>
-            </div>
-        @endauth
-    </aside>
-
-    {{-- ===== MAIN AREA ===== --}}
-    <div class="flex-1 flex flex-col min-h-screen">
-
-        <header class="bg-white border-b border-gray-100">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <button id="sidebar-open"
-                            class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--homi-orange)] text-white"
-                            aria-label="Open menu">
-                        ☰
-                    </button>
-
-                    <div class="leading-tight">
-                        <div class="text-sm font-semibold text-gray-800">
-                            @yield('page_title', 'Dashboard')
-                        </div>
-                        <div class="text-[11px] text-gray-500">
-                            @yield('page_subtitle', 'Panel Admin HOMI')
-                        </div>
-                    </div>
-                </div>
-
-                @auth
+            <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+                @foreach($navItems as $item)
                     @php
-                        $displayName = Auth::user()->full_name ?? Auth::user()->name ?? 'Admin';
+                        $isActive = false;
+                        foreach (($item['active'] ?? [$item['route']]) as $pattern) {
+                            if (\Illuminate\Support\Facades\Route::is($pattern)) {
+                                $isActive = true;
+                                break;
+                            }
+                        }
+
+                        $href = \Illuminate\Support\Facades\Route::has($item['route'])
+                            ? route($item['route'])
+                            : route('admin.dashboard');
                     @endphp
-                    <div class="hidden sm:flex items-center gap-2">
-                        <div class="text-right leading-tight">
-                            <div class="text-xs font-semibold text-gray-800">{{ $displayName }}</div>
-                            <div class="text-[11px] text-gray-500">{{ Auth::user()->email }}</div>
+
+                    <a href="{{ $href }}"
+                       class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition
+                              {{ $isActive
+                                  ? 'bg-white text-[#1f6f8b] shadow-md shadow-sky-900/15'
+                                  : 'text-white/90 hover:bg-white/12 hover:text-white' }}">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border
+                                     {{ $isActive ? 'border-[#d7eaf3] bg-[#eef6fb] text-[#1f6f8b]' : 'border-white/25 bg-white/10 text-white' }}">
+                            @switch($item['icon'])
+                                @case('dashboard')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M4 13h7V4H4zM13 20h7v-9h-7zM13 11h7V4h-7zM4 20h7v-5H4z"/></svg>
+                                    @break
+                                @case('residents')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="3.5"/><path d="M20 8v6M23 11h-6"/></svg>
+                                    @break
+                                @case('announcements')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M3 11.5V8a2 2 0 0 1 2-2h3l8-3v18l-8-3H5a2 2 0 0 1-2-2v-3.5z"/><path d="M8 18v3"/></svg>
+                                    @break
+                                @case('complaints')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    @break
+                                @case('services')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>
+                                    @break
+                                @case('letters')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
+                                    @break
+                                @case('payments')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M16 15h2"/></svg>
+                                    @break
+                                @case('notifications')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M9.5 17a2.5 2.5 0 0 0 5 0"/></svg>
+                                    @break
+                                @case('invoices')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M6 3h12l2 3v15H4V6z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>
+                                    @break
+                                @case('qr')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM20 14h1v1h-1zM17 17h4v4h-4z"/></svg>
+                                    @break
+                                @case('tenants')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
+                                    @break
+                            @endswitch
+                        </span>
+                        <span class="truncate">{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+            </nav>
+
+            <div class="border-t border-white/15 px-4 py-4">
+                <div class="rounded-xl border border-white/20 bg-white/10 p-3">
+                    <div class="flex items-center gap-3">
+                        <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white font-bold uppercase text-[#1f6f8b]">
+                            {{ strtoupper(substr($displayName, 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold">{{ $displayName }}</p>
+                            <p class="truncate text-[11px] text-white/75">{{ $displayEmail }}</p>
                         </div>
                     </div>
-                @endauth
+                    <form method="POST" action="{{ route('admin.logout') }}" class="logout-form mt-3 lg:hidden">
+                        @csrf
+                        <button type="button"
+                                class="logout-trigger inline-flex w-full items-center justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-[#1f6f8b] hover:bg-sky-50">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="relative flex min-h-screen flex-1 flex-col">
+        <header class="sticky top-0 z-30 border-b border-slate-200/90 bg-white/90 backdrop-blur">
+            <div class="flex h-16 w-full items-center justify-between px-6 lg:px-10">
+                <div class="flex items-center gap-3">
+                    <button id="sidebar-open"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 lg:hidden"
+                            aria-label="Open menu">
+                        <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current stroke-[1.8]"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                    </button>
+                    <div>
+                        <p class="text-[10px] uppercase tracking-[0.16em] text-slate-400">HOMI Admin</p>
+                        <h2 class="text-base font-bold text-slate-900">
+                            @yield('page_title', 'Dashboard')
+                        </h2>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 sm:block">
+                        @yield('page_subtitle', 'Panel Admin HOMI')
+                    </div>
+                    <form method="POST" action="{{ route('admin.logout') }}" class="logout-form hidden lg:block">
+                        @csrf
+                        <button type="button"
+                                class="logout-trigger inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                            Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </header>
 
         <main class="flex-1">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="w-full px-6 py-6 lg:px-10 lg:py-8">
                 @yield('content')
             </div>
         </main>
 
-        <footer class="border-t border-gray-100 bg-white">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                <p class="text-[11px] text-gray-400 text-center">
-                    HOMI &mdash; Sistem Informasi Manajemen Layanan Warga Hawai Garden
-                </p>
+        <footer class="border-t border-slate-200/90 bg-white/85">
+            <div class="w-full px-6 py-3 text-center text-[11px] text-slate-500 lg:px-10">
+                HOMI - Sistem Informasi Layanan Warga
             </div>
         </footer>
     </div>
 </div>
 
-{{-- POPUP LOGOUT --}}
 <div id="logout-modal"
-     class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/30 backdrop-blur-sm">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-5 mx-4">
-        <h2 class="text-sm font-semibold text-gray-800 mb-1">
-            Konfirmasi Keluar
-        </h2>
-        <p class="text-xs text-gray-600 mb-4">
-            Apakah Anda yakin ingin keluar dari dashboard HOMI Admin?
+     class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/45 px-4 backdrop-blur-[2px]">
+    <div class="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+        <h3 class="text-lg font-bold text-slate-900">Konfirmasi Logout</h3>
+        <p class="mt-1 text-sm text-slate-600">
+            Anda yakin ingin keluar dari dashboard admin?
         </p>
-        <div class="flex justify-end gap-2 text-sm">
+        <div class="mt-5 flex justify-end gap-2">
             <button id="logout-cancel"
-                    class="px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+                    class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
                 Batal
             </button>
             <button id="logout-confirm"
-                    class="px-3 py-2 rounded-lg bg-[var(--homi-orange)] text-white hover:bg-orange-500">
-                Ya, keluar
+                    class="rounded-lg bg-[var(--homi-orange)] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#e67949]">
+                Ya, logout
             </button>
         </div>
     </div>
@@ -302,67 +209,81 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const openBtn  = document.getElementById('sidebar-open');
-    const closeBtn = document.getElementById('sidebar-close');
-    const overlay  = document.getElementById('sidebar-overlay');
-    const drawer   = document.getElementById('mobile-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const sidebar = document.getElementById('app-sidebar');
+    const openButton = document.getElementById('sidebar-open');
 
-    function openDrawer() {
-        if (!drawer || !overlay) return;
-        drawer.classList.remove('-translate-x-full');
+    function openSidebar() {
+        if (!overlay || !sidebar) return;
         overlay.classList.remove('hidden');
+        sidebar.classList.remove('-translate-x-full');
     }
 
-    function closeDrawer() {
-        if (!drawer || !overlay) return;
-        drawer.classList.add('-translate-x-full');
+    function closeSidebar() {
+        if (!overlay || !sidebar) return;
         overlay.classList.add('hidden');
+        sidebar.classList.add('-translate-x-full');
     }
 
-    if (openBtn) openBtn.addEventListener('click', openDrawer);
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-    if (overlay) overlay.addEventListener('click', closeDrawer);
+    if (openButton) {
+        openButton.addEventListener('click', openSidebar);
+    }
 
-    const logoutModal   = document.getElementById('logout-modal');
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeSidebar();
+            closeLogoutModal();
+        }
+    });
+
+    const logoutModal = document.getElementById('logout-modal');
     const logoutButtons = document.querySelectorAll('.logout-trigger');
-    const cancelBtn     = document.getElementById('logout-cancel');
-    const confirmBtn    = document.getElementById('logout-confirm');
+    const cancelLogout = document.getElementById('logout-cancel');
+    const confirmLogout = document.getElementById('logout-confirm');
 
     let formToSubmit = null;
 
-    logoutButtons.forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            formToSubmit = btn.closest('form');
-            if (logoutModal) {
-                logoutModal.classList.remove('hidden');
-                logoutModal.classList.add('flex');
-            }
+    function openLogoutModal(form) {
+        if (!logoutModal) return;
+        formToSubmit = form;
+        logoutModal.classList.remove('hidden');
+        logoutModal.classList.add('flex');
+    }
+
+    function closeLogoutModal() {
+        if (!logoutModal) return;
+        logoutModal.classList.add('hidden');
+        logoutModal.classList.remove('flex');
+        formToSubmit = null;
+    }
+
+    logoutButtons.forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            openLogoutModal(button.closest('form'));
         });
     });
 
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function () {
-            if (logoutModal) {
-                logoutModal.classList.add('hidden');
-                logoutModal.classList.remove('flex');
-            }
-            formToSubmit = null;
-        });
-    }
-
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', function () {
-            if (formToSubmit) formToSubmit.submit();
-        });
+    if (cancelLogout) {
+        cancelLogout.addEventListener('click', closeLogoutModal);
     }
 
     if (logoutModal) {
-        logoutModal.addEventListener('click', function (e) {
-            if (e.target === logoutModal) {
-                logoutModal.classList.add('hidden');
-                logoutModal.classList.remove('flex');
-                formToSubmit = null;
+        logoutModal.addEventListener('click', function (event) {
+            if (event.target === logoutModal) {
+                closeLogoutModal();
+            }
+        });
+    }
+
+    if (confirmLogout) {
+        confirmLogout.addEventListener('click', function () {
+            if (formToSubmit) {
+                formToSubmit.submit();
             }
         });
     }

@@ -28,6 +28,7 @@ class User extends Authenticatable
         // roles
         'role',
         'role_id',
+        'tenant_id',
         'is_active',
         'is_verified',
 
@@ -37,6 +38,11 @@ class User extends Authenticatable
         'otp_expires_at',
         'reset_token',
         'reset_token_expires_at',
+
+        // google & fcm
+        'google_id',
+        'fcm_token',
+        'profile_photo_path',
     ];
 
     /**
@@ -101,6 +107,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Super Admin checker:
+     * - Email spesifik developer
+     * - Atau role 'superadmin'
+     */
+    public function isSuperAdmin(): bool
+    {
+        $email = strtolower($this->email ?? '');
+        $role  = strtolower($this->role ?? '');
+        
+        return ($email === 'admin@homi.test') || ($role === 'superadmin');
+    }
+
+    /**
      * Relasi profil resident.
      * - Kalau project temen pakai ResidentProfile, gunakan itu
      * - Kalau project kamu pakai Resident, gunakan itu
@@ -114,5 +133,13 @@ class User extends Authenticatable
 
         // fallback ke skema kamu: Resident dengan foreign key user_id
         return $this->hasOne(\App\Models\Resident::class, 'user_id');
+    }
+
+    /**
+     * Relasi ke perumahan (tenant).
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 }

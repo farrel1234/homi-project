@@ -29,7 +29,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.rotate
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import com.example.homi.R
 import com.example.homi.data.local.TokenStore
 import com.example.homi.data.model.AnnouncementDto
@@ -45,12 +48,14 @@ import androidx.compose.material3.HorizontalDivider
 
 /* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
+private val BlueDark     = Color(0xFF1A5E7B)
 private val BlueButton   = Color(0xFF4F8EA9)
-private val AccentOrange = Color(0xFFE26A2C)
+private val AccentOrange = Color(0xFFF7A477)
 
 private val BlueBorder   = Color(0xFF2F7FA3)
 private val TextPrimary  = Color(0xFF0E0E0E)
 private val LineGray     = Color(0xFFE6E6E6)
+private val HintGray     = Color(0xFF8A8A8A)
 
 private val PoppinsSemi = FontFamily(Font(R.font.poppins_semibold))
 private val PoppinsReg  = FontFamily(Font(R.font.poppins_regular))
@@ -79,24 +84,29 @@ fun DashboardScreen(
     complaintRepo: ComplaintRepository? = null,
     refreshRiwayatKey: Boolean = false,
 
-    onPengajuan: (() -> Unit)? = null,
+    onPengajuanLayanan: (() -> Unit)? = null,
+    onPengajuanSurat: (() -> Unit)? = null,
     onPengaduan: (() -> Unit)? = null,
     onPembayaran: (() -> Unit)? = null,
     onDetailPengumumanClicked: ((Long) -> Unit)? = null,
 
-    onOpenPengaduanStepper: ((Long) -> Unit)? = null,
     onOpenSuratStatus: ((Long) -> Unit)? = null,
 
     onUbahKataSandi: (() -> Unit)? = null,
+    onEditProfil: (() -> Unit)? = null,
+    onProsesPengajuan: ((Long) -> Unit)? = null,
     onLaporkanMasalah: (() -> Unit)? = null,
     onKeluarConfirmed: (() -> Unit)? = null,
-    onProsesPengajuan: (() -> Unit)? = null,
 ) {
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
 
     val nameFlow = runCatching { tokenStore.nameFlow }.getOrNull() ?: flow { emit("Warga") }
     val savedName by nameFlow.collectAsState(initial = "Warga")
     val displayName = savedName?.trim().takeIf { !it.isNullOrBlank() } ?: "Warga"
+
+    val nikFlow = runCatching { tokenStore.nikFlow }.getOrNull() ?: flow { emit("") }
+    val savedNik by nikFlow.collectAsState(initial = "")
+    val displayNik = savedNik?.trim().takeIf { !it.isNullOrBlank() } ?: "NIK belum tersedia"
 
     val annState by annVm.state.collectAsState()
 
@@ -115,7 +125,11 @@ fun DashboardScreen(
 
     val latest = annState.list.firstOrNull()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -127,7 +141,8 @@ fun DashboardScreen(
                     userName = displayName,
                     unreadCount = unreadCount,
                     onNotifications = onNotifications,
-                    onPengajuan = onPengajuan,
+                    onPengajuanLayanan = onPengajuanLayanan,
+                    onPengajuanSurat = onPengajuanSurat,
                     onPengaduan = onPengaduan,
                     onPembayaran = onPembayaran,
                     onDetailPengumumanClicked = onDetailPengumumanClicked
@@ -153,7 +168,7 @@ fun DashboardScreen(
                             Riwayat1Screen(
                                 serviceRepo = serviceRepo,
                                 complaintRepo = complaintRepo,
-                                onPengaduanItemClick = { id -> onOpenPengaduanStepper?.invoke(id) },
+                                onPengaduanItemClick = { id -> onProsesPengajuan?.invoke(id) },
                                 onPengajuanSuratClick = { id -> onOpenSuratStatus?.invoke(id) }
                             )
                         }
@@ -163,9 +178,9 @@ fun DashboardScreen(
                 BottomTab.AKUN -> AkunScreen(
                     tokenStore = tokenStore,
                     onUbahKataSandi = onUbahKataSandi,
-                    onProsesPengajuan = onProsesPengajuan,
+                    onEditProfil = onEditProfil,
                     onLaporkanMasalah = onLaporkanMasalah,
-                    onKeluarConfirmed = { onKeluarConfirmed?.invoke() }
+                    onKeluarConfirmed = onKeluarConfirmed
                 )
             }
         }
@@ -183,7 +198,8 @@ private fun BerandaSection(
     userName: String,
     unreadCount: Int,
     onNotifications: (() -> Unit)?,
-    onPengajuan: (() -> Unit)?,
+    onPengajuanLayanan: (() -> Unit)?,
+    onPengajuanSurat: (() -> Unit)?,
     onPengaduan: (() -> Unit)?,
     onPembayaran: (() -> Unit)?,
     onDetailPengumumanClicked: ((Long) -> Unit)?
@@ -197,23 +213,34 @@ private fun BerandaSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp),
+                .padding(horizontal = 20.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(R.drawable.icon_profile),
                 contentDescription = "Profil",
-                modifier = Modifier.size(80.dp).clip(CircleShape)
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.White.copy(alpha = 0.3f), CircleShape)
             )
 
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text("Hai, $userName", fontFamily = PoppinsSemi, fontSize = 20.sp, color = Color.White)
-                Text("Selamat Datang di Homi", fontFamily = PoppinsSemi, fontSize = 20.sp, color = Color.White)
                 Text(
-                    "Menghubungkan Warga, Membangun Kebersamaan",
-                    fontFamily = PoppinsReg, fontSize = 12.sp, color = Color.White
+                    text = "Halo, $userName",
+                    fontFamily = PoppinsSemi,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Warga Homi Garden",
+                    fontFamily = PoppinsReg,
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = 0.8f)
                 )
             }
 
@@ -223,7 +250,7 @@ private fun BerandaSection(
             )
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
 
         Card(
             modifier = Modifier.fillMaxSize(),
@@ -252,11 +279,8 @@ private fun BerandaSection(
                 }
 
                 item {
-                    val imageUrl = item?.imageUrl
-                        ?.replace("127.0.0.1", "10.0.2.2")
-                        ?.replace("localhost", "10.0.2.2")
+                    val imageUrl = com.example.homi.util.fixLocalhostUrl(item?.imageUrl)
 
-                    // ✅ PERUBAHAN: klik gambar/banner langsung ke detail
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -264,15 +288,26 @@ private fun BerandaSection(
                             .clip(RoundedCornerShape(16.dp))
                             .clickable(
                                 enabled = item != null && onDetailPengumumanClicked != null
-                            ) { onDetailPengumumanClicked?.invoke(item!!.id) }
+                            ) {
+                                item?.id?.let { id -> onDetailPengumumanClicked?.invoke(id) }
+                            }
                     ) {
                         if (!imageUrl.isNullOrBlank()) {
-                            AsyncImage(
+                            val painter = rememberAsyncImagePainter(
                                 model = imageUrl,
+                                error = painterResource(R.drawable.img_pengumuman)
+                            )
+                            Image(
+                                painter = painter,
                                 contentDescription = item?.title ?: "Pengumuman",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
+                            
+                            // Skeleton/Loading overlay simple
+                            if (painter.state is AsyncImagePainter.State.Loading) {
+                                Box(modifier = Modifier.fillMaxSize().background(Color.LightGray))
+                            }
                         } else {
                             Image(
                                 painter = painterResource(R.drawable.img_pengumuman),
@@ -288,7 +323,6 @@ private fun BerandaSection(
                                 .background(Color.Black.copy(alpha = 0.30f))
                         )
 
-                        // ✅ Judul tidak wajib diklik lagi (hapus clickable di judul)
                         Text(
                             text = item?.title ?: "Pengumuman terbaru belum tersedia",
                             fontFamily = SuezOne,
@@ -318,23 +352,34 @@ private fun BerandaSection(
 
                 item {
                     MenuButtonSymmetric(
-                        icon = R.drawable.icon_pengajuan,
-                        title = "Pengajuan Layanan",
-                        onClick = onPengajuan
+                        icon = R.drawable.ic_doc,
+                        title = "Pengajuan Surat",
+                        onClick = onPengajuanSurat
                     )
                 }
                 item {
+                    MenuButtonSymmetric(
+                        icon = R.drawable.icon_pengajuan,
+                        title = "Pengajuan Layanan",
+                        onClick = onPengajuanLayanan
+                    )
+                }
+                item {
+                    // Meningkatkan ukuran icon karena aset aslinya memiliki padding internal yang besar
                     MenuButtonSymmetric(
                         icon = R.drawable.icon_pengaduan,
                         title = "Pengaduan Warga",
-                        onClick = onPengaduan
+                        onClick = onPengaduan,
+                        iconInnerSize = 50.dp
                     )
                 }
                 item {
+                    // Meningkatkan ukuran icon agar seimbang dengan yang lain
                     MenuButtonSymmetric(
                         icon = R.drawable.icon_pembayaran,
                         title = "Pembayaran Iuran",
-                        onClick = onPembayaran
+                        onClick = onPembayaran,
+                        iconInnerSize = 50.dp
                     )
                 }
 
@@ -382,55 +427,54 @@ private fun MenuButtonSymmetric(
     @DrawableRes icon: Int,
     title: String,
     onClick: (() -> Unit)? = null,
+    iconInnerSize: androidx.compose.ui.unit.Dp = 36.dp
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(18.dp)
+    val iconBoxSize = 58.dp
 
-    // ✅ ukuran FIX biar sejajar
-    val iconBox = 56.dp
-
-    // ✅ inner icon size: “visual sama besar” (beda tipis, bukan 70dp)
-    val iconSize = when (icon) {
-        R.drawable.icon_pengajuan -> 34.dp
-        R.drawable.icon_pengaduan -> 38.dp
-        R.drawable.icon_pembayaran -> 38.dp
-        else -> 34.dp
-    }
-
-    Row(
+    Card(
+        onClick = { onClick?.invoke() },
+        enabled = onClick != null,
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = BlueButton),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(76.dp) // sedikit lebih tinggi biar lega
-            .clip(shape)
-            .background(BlueButton)
-            .clickable(enabled = onClick != null) { onClick?.invoke() }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(84.dp)
     ) {
-        // ✅ kotak icon seragam → otomatis rata
-        Box(
+        Row(
             modifier = Modifier
-                .size(iconBox)
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color.White.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(icon),
-                contentDescription = title,
-                modifier = Modifier.size(iconSize),
-                contentScale = ContentScale.Fit
+            Box(
+                modifier = Modifier
+                    .size(iconBoxSize)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                val tint = if (icon == R.drawable.ic_doc) androidx.compose.ui.graphics.ColorFilter.tint(Color.White) else null
+                Image(
+                    painter = painterResource(icon),
+                    contentDescription = title,
+                    modifier = Modifier.size(iconInnerSize),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = tint
+                )
+            }
+
+            Spacer(Modifier.width(18.dp))
+
+            Text(
+                text = title,
+                fontFamily = PoppinsSemi,
+                color = Color.White,
+                fontSize = 17.sp,
+                maxLines = 1
             )
         }
-
-        Spacer(Modifier.width(14.dp))
-
-        Text(
-            text = title,
-            fontFamily = PoppinsSemi,
-            color = Color.White,
-            fontSize = 16.sp,
-            maxLines = 1
-        )
     }
 }
 
@@ -489,7 +533,9 @@ private fun DirektoriSection(dirVm: DirectoryViewModel) {
                 OutlinedTextField(
                     value = q,
                     onValueChange = { q = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
                     singleLine = true,
                     textStyle = LocalTextStyle.current.copy(fontFamily = PoppinsReg, fontSize = 14.sp),
                     placeholder = { Text("Cari nama / blok...", fontFamily = PoppinsReg) },
@@ -528,104 +574,102 @@ private fun DirektoriSection(dirVm: DirectoryViewModel) {
                     Spacer(Modifier.height(8.dp))
                 }
 
-                DirektoriTable(items = state.items)
+                DirektoriCardList(items = state.items)
             }
         }
     }
 }
 
 @Composable
-private fun DirektoriTable(items: List<DirectoryItem>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, LineGray, RoundedCornerShape(8.dp))
+private fun DirektoriCardList(items: List<DirectoryItem>) {
+    if (items.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AccentOrange)
-                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                    .height(IntrinsicSize.Min)
-                    .padding(vertical = 10.dp, horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Nama",
-                    fontFamily = PoppinsSemi,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Box(Modifier.fillMaxHeight().width(1.dp).background(Color.White.copy(alpha = 0.6f)))
-                Text(
-                    "Blok Alamat",
-                    fontFamily = PoppinsSemi,
-                    color = Color.White,
-                    fontSize = 14.sp,
+            Text(
+                "Data direktori tidak ditemukan",
+                fontFamily = PoppinsReg,
+                color = HintGray,
+                fontSize = 14.sp
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
+            items(items) { item ->
+                Card(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp)
-                )
-            }
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    border = BorderStroke(1.dp, Color(0xFFF1F5F9))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = BlueMain.copy(alpha = 0.1f),
+                            modifier = Modifier.size(52.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = (item.name.firstOrNull() ?: '?').toString().uppercase(),
+                                    fontFamily = PoppinsSemi,
+                                    color = BlueMain,
+                                    fontSize = 20.sp
+                                )
+                            }
+                        }
 
-            if (items.isEmpty()) {
-                Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                    Text("Data direktori kosong", fontFamily = PoppinsReg, color = Color.Gray)
-                }
-            } else {
-                LazyColumn {
-                    items(items) {
-                        TableRowDirectory(it)
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(LineGray))
+                        Spacer(Modifier.width(20.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = item.name,
+                                fontFamily = PoppinsSemi,
+                                fontSize = 16.sp,
+                                color = TextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.icon_home),
+                                    contentDescription = null,
+                                    tint = AccentOrange.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = "Blok ${item.blok} • No. ${item.noRumah}",
+                                    fontFamily = PoppinsReg,
+                                    fontSize = 13.sp,
+                                    color = HintGray
+                                )
+                            }
+                        }
+                        
+                        Icon(
+                            painter = painterResource(id = R.drawable.panahkembali),
+                            contentDescription = null,
+                            tint = Color.LightGray,
+                            modifier = Modifier.size(16.dp).rotate(180f)
+                        )
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun TableRowDirectory(item: DirectoryItem) {
-    val alamat = item.blokAlamat ?: listOf(item.blok?.trim(), item.noRumah?.trim())
-        .filter { !it.isNullOrBlank() }
-        .joinToString(" ")
-        .ifBlank { "-" }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 52.dp)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = item.name,
-            fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = TextPrimary,
-            modifier = Modifier.weight(1f),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        Box(Modifier.fillMaxHeight().width(1.dp).background(LineGray))
-        Text(
-            text = alamat,
-            fontFamily = PoppinsReg,
-            fontSize = 13.sp,
-            color = TextPrimary,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -641,48 +685,52 @@ private fun BottomNavBar(
         BottomNavItem(BottomTab.AKUN, "Akun", R.drawable.akunoren, R.drawable.icon_akun),
     )
 
-    Surface(color = Color(0xFFF6F6F6), tonalElevation = 8.dp, shadowElevation = 8.dp) {
+    Surface(
+        color = BlueButton, // Warna disamakan dengan tombol menu utama
+        shape = RoundedCornerShape(32.dp),
+        shadowElevation = 8.dp,
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 12.dp)
+            .fillMaxWidth()
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(vertical = 10.dp, horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
                 val selected = item.tab == currentTab
                 val iconId = if (selected) item.iconSelected else item.iconUnselected
-                val labelColor = if (selected) Color.White else Color(0xFF6C6C6C)
+                val color = if (selected) AccentOrange else Color.White
 
                 Column(
                     modifier = Modifier
                         .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
                         .clickable { onTabSelected(item.tab) },
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(if (selected) AccentOrange else Color.Transparent)
-                            .padding(horizontal = 14.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Image(
-                                painter = painterResource(id = iconId),
-                                contentDescription = item.label,
-                                modifier = Modifier.size(20.dp),
-                                contentScale = ContentScale.Fit
-                            )
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                item.label,
-                                fontFamily = PoppinsReg,
-                                fontSize = 10.sp,
-                                color = labelColor,
-                                maxLines = 1
-                            )
-                        }
-                    }
+                    Image(
+                        painter = painterResource(id = iconId),
+                        contentDescription = item.label,
+                        modifier = Modifier.size(24.dp),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(color)
+                    )
+                    
+                    Spacer(Modifier.height(4.dp))
+                    
+                    Text(
+                        item.label,
+                        fontFamily = if (selected) PoppinsSemi else PoppinsReg,
+                        fontSize = 11.sp,
+                        color = color,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }

@@ -6,106 +6,83 @@
 <div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="flex flex-col gap-1">
-        <h1 class="homi-title">Tambah Data Warga</h1>
-        <p class="homi-subtitle">Tambahkan warga ke direktori. Username dibuat otomatis dari email.</p>
-    </div>
-
-    {{-- ERROR --}}
-    @if ($errors->any())
-        <div class="homi-card bg-rose-50 border border-rose-200 text-sm text-rose-800">
-            <div class="font-semibold mb-1">Gagal menyimpan</div>
-            <ul class="list-disc pl-5 space-y-1">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
+<div class="max-w-3xl mx-auto py-8">
+    <div class="homi-card p-0 overflow-hidden shadow-2xl shadow-slate-200 border-none">
+        {{-- Header dengan Visual Premium --}}
+        <div class="bg-slate-900 p-8 text-white relative">
+            <div class="absolute right-0 top-0 p-8 opacity-10">
+                <svg viewBox="0 0 24 24" class="h-24 w-24 fill-current"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <div class="relative z-10">
+                <h1 class="text-2xl font-black tracking-tight mb-2 uppercase">Registrasi Warga</h1>
+                <p class="text-slate-400 text-sm font-medium">Username akan digenerate otomatis melalui alamat email</p>
+            </div>
         </div>
-    @endif
 
-    <div class="homi-card border border-gray-200">
-        <form method="POST" action="{{ route('residents.store') }}" class="space-y-6">
+        <form method="POST" action="{{ route('residents.store') }}" class="p-8 space-y-8">
             @csrf
 
-            {{-- DATA UTAMA (MINIMAL) --}}
-            <div class="grid md:grid-cols-2 gap-4">
+            {{-- Row 1: Identitas Dasar --}}
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="homi-label text-slate-900">Nama Lengkap <span class="text-rose-500">*</span></label>
+                        <input type="text" name="full_name" value="{{ old('full_name') }}" placeholder="Masukkan nama lengkap sesuai KTP..." 
+                               class="homi-input text-lg font-bold" required>
+                    </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium mb-1">Full Name <span class="text-rose-600">*</span></label>
-                    <input type="text" name="full_name"
-                           value="{{ old('full_name') }}"
-                           placeholder="Contoh: Hanif Abyad"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
-                           required>
-                </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="homi-label text-slate-900">Alamat Email <span class="text-rose-500">*</span></label>
+                        <input type="email" name="email" value="{{ old('email') }}" placeholder="warga@example.com" 
+                               class="homi-input font-bold" required>
+                    </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium mb-1">Email <span class="text-rose-600">*</span></label>
-                    <input type="email" name="email"
-                           value="{{ old('email') }}"
-                           placeholder="Contoh: hanif@gmail.com"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
-                           required>
-                    <div class="text-[11px] text-gray-500 mt-1">
-                        Username akan dibuat otomatis dari email (bisa diedit setelah dibuat).
+                    <div class="space-y-2">
+                        <label class="homi-label">Nomor Telepon/WA</label>
+                        <input type="text" name="phone" value="{{ old('phone') }}" placeholder="0812XXXXXXXX" 
+                               class="homi-input font-mono font-bold">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="homi-label">Blok</label>
+                            <input type="text" name="blok" value="{{ old('blok') }}" placeholder="A" 
+                                   class="homi-input font-bold text-center uppercase">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="homi-label">No. Rumah</label>
+                            <input type="text" name="no_rumah" value="{{ old('no_rumah') }}" placeholder="01" 
+                                   class="homi-input font-bold text-center">
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">No HP</label>
-                    <input type="text" name="phone"
-                           value="{{ old('phone') }}"
-                           placeholder="Contoh: 0812xxxxxxx"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Blok</label>
-                    <input type="text" name="blok"
-                           value="{{ old('blok') }}"
-                           placeholder="Contoh: A"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">No Rumah</label>
-                    <input type="text" name="no_rumah"
-                           value="{{ old('no_rumah') }}"
-                           placeholder="Contoh: 07"
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50">
-                        <input type="checkbox" name="is_public" value="1" class="mt-1"
-                               @checked(old('is_public'))>
-                        <div>
-                            <div class="text-sm font-medium text-gray-900">
-                                Tampilkan di Direktori Warga (Publik)
-                            </div>
-                            <div class="text-[12px] text-gray-500">
-                                Jika aktif, warga lain dapat melihat data rumah ini di menu direktori.
-                            </div>
+                {{-- Row 2: Keamanan & Privasi --}}
+                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
+                    <label class="flex items-start gap-4 cursor-pointer group">
+                        <input type="checkbox" name="is_public" value="1" @checked(old('is_public', true)) 
+                               class="mt-1 h-6 w-6 rounded-lg border-slate-300 text-[var(--homi-blue)] focus:ring-[var(--homi-blue)] transition-all">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-black text-slate-700 uppercase tracking-widest leading-none mb-1">Tampilkan di Direktori</span>
+                            <span class="text-[11px] text-slate-400 font-bold uppercase">Warga lain dapat melihat data rumah ini di aplikasi</span>
                         </div>
                     </label>
                 </div>
-
             </div>
 
-            {{-- ACTIONS --}}
-            <div class="flex flex-wrap gap-2 pt-2">
-                <button type="submit"
-                        class="px-4 py-2 rounded-xl bg-[var(--homi-blue)] text-white text-sm font-semibold hover:bg-sky-800">
-                    Simpan
-                </button>
-
-                <a href="{{ route('residents.index') }}"
-                   class="px-3 py-2 rounded-xl border border-gray-200 text-xs text-gray-600 hover:bg-gray-50">
-                    Batal
+            {{-- Row 3: Actions --}}
+            <div class="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-8 border-t border-slate-100">
+                <a href="{{ route('residents.index') }}" class="w-full sm:w-auto text-center px-10 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
+                    Batalkan
                 </a>
+                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[var(--homi-blue-light)] hover:bg-[var(--homi-blue)] transition-all">
+                    Simpan Data Warga
+                </button>
             </div>
         </form>
     </div>
+</div>
+
 
 </div>
 @endsection
