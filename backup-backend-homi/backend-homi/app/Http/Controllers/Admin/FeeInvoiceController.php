@@ -65,12 +65,20 @@ class FeeInvoiceController extends Controller
 
     public function create()
     {
+        $tenant     = app('currentTenant');
         $feeTypes   = FeeType::query()->orderBy('id')->get();
-        $users      = User::query()->orderBy('id')->limit(300)->get();
+        
+        $users      = User::query()
+            ->where('role', 'resident')
+            ->where('is_active', 1)
+            ->orderBy('id')
+            ->limit(500)
+            ->get();
+
         $qr         = $this->activeQr();
         $monthNames = $this->monthNames;
 
-        return view('admin.fees.invoices.create', compact('feeTypes', 'users', 'qr', 'monthNames'));
+        return view('admin.fees.invoices.create', compact('tenant', 'feeTypes', 'users', 'qr', 'monthNames'));
     }
 
     public function store(Request $request)

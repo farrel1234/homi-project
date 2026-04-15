@@ -40,8 +40,11 @@ object Routes {
     const val ProsesPengajuan = "proses_pengajuan"
 
     const val FormPengaduan = "form_pengaduan"
-    const val DetailRiwayatPengaduan = "detail_riwayat_pengaduan"
-    const val DetailRiwayatPengajuan = "detail_riwayat_pengajuan"
+    const val DetailRiwayatPengaduan = "detail_riwayat_pengaduan/{id}"
+    fun detailRiwayatPengaduan(id: Long) = "detail_riwayat_pengaduan/$id"
+
+    const val DetailRiwayatPengajuan = "detail_riwayat_pengajuan/{id}"
+    fun detailRiwayatPengajuan(id: Long) = "detail_riwayat_pengajuan/$id"
 
     const val UbahKataSandi = "ubah_kata_sandi"
     const val LaporkanMasalah = "laporkan_masalah"

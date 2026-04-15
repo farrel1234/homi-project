@@ -16,13 +16,13 @@ data class AuthState(
     val isLoggedIn: Boolean = false,
     val userName: String = "Warga",
     val tenantCode: String = ApiConfig.DEFAULT_TENANT_CODE,
-    // Google Sign-Up redirect
     val needsGoogleRegister: Boolean = false,
     val googleEmail: String = "",
     val googleName: String = "",
     val googleId: String = "",
     // Tenant list for dropdown
-    val tenants: List<com.example.homi.data.model.TenantListData> = emptyList()
+    val tenants: List<com.example.homi.data.model.TenantListData> = emptyList(),
+    val tenantName: String = "Homi Garden"
 )
 
 class AuthViewModel(
@@ -41,10 +41,15 @@ class AuthViewModel(
                 .trim()
                 .ifBlank { ApiConfig.DEFAULT_TENANT_CODE }
 
+            val storedTenantName = runCatching { tokenStore.tenantNameFlow.first() }.getOrNull() ?: "Homi Garden"
+
             ApiConfig.tenantCode = storedCode
             tokenStore.saveTenantCode(storedCode)
 
-            _state.value = _state.value.copy(tenantCode = storedCode)
+            _state.value = _state.value.copy(
+                tenantCode = storedCode,
+                tenantName = storedTenantName
+            )
             
             // Fetch public tenants for dropdown
             fetchTenants()
@@ -95,11 +100,13 @@ class AuthViewModel(
                             ?: "Warga"
 
                     tokenStore.saveName(nameToSave)
+                    res.data.tenantName?.let { tokenStore.saveTenantName(it) }
 
                     _state.value = AuthState(
                         loading = false,
                         isLoggedIn = true,
-                        userName = nameToSave
+                        userName = nameToSave,
+                        tenantName = res.data.tenantName ?: "Homi Garden"
                     )
                 } else {
                     _state.value = _state.value.copy(

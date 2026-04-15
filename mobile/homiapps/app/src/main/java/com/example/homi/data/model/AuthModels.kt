@@ -16,11 +16,13 @@ data class RegisterRequest(
 
 data class VerifyOtpRequest(
     val email: String,
-    val otp: String
+    val otp: String,
+    @SerializedName("tenant_code") val tenantCode: String
 )
 
 data class ForgotPasswordRequest(
-    val email: String
+    val email: String,
+    @SerializedName("tenant_code") val tenantCode: String? = null
 )
 
 data class ResetPasswordRequest(
@@ -47,7 +49,8 @@ data class RegisterData(
 // backend return data.user + data.token saat login / verifyOtp / loginGoogle
 data class VerifyOtpData(
     val user: UserDto,
-    val token: String
+    val token: String,
+    @SerializedName("tenant_name") val tenantName: String? = null
 )
 
 data class UserDto(

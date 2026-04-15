@@ -12,7 +12,7 @@
             </div>
             <div class="relative z-10">
                 <h1 class="text-2xl font-black tracking-tight mb-2 uppercase">Edit Pengumuman</h1>
-                <p class="text-slate-400 text-sm font-medium">Perbarui informasi pengumuman Hawaii Garden</p>
+                <p class="text-slate-400 text-sm font-medium">Perbarui informasi pengumuman {{ session('tenant_name', 'Homi') }}</p>
             </div>
         </div>
 

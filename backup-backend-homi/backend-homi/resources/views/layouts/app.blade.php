@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'HOMI Admin')</title>
+    <link rel="shortcut icon" href="{{ asset('images/homi-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen">
@@ -23,6 +24,7 @@
     if (auth()->check() && auth()->user()->isSuperAdmin()) {
         $navItems[] = ['label' => 'Manajemen Staff', 'route' => 'admin.staff.index', 'active' => ['admin.staff.*'], 'icon' => 'residents'];
         $navItems[] = ['label' => 'Manajemen Tenant', 'route' => 'tenants.index', 'active' => ['tenants.*'], 'icon' => 'tenants'];
+        $navItems[] = ['label' => 'Permintaan Trial', 'route' => 'tenant-requests.index', 'active' => ['tenant-requests.*'], 'icon' => 'letters'];
     }
 
     $displayName = auth()->check()
@@ -159,6 +161,20 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    @if(auth()->check() && auth()->user()->isSuperAdmin())
+                        <div class="hidden sm:block">
+                            <select onchange="window.location.href='/admin/tenants/' + this.value + '/switch'" 
+                                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                <option value="central" {{ !session('impersonated_tenant_id') ? 'selected' : '' }}>-- Dashboard Pusat --</option>
+                                @foreach(\App\Models\Tenant::where('is_active', true)->orderBy('name')->get() as $t)
+                                    <option value="{{ $t->id }}" {{ session('impersonated_tenant_id') == $t->id ? 'selected' : '' }}>
+                                        {{ $t->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     <div class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 sm:block">
                         @yield('page_subtitle', 'Panel Admin HOMI')
                     </div>
@@ -174,7 +190,7 @@
         </header>
 
         <main class="flex-1">
-            <div class="w-full px-6 py-6 lg:px-10 lg:py-8">
+            <div class="w-full px-6 py-6 lg:px-6 xl:px-10 lg:py-8">
                 @yield('content')
             </div>
         </main>

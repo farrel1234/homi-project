@@ -44,6 +44,7 @@ import com.example.homi.ui.viewmodel.DirectoryViewModel
 import com.example.homi.ui.viewmodel.NotificationUiState
 import com.example.homi.ui.viewmodel.NotificationViewModel
 import kotlinx.coroutines.flow.flow
+import com.example.homi.util.DateUtils
 import androidx.compose.material3.HorizontalDivider
 
 /* ===== Tokens ===== */
@@ -97,6 +98,8 @@ fun DashboardScreen(
     onProsesPengajuan: ((Long) -> Unit)? = null,
     onLaporkanMasalah: (() -> Unit)? = null,
     onKeluarConfirmed: (() -> Unit)? = null,
+    onDetailRiwayatPengaduan: ((Long) -> Unit)? = null,
+    onDetailRiwayatPengajuan: ((Long) -> Unit)? = null,
 ) {
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.BERANDA) }
 
@@ -107,6 +110,10 @@ fun DashboardScreen(
     val nikFlow = runCatching { tokenStore.nikFlow }.getOrNull() ?: flow { emit("") }
     val savedNik by nikFlow.collectAsState(initial = "")
     val displayNik = savedNik?.trim().takeIf { !it.isNullOrBlank() } ?: "NIK belum tersedia"
+
+    val tenantNameFlow = runCatching { tokenStore.tenantNameFlow }.getOrNull() ?: flow { emit("Homi Garden") }
+    val savedTenantName by tenantNameFlow.collectAsState(initial = "Homi Garden")
+    val displayTenantName = savedTenantName?.trim().takeIf { !it.isNullOrBlank() } ?: "Homi Garden"
 
     val annState by annVm.state.collectAsState()
 
@@ -139,6 +146,7 @@ fun DashboardScreen(
                 BottomTab.BERANDA -> BerandaSection(
                     item = latest,
                     userName = displayName,
+                    tenantName = displayTenantName,
                     unreadCount = unreadCount,
                     onNotifications = onNotifications,
                     onPengajuanLayanan = onPengajuanLayanan,
@@ -154,7 +162,7 @@ fun DashboardScreen(
                             Text("Direktori belum dihubungkan (dirVm null)", fontFamily = PoppinsSemi)
                         }
                     } else {
-                        DirektoriSection(dirVm = dirVm)
+                        DirektoriSection(dirVm = dirVm, tenantName = displayTenantName)
                     }
                 }
 
@@ -168,8 +176,8 @@ fun DashboardScreen(
                             Riwayat1Screen(
                                 serviceRepo = serviceRepo,
                                 complaintRepo = complaintRepo,
-                                onPengaduanItemClick = { id -> onProsesPengajuan?.invoke(id) },
-                                onPengajuanSuratClick = { id -> onOpenSuratStatus?.invoke(id) }
+                                onPengaduanItemClick = { id -> onDetailRiwayatPengaduan?.invoke(id) ?: onProsesPengajuan?.invoke(id) },
+                                onPengajuanSuratClick = { id -> onDetailRiwayatPengajuan?.invoke(id) ?: onOpenSuratStatus?.invoke(id) }
                             )
                         }
                     }
@@ -196,6 +204,7 @@ fun DashboardScreen(
 private fun BerandaSection(
     item: AnnouncementDto?,
     userName: String,
+    tenantName: String,
     unreadCount: Int,
     onNotifications: (() -> Unit)?,
     onPengajuanLayanan: (() -> Unit)?,
@@ -237,7 +246,7 @@ private fun BerandaSection(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Warga Homi Garden",
+                    text = "Warga $tenantName",
                     fontFamily = PoppinsReg,
                     fontSize = 13.sp,
                     color = Color.White.copy(alpha = 0.8f)
@@ -335,7 +344,7 @@ private fun BerandaSection(
                                 .fillMaxWidth()
                         )
 
-                        val dateText = item?.publishedAt ?: item?.createdAt ?: ""
+                        val dateText = DateUtils.formatIsoToId(item?.publishedAt ?: item?.createdAt)
                         if (dateText.isNotBlank()) {
                             Text(
                                 text = dateText,
@@ -370,7 +379,7 @@ private fun BerandaSection(
                         icon = R.drawable.icon_pengaduan,
                         title = "Pengaduan Warga",
                         onClick = onPengaduan,
-                        iconInnerSize = 50.dp
+                        iconInnerSize = 54.dp
                     )
                 }
                 item {
@@ -379,7 +388,7 @@ private fun BerandaSection(
                         icon = R.drawable.icon_pembayaran,
                         title = "Pembayaran Iuran",
                         onClick = onPembayaran,
-                        iconInnerSize = 50.dp
+                        iconInnerSize = 54.dp
                     )
                 }
 
@@ -436,7 +445,7 @@ private fun MenuButtonSymmetric(
         onClick = { onClick?.invoke() },
         enabled = onClick != null,
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = BlueButton),
+        colors = CardDefaults.cardColors(containerColor = BlueMain),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -481,7 +490,7 @@ private fun MenuButtonSymmetric(
 
 /* ===== DIREKTORI SECTION (tetap seperti punyamu) ===== */
 @Composable
-private fun DirektoriSection(dirVm: DirectoryViewModel) {
+private fun DirektoriSection(dirVm: DirectoryViewModel, tenantName: String) {
     val state by dirVm.state.collectAsState()
     var q by rememberSaveable { mutableStateOf("") }
 
@@ -511,7 +520,7 @@ private fun DirektoriSection(dirVm: DirectoryViewModel) {
         Spacer(Modifier.height(6.dp))
 
         Text(
-            text = "Berikut adalah nama dan alamat warga perumahan\nHawaii Garden",
+            text = "Berikut adalah nama dan alamat warga perumahan\n$tenantName",
             fontFamily = PoppinsReg,
             fontSize = 12.sp,
             color = Color.White,
@@ -686,7 +695,7 @@ private fun BottomNavBar(
     )
 
     Surface(
-        color = BlueButton, // Warna disamakan dengan tombol menu utama
+        color = BlueMain, // Warna disamakan dengan tema utama
         shape = RoundedCornerShape(32.dp),
         shadowElevation = 8.dp,
         modifier = Modifier

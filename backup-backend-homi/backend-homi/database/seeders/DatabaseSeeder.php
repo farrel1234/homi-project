@@ -15,15 +15,76 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Deteksi apakah kita sedang di database PUSAT (homi)
+        $currentDB = config('database.connections.' . config('database.default', 'mysql') . '.database');
+        $isCentral = ($currentDB === 'homi');
 
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            ['name' => 'Test User']
-)       ;
+        // 1. Selalu buat Super Admin (Akses Global)
+        User::updateOrCreate(
+            ['email' => 'admin@homi.id'],
+            [
+                'name' => 'Super Admin Homi',
+                'password' => bcrypt('admin123'),
+                'role' => 'superadmin',
+                'is_active' => true,
+            ]
+        );
 
+        // 2. Buat Tenant Default Jika di DB Pusat (homi)
+        if ($isCentral) {
+            \App\Models\Tenant::updateOrCreate(
+                ['code' => 'hawaii-garden'],
+                [
+                    'name' => 'Hawaii Garden',
+                    'db_host' => '127.0.0.1',
+                    'db_port' => '3306',
+                    'db_database' => 'homi_hawaii_db',
+                    'db_username' => 'root',
+                    'db_password' => '',
+                    'registration_code' => 'HWG123',
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        // 2. Akun Khusus Jika di Database PERUMAHAN
+        if (!$isCentral) {
+            // Admin Test (Default untuk testing tenant baru)
+            User::updateOrCreate(
+                ['email' => 'admin@test.id'],
+                [
+                    'name' => 'Admin Perumahan',
+                    'password' => 'password',
+                    'role' => 'admin',
+                    'is_active' => true,
+                ]
+            );
+
+            // Admin Asli dari Pendaftar (Jika ada)
+            $request = \App\Models\TenantRequest::where('status', 'approved')
+                ->where('email', '!=', 'admin@homi.id')
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($request) {
+                 // Coba cari password dari DB Pusat agar tidak tertimpa 'password' literal
+                 $centralUser = User::on('central')->where('email', $request->email)->first();
+                 $password = $centralUser ? $centralUser->password : 'password';
+
+                 User::updateOrCreate(
+                    ['email' => $request->email],
+                    [
+                        'name' => $request->manager_name ?? $request->name,
+                        'password' => $password,
+                        'role' => 'admin',
+                        'is_active' => true,
+                    ]
+                );
+            }
+        }
 
         // Seeder pengajuan
+        $this->call(LetterTypeSeeder::class);
         $this->call(RequestTypeSeeder::class);
 
         // Seeder jenis iuran

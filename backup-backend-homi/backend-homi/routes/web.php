@@ -17,7 +17,8 @@ use App\Http\Controllers\Admin\{
     ServiceRequestController as AdminServiceRequestController,
     AppNotificationController,
     TenantController,
-    StaffController
+    StaffController,
+    TenantRequestController as AdminTenantRequestController
 };
 
 /*
@@ -152,6 +153,15 @@ Route::prefix('admin')->group(function () {
 
         // ===================== TENANTS =====================
         Route::resource('tenants', TenantController::class);
+        Route::post('tenants/{tenant}/migrate', [TenantController::class, 'migrateDatabase'])->name('tenants.migrate');
+
+        // IMPERSONATE / SWITCH TENANT (Super Admin only)
+        Route::get('tenants/{id}/switch', [\App\Http\Controllers\Admin\ImpersonateTenantController::class, 'switch'])->name('admin.tenants.switch');
+
+        // ===================== TENANT REQUESTS (ADMIN) =====================
+        Route::resource('tenant-requests', AdminTenantRequestController::class)->only(['index', 'update', 'destroy']);
+        Route::get('tenant-requests/{tenantRequest}/approve', [AdminTenantRequestController::class, 'approve'])
+            ->name('tenant-requests.approve');
 
     });
 });

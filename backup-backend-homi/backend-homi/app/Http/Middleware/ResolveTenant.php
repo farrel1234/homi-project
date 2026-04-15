@@ -42,8 +42,12 @@ class ResolveTenant
         }
 
         try {
+            $tenantCodeSearch = trim((string) $tenantCode);
             $tenant = Tenant::query()
-                ->where('code', $tenantCode)
+                ->where(function ($q) use ($tenantCodeSearch) {
+                    $q->where('code', $tenantCodeSearch)
+                      ->orWhere('registration_code', $tenantCodeSearch);
+                })
                 ->where('is_active', true)
                 ->first();
         } catch (QueryException $e) {
@@ -69,23 +73,27 @@ class ResolveTenant
         $this->tenantManager->activate($tenant);
         $request->attributes->set('tenant', $tenant);
 
+        // Security Patch: Reset Auth User after DB switch
+        // This ensures auth()->user() fetches from the NEW database
+        if (\Illuminate\Support\Facades\Auth::hasUser()) {
+            \Illuminate\Support\Facades\Auth::forgetUser();
+        }
+
         return $next($request);
     }
 
     private function resolveTenantCode(Request $request): ?string
     {
-        foreach ((array) config('tenancy.header_keys', []) as $headerKey) {
-            $value = trim((string) $request->header($headerKey, ''));
-            if ($value !== '') {
-                return $value;
-            }
-        }
-
+        // Prioritas ke-1: Payload (Form / JSON) - Ini paling spesifik (untuk registrasi dsb)
         foreach ((array) config('tenancy.payload_keys', []) as $payloadKey) {
             $value = trim((string) $request->input($payloadKey, ''));
-            if ($value !== '') {
-                return $value;
-            }
+            if ($value !== '') return $value;
+        }
+
+        // Prioritas ke-2: Header (X-Tenant-Code dsb) - Untuk sesi yang sudah berjalan
+        foreach ((array) config('tenancy.header_keys', []) as $headerKey) {
+            $value = trim((string) $request->header($headerKey, ''));
+            if ($value !== '') return $value;
         }
 
         if (! (bool) config('tenancy.lookup_by_domain', true)) {

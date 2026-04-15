@@ -14,6 +14,27 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+
+        // ========== LOGIK KHUSUS SUPER ADMIN ==========
+        if ($user->isSuperAdmin()) {
+            $totalTenants = \App\Models\Tenant::count();
+            $activeTenants = \App\Models\Tenant::where('is_active', true)->count();
+            $pendingRequests = \App\Models\TenantRequest::where('status', 'pending')->count();
+            
+            $recentRequests = \App\Models\TenantRequest::orderByDesc('created_at')->take(5)->get();
+            $recentTenants  = \App\Models\Tenant::orderByDesc('created_at')->take(5)->get();
+
+            return view('dashboard.super', compact(
+                'totalTenants',
+                'activeTenants',
+                'pendingRequests',
+                'recentRequests',
+                'recentTenants'
+            ));
+        }
+
+        // ========== LOGIK TENANT ADMIN (DEFAULT) ==========
         // Parameter tunggakan
         $atRiskDays = 14;
         $highRiskDays = 30;

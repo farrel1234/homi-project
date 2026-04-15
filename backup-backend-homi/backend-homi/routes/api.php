@@ -78,6 +78,9 @@ Route::post('reset-password', [AuthController::class, 'resetPassword']);
 // Google login (versi AuthController yang dipakai Android kamu sekarang)
 Route::post('login-google', [AuthController::class, 'loginGoogle']);
 
+// Public Tenant Request (Trial)
+Route::post('tenant-requests', [\App\Http\Controllers\Api\TenantRequestController::class, 'store']);
+
 /*
 |--------------------------------------------------------------------------
 | AUTH (PROTECTED) - WARGA
@@ -123,10 +126,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // SURAT / PENGAJUAN
     // =========================
     Route::get('request-types', [ServiceRequestController::class, 'types']);
-    Route::post('service-requests', [ServiceRequestController::class, 'store']);
+    Route::post('service-requests', [ServiceRequestController::class, 'store'])->middleware('check_feature:service-request');
     Route::get('service-requests', [ServiceRequestController::class, 'index']);
     Route::get('service-requests/{id}', [ServiceRequestController::class, 'show']);
-    Route::get('service-requests/{id}/download', [ServiceRequestController::class, 'downloadPdf']);
+    Route::get('service-requests/{id}/download', [ServiceRequestController::class, 'downloadPdf'])->middleware('check_feature:pdf-download');
 
     // =========================
     // PEMBAYARAN IURAN

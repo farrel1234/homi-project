@@ -100,7 +100,9 @@ class ResidentController extends Controller
         ]);
 
         return redirect()->route('residents.index')
-            ->with('ok', 'Warga berhasil ditambahkan.');
+            ->with('ok', 'Warga berhasil ditambahkan.')
+            ->with('plain_password', $plainPassword)
+            ->with('new_resident_email', $data['email']);
     }
 
     /**

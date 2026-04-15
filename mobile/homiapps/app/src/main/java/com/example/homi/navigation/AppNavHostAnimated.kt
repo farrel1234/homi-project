@@ -53,6 +53,8 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
     val accountRepo = remember { AccountRepository(api) }
     val authRepo = remember { AuthRepository(api) }
 
+    val tenantCode by tokenStore.tenantCodeFlow.collectAsState(initial = "")
+
     val notifVm: NotificationViewModel =
         viewModel(factory = NotificationViewModelFactory(notifRepo))
 
@@ -176,8 +178,9 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                         popUpTo(Routes.Daftar) { inclusive = true }
                     }
                 },
-                onGoOtp = { email, _, _, _, _, _ ->
+                onGoOtp = { email, tenant, _, _, _, _ ->
                     navController.currentBackStackEntry?.savedStateHandle?.set("register_email", email)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("register_tenant_code", tenant)
                     navController.navigate(Routes.Konfirmasi)
                 }
 
@@ -207,8 +210,9 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                         popUpTo(Routes.DaftarGoogle) { inclusive = true }
                     }
                 },
-                onGoOtp = { mail, _, _, _, _, _ ->
+                onGoOtp = { mail, tenant, _, _, _, _ ->
                     navController.currentBackStackEntry?.savedStateHandle?.set("register_email", mail)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("register_tenant_code", tenant)
                     navController.navigate(Routes.Konfirmasi)
                 }
             )
@@ -228,7 +232,7 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
         composable(route = Routes.LupaKataSandi) {
             LupaKataSandiEmailScreen(
                 onBack = { navController.popBackStack() },
-                onRequestOtp = { email -> authRepo.forgotPassword(email) },
+                onRequestOtp = { email -> scope.launch { authRepo.forgotPassword(email, tenantCode) } },
                 onOtpSent = { email ->
                     navController.currentBackStackEntry?.savedStateHandle?.set("forgot_email", email)
                     navController.navigate(Routes.LupaKataSandiOtp)
@@ -249,9 +253,9 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 LupaKataSandiOtpScreen(
                     email = email,
                     onBack = { navController.popBackStack() },
-                    onResendOtp = { target -> authRepo.forgotPassword(target) },
+                    onResendOtp = { target -> scope.launch { authRepo.forgotPassword(target, tenantCode) } },
                     onVerifyOtp = { target, otp ->
-                        authRepo.verifyResetOtp(target, otp).resetToken
+                        authRepo.verifyResetOtp(target, otp, tenantCode).resetToken
                     },
                     onVerified = { resetToken ->
                         navController.currentBackStackEntry?.savedStateHandle?.set("reset_token", resetToken)
@@ -370,6 +374,12 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                         popUpTo(Routes.Beranda) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                onDetailRiwayatPengaduan = { id ->
+                    navController.navigate(Routes.detailRiwayatPengaduan(id))
+                },
+                onDetailRiwayatPengajuan = { id ->
+                    navController.navigate(Routes.pengajuanSuratStatus(id))
                 }
             )
         }
@@ -735,7 +745,7 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
             exitTransition = { fadeOut(tween(180)) }
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
-            ProsesPengajuanLayananScreen(
+            DetailRiwayatPengaduan(
                 complaintId = id,
                 complaintRepo = complaintRepo,
                 onBack = { navController.popBackStack() }
@@ -779,7 +789,7 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                     CircularProgressIndicator()
                 }
             } else {
-                ProsesPengajuanLayananScreen(
+                DetailRiwayatPengaduan(
                     complaintId = lastId,
                     complaintRepo = complaintRepo,
                     onBack = { navController.popBackStack() }
@@ -787,13 +797,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
             }
         }
 
-        // =================== RIWAYAT (legacy) ===================
-        composable(route = Routes.DetailRiwayatPengaduan) {
-            DetailRiwayatPengaduan(onBack = { navController.popBackStack() })
+        // =================== RIWAYAT (Modernized) ===================
+        composable(
+            route = Routes.DetailRiwayatPengaduan,
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
+            DetailRiwayatPengaduan(
+                complaintId = id,
+                complaintRepo = complaintRepo,
+                onBack = { navController.popBackStack() }
+            )
         }
 
-        composable(route = Routes.DetailRiwayatPengajuan) {
-            RiwayatDiterimaScreen(onBack = { navController.popBackStack() })
+        composable(
+            route = Routes.DetailRiwayatPengajuan,
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
+            DetailRiwayatPengajuan(
+                serviceRequestId = id,
+                serviceRepo = serviceRepo,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // =================== LAPOR MASALAH ===================

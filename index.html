@@ -48,7 +48,7 @@
         <div class="absolute bottom-20 right-10 w-72 h-72 bg-homi-accent/10 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
 
         <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div class="opacity-0 animate-fade-in-up">
+            <div class="animate-on-scroll">
                 <div class="inline-flex items-center space-x-2 px-4 py-2 bg-blue-50/50 text-homi-blue rounded-full border border-blue-100 mb-8">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                     <span class="text-xs font-black uppercase tracking-widest">Next-Gen Management Portal</span>
@@ -79,7 +79,7 @@
                 </div>
             </div>
 
-            <div class="relative hidden lg:block opacity-0 animate-fade-in-up" style="animation-delay: 0.2s">
+            <div class="relative hidden lg:block animate-on-scroll" style="transition-delay: 200ms">
                 <div class="absolute -inset-10 bg-gradient-to-tr from-homi-blue/10 to-homi-accent/5 rounded-[6rem] blur-3xl -z-10"></div>
                 
                 <div class="relative flex items-center justify-center">
@@ -134,7 +134,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <!-- Feature 1 -->
-                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                <div class="feature-card animate-on-scroll p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
                     <div class="w-16 h-16 bg-blue-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-homi-blue group-hover:text-white transition-colors duration-500">
                         <i data-lucide="layout-dashboard" class="w-8 h-8"></i>
                     </div>
@@ -142,7 +142,7 @@
                     <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Pantau seluruh aktivitas lingkungan, tunggakan warga, hingga laporan masuk dalam satu layar terpusat.</p>
                 </div>
                 <!-- Feature 2 -->
-                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                <div class="feature-card animate-on-scroll p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
                     <div class="w-16 h-16 bg-amber-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-homi-accent group-hover:text-white transition-colors duration-500 text-homi-accent">
                         <i data-lucide="scan-line" class="w-8 h-8"></i>
                     </div>
@@ -150,7 +150,7 @@
                     <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Validasi bukti transfer iuran warga secara otomatis menggunakan kecerdasan buatan (OCR Space Integration).</p>
                 </div>
                 <!-- Feature 3 -->
-                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                <div class="feature-card animate-on-scroll p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
                     <div class="w-16 h-16 bg-emerald-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-500 text-emerald-600">
                         <i data-lucide="file-text" class="w-8 h-8"></i>
                     </div>
@@ -158,7 +158,7 @@
                     <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Warga mengajukan surat dari ponsel, admin klik setuju, dan PDF siap didownload secara otomatis.</p>
                 </div>
                 <!-- Feature 4 -->
-                <div class="feature-card p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
+                <div class="feature-card animate-on-scroll p-10 bg-slate-50/50 rounded-[2.5rem] border border-transparent hover:bg-white transition-all group">
                     <div class="w-16 h-16 bg-rose-100/50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-500 text-rose-500">
                         <i data-lucide="message-square" class="w-8 h-8"></i>
                     </div>
@@ -243,15 +243,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
                 <!-- Starter Plan -->
-                <div class="interactive-btn p-10 rounded-[4rem] bg-slate-50 border border-slate-100 flex flex-col items-center text-center group">
+                <div class="interactive-btn animate-on-scroll p-10 rounded-[4rem] bg-slate-50 border border-slate-100 flex flex-col items-center text-center group">
                     <span class="px-4 py-1 bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Up to 100 Houses</span>
                     <h3 class="text-xl font-black uppercase mb-2 tracking-widest">Starter</h3>
                     <div class="flex flex-col mb-8">
                         <div class="flex items-baseline justify-center">
-                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 100k</span>
-                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 799k</span>
+                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Tahun</span>
                         </div>
-                        <div class="text-blue-500 text-[10px] font-bold mt-1">Atau Rp 799k / Tahun</div>
+                        <div class="text-blue-500 text-[10px] font-bold mt-1 italic">Hanya Rp 66rb / bulan</div>
                     </div>
                     <ul class="space-y-4 mb-10 text-xs text-gray-500 font-semibold text-left w-full">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> Dashboard Admin Cluster</li>
@@ -265,16 +265,16 @@
                 </div>
 
                 <!-- Professional Plan (POPULER) -->
-                <div class="interactive-btn p-10 rounded-[4rem] bg-homi-blue text-white relative flex flex-col items-center text-center pricing-glow ring-4 ring-blue-50">
+                <div class="interactive-btn animate-on-scroll p-10 rounded-[4rem] bg-homi-blue text-white relative flex flex-col items-center text-center pricing-glow ring-4 ring-blue-50">
                     <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-homi-accent text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">POPULER</div>
                     <span class="px-4 py-1 bg-white/10 text-blue-200 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Up to 300 Houses</span>
                     <h3 class="text-xl font-black uppercase mb-2 tracking-widest italic">Professional</h3>
                     <div class="flex flex-col mb-8 text-white">
                         <div class="flex items-baseline justify-center">
-                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 250k</span>
-                            <span class="text-blue-100 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 2.4Jt</span>
+                            <span class="text-blue-100 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Tahun</span>
                         </div>
-                        <div class="text-teal-300 text-[10px] font-bold mt-1 uppercase italic">Hemat! Rp 2.4Jt / Tahun</div>
+                        <div class="text-teal-300 text-[10px] font-bold mt-1 uppercase italic">Hemat! Hanya Rp 200rb / bulan</div>
                     </div>
                     <ul class="space-y-4 mb-10 text-xs text-blue-50 font-semibold text-left w-full">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-teal-300"></i> Semua Fitur Starter</li>
@@ -288,15 +288,15 @@
                 </div>
 
                 <!-- Elite Plan -->
-                <div class="interactive-btn p-10 rounded-[4rem] bg-homi-dark text-white border border-white/5 flex flex-col items-center text-center group">
+                <div class="interactive-btn animate-on-scroll p-10 rounded-[4rem] bg-homi-dark text-white border border-white/5 flex flex-col items-center text-center group">
                     <span class="px-4 py-1 bg-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">500+ Houses / Unlimited</span>
                     <h3 class="text-xl font-black uppercase mb-2 tracking-widest">Elite / Enterprise</h3>
                     <div class="flex flex-col mb-8">
                         <div class="flex items-baseline justify-center">
-                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 500k</span>
-                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 4.8Jt</span>
+                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Tahun</span>
                         </div>
-                        <div class="text-homi-blue text-[10px] font-bold mt-1">Special Deal for Long-term</div>
+                        <div class="text-homi-blue text-[10px] font-bold mt-1 italic">Hanya Rp 400rb / bulan</div>
                     </div>
                     <ul class="space-y-4 mb-10 text-xs text-gray-400 font-semibold text-left w-full">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-homi-blue"></i> White Label / Custom Logo</li>

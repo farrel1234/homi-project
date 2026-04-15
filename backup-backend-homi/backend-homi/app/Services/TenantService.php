@@ -14,34 +14,45 @@ class TenantService
      */
     public function switchToTenant(Tenant $tenant)
     {
-        // Putus koneksi lama jika ada
-        DB::purge('mysql');
+        // HIJACK JALUR UTAMA (Copy logic dari TenantManager agar kompatibel MySQL 8.4)
+        $connectionName = config('database.default', 'mysql');
 
-        // Update konfigurasi koneksi 'mysql' secara dinamis
-        Config::set('database.connections.mysql.database', $tenant->db_database);
-        Config::set('database.connections.mysql.username', $tenant->db_username);
-        Config::set('database.connections.mysql.password', $tenant->db_password);
-        
-        if ($tenant->db_host) {
-            Config::set('database.connections.mysql.host', $tenant->db_host);
-        }
-        
-        if ($tenant->db_port) {
-            Config::set('database.connections.mysql.port', $tenant->db_port);
-        }
+        // Pindahkan target database ke database perumahan ini
+        config(["database.connections.{$connectionName}.database" => $tenant->db_database]);
 
-        // Re-koneksi dengan config baru
-        DB::reconnect('mysql');
+        // Putus koneksi lama & Re-koneksi dengan config baru
+        DB::purge($connectionName);
+        DB::reconnect($connectionName);
         
-        // Simpan metadata tenant saat ini di app container (opsional tapi berguna)
-        app()->instance('current_tenant', $tenant);
+        // Simpan metadata tenant saat ini di app container
+        app()->instance('currentTenant', $tenant);
     }
-    
+
     /**
-     * Cari tenant berdasarkan ID (dari central DB)
+     * Cari tenant berdasarkan ID (Single Connection Strategy)
      */
     public function findById($id)
     {
-        return Tenant::on('central')->find($id);
+        // Jika kita di dalam perumahan, kita harus "lompat sejenak" ke DB pusat
+        $currentDB = config('database.connections.' . config('database.default', 'mysql') . '.database');
+        $isTenantDB = ($currentDB !== 'homi');
+
+        if ($isTenantDB) {
+            $manager = app(\App\Support\Tenancy\TenantManager::class);
+            $currentTenant = $manager->current();
+            
+            // Lompat ke pusat
+            $manager->deactivate();
+            $tenant = Tenant::find($id);
+            
+            // Lompat balik ke perumahan sebelumnya jika ada
+            if ($currentTenant) {
+                $manager->activate($currentTenant);
+            }
+            
+            return $tenant;
+        }
+
+        return Tenant::find($id);
     }
 }

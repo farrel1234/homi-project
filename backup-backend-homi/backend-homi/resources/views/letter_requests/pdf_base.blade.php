@@ -47,12 +47,10 @@
 
     {{-- KOP SURAT RESMI --}}
     <div class="kop">
-    <div class="title">PENGELOLA PERUMAHAN HAWAI GARDEN</div>
+    <div class="title">PENGELOLA {{ strtoupper($tenantName ?? 'PERUMAHAN') }}</div>
     <div class="subtitle">KOTA BATAM</div>
     <div class="address">
-        Jl. Raya Abulyatama, Hawai Garden, Blok B 3a,<br>
-        Kecamatan Batam Kota, Kelurahan Belian, Kota Batam<br>
-        Telp: 0811-778-8181
+        {{ $tenantName ?? 'Perumahan' }}, Kota Batam
     </div>
 </div>
 

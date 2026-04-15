@@ -91,7 +91,9 @@ fun FormSuratPengantarScreen(
                     alamat = "Perumahan Hawai Garden Blok $blokStr No. $noStr".trim()
                     
                     if (isSelf) {
-                        nama = profile.fullName ?: profile.name ?: ""
+                        val raw = profile.fullName ?: profile.name ?: ""
+                        nama = if (raw.lowercase().contains("warga")) "" else raw
+                        
                         nik = rp?.nik ?: ""
                         rt = rp?.rt ?: ""
                         rw = rp?.rw ?: ""
@@ -108,7 +110,9 @@ fun FormSuratPengantarScreen(
         val p = profileData ?: return@LaunchedEffect
         val rp = p.residentProfile
         if (isSelf) {
-            nama = p.fullName ?: p.name ?: ""
+            val raw = p.fullName ?: p.name ?: ""
+            nama = if (raw.lowercase().contains("warga")) "" else raw
+            
             nik = rp?.nik ?: ""
             rt = rp?.rt ?: ""
             rw = rp?.rw ?: ""
@@ -200,23 +204,7 @@ fun FormSuratPengantarScreen(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ForwardToInbox,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = "Lengkapi data untuk pembuatan Surat Pengantar\nke instansi atau kelurahan.",
                 fontFamily = PoppinsReg,
@@ -284,7 +272,7 @@ fun FormSuratPengantarScreen(
                     placeholder = "Misal: Budi Santoso",
                     value = nama,
                     onValueChange = { nama = it },
-                    enabled = !isSelf
+                    enabled = !isSelf || nama.isBlank()
                 )
 
                 Spacer(Modifier.height(16.dp))

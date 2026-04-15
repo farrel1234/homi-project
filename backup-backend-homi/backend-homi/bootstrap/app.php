@@ -13,7 +13,13 @@ return Application::configure()
     )
     ->withMiddleware(function (Middleware $middleware) {
         
-        // Menambahkan security headers secara global
+        // CSRF Exemptions (SATU KALI SAJA, jangan duplikat)
+        $middleware->validateCsrfTokens(except: [
+            'admin/login*',
+            'admin/logout',
+            'api/tenant-requests',
+        ]);
+
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
         // Group middleware untuk Web (Admin)
@@ -33,12 +39,16 @@ return Application::configure()
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
             'tenant' => \App\Http\Middleware\ResolveTenant::class,
+            'check_feature' => \App\Http\Middleware\CheckTenantFeature::class,
         ]);
 
-        // Exclude logout dari CSRF untuk menghindari error 419 saat session expired
-        $middleware->validateCsrfTokens(except: [
-            'admin/logout',
-        ]);
+        // KRITIS: Pastikan TenantMiddleware berjalan SEBELUM Authenticate 
+        // Jika tidak, Authenticate akan memeriksa auth di database pusati SEBELUM
+        // TenantMiddleware sempat menswitch database tenant, lalu me-redirect-nya lagi.
+        $middleware->prependToPriorityList(
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \App\Http\Middleware\TenantMiddleware::class
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

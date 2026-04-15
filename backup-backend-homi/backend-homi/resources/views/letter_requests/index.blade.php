@@ -8,7 +8,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-1">
             <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase italic">Arsip Surat</h1>
-            <p class="text-slate-500 font-medium">Manajemen dokumen dan surat resmi Hawai Garden</p>
+            <p class="text-slate-500 font-medium">Manajemen dokumen dan surat resmi {{ session('tenant_name', 'Homi') }}</p>
         </div>
         
         <form action="{{ route('letter-requests.index') }}" method="GET" class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">

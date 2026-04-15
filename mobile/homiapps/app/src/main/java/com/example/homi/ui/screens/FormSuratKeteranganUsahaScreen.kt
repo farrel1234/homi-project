@@ -86,7 +86,9 @@ fun FormSuratKeteranganUsahaScreen(
                 .onSuccess { profile ->
                     profileData = profile
                     if (isSelf) {
-                        nama = profile.fullName ?: profile.name ?: ""
+                        val raw = profile.fullName ?: profile.name ?: ""
+                        nama = if (raw.lowercase().contains("warga")) "" else raw
+                        
                         nik = profile.residentProfile?.nik ?: ""
                         tempatLahir = profile.residentProfile?.tempatLahir ?: ""
                         tanggalLahir = profile.residentProfile?.tanggalLahir ?: ""
@@ -111,7 +113,9 @@ fun FormSuratKeteranganUsahaScreen(
     LaunchedEffect(isSelf, profileData) {
         val p = profileData ?: return@LaunchedEffect
         if (isSelf) {
-            nama = p.fullName ?: p.name ?: ""
+            val raw = p.fullName ?: p.name ?: ""
+            nama = if (raw.lowercase().contains("warga")) "" else raw
+            
             nik = p.residentProfile?.nik ?: ""
             tempatLahir = p.residentProfile?.tempatLahir ?: ""
             tanggalLahir = p.residentProfile?.tanggalLahir ?: ""
@@ -203,23 +207,6 @@ fun FormSuratKeteranganUsahaScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-
-            // Icon topper
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Storefront,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
             Text(
                 text = "Lengkapi data untuk pembuatan Surat Keterangan Usaha\nlegalitas usaha warga Hawaii Garden.",
                 fontFamily = PoppinsReg,
@@ -282,7 +269,7 @@ fun FormSuratKeteranganUsahaScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                HomiFormField("Nama Lengkap", "Misal: Budi Santoso", nama, { nama = it }, enabled = !isSelf)
+                HomiFormField("Nama Lengkap", "Misal: Budi Santoso", nama, { nama = it }, enabled = !isSelf || nama.isBlank())
                 Spacer(Modifier.height(16.dp))
                 HomiFormField("NIK", "Masukkan 16 digit NIK", nik, { nik = it.filter { c -> c.isDigit() }.take(16) }, KeyboardType.Number, enabled = !isSelf)
                 Spacer(Modifier.height(16.dp))

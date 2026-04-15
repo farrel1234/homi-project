@@ -16,6 +16,7 @@ class TokenStore(private val context: Context) {
     private val KEY_NAME = stringPreferencesKey("name")
     private val KEY_NIK = stringPreferencesKey("nik")
     private val KEY_TENANT_CODE = stringPreferencesKey("tenant_code")
+    private val KEY_TENANT_NAME = stringPreferencesKey("tenant_name")
     private val KEY_HAS_SEEN_ONBOARDING = androidx.datastore.preferences.core.booleanPreferencesKey("has_seen_onboarding")
 
     val tokenFlow: Flow<String?> =
@@ -26,6 +27,9 @@ class TokenStore(private val context: Context) {
 
     val nikFlow: Flow<String?> =
         context.dataStore.data.map { prefs -> prefs[KEY_NIK] }
+
+    val tenantNameFlow: Flow<String?> =
+        context.dataStore.data.map { prefs -> prefs[KEY_TENANT_NAME] }
 
     val hasSeenOnboardingFlow: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[KEY_HAS_SEEN_ONBOARDING] ?: false }
@@ -46,6 +50,10 @@ class TokenStore(private val context: Context) {
 
     suspend fun saveNik(nik: String) {
         context.dataStore.edit { prefs -> prefs[KEY_NIK] = nik }
+    }
+
+    suspend fun saveTenantName(name: String) {
+        context.dataStore.edit { prefs -> prefs[KEY_TENANT_NAME] = name }
     }
 
     suspend fun saveTenantCode(code: String) {

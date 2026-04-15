@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+
+  # PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        user: homi
+        uid: 1000
+    image: homi-app
+    container_name: homi-app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: homi-app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - homi-network
+
+  # Nginx Service
+  web:
+    image: nginx:alpine
+    container_name: homi-webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - homi-network
+
+  # MySQL Service
+  db:
+    image: mysql:8.0
+    container_name: homi-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "33066:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - homi-db-data:/var/lib/mysql
+    networks:
+      - homi-network
+
+networks:
+  homi-network:
+    driver: bridge
+
+volumes:
+  homi-db-data:
+    driver: local

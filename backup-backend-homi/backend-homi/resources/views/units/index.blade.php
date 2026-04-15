@@ -10,7 +10,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-1">
             <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase italic">Data Unit</h1>
-            <p class="text-slate-500 font-medium">Manajemen blok dan nomor rumah warga Hawai Garden</p>
+            <p class="text-slate-500 font-medium">Manajemen blok dan nomor rumah warga {{ session('tenant_name', 'Homi') }}</p>
         </div>
         
         <div class="flex items-center gap-4">
@@ -51,7 +51,7 @@
                             </td>
                             <td class="px-8 py-6">
                                 <div class="font-black text-slate-700 leading-none mb-1">{{ $unit->block ?? 'Umum' }}</div>
-                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Hawai Garden Regency</div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">{{ session('tenant_name', 'Perumahan') }}</div>
                             </td>
                             <td class="px-8 py-6">
                                 <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-100 group-hover:bg-white transition-colors">

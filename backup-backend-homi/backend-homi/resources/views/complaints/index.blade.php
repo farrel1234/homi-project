@@ -11,7 +11,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-1">
             <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase">Laporan Pengaduan</h1>
-            <p class="text-slate-500 font-medium">Monitoring dan tindak lanjut keluhan warga Hawai Garden</p>
+            <p class="text-slate-500 font-medium">Monitoring dan tindak lanjut keluhan warga {{ session('tenant_name', 'Homi') }}</p>
         </div>
         
         <div class="flex items-center gap-4 bg-white p-2 rounded-[2rem] shadow-sm border border-slate-100">

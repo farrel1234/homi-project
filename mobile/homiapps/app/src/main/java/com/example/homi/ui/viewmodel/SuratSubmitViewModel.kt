@@ -33,10 +33,12 @@ class SuratSubmitViewModel(
     ) {
         if (_state.value.loading) return
 
-        val reporter = payload["nama"]
-            ?: payload["namaPelapor"]
+        val reporter = payload["nama_warga"]
+            ?: payload["nama_pemohon"]
             ?: payload["nama_pelapor"]
+            ?: payload["namaPelapor"]
             ?: payload["nama_lengkap"]
+            ?: payload["nama"]
             ?: payload["reporter_name"]
             ?: "Warga"
 
@@ -76,10 +78,12 @@ class SuratSubmitViewModel(
     ) {
         if (_state.value.loading) return
 
-        val reporter = payload["nama"]
-            ?: payload["namaPelapor"]
+        val reporter = payload["nama_warga"]
+            ?: payload["nama_pemohon"]
             ?: payload["nama_pelapor"]
+            ?: payload["namaPelapor"]
             ?: payload["nama_lengkap"]
+            ?: payload["nama"]
             ?: payload["reporter_name"]
             ?: "Warga"
 

@@ -83,7 +83,14 @@ class User extends Authenticatable
     {
         if (!$value) return;
 
-        $hashed = Hash::make($value);
+        // Jika value sudah berupa hash (Bcrypt), jangan di-hash lagi
+        // Cek format Bcrypt: $2y$ atau $2a$ atau $2b$, panjang 60 karakter
+        $isHash = is_string($value) && 
+                  (strpos($value, '$2y$') === 0 || strpos($value, '$2a$') === 0 || strpos($value, '$2b$') === 0) &&
+                  strlen($value) === 60;
+
+        $hashed = $isHash ? $value : Hash::make($value);
+        
         $this->attributes['password'] = $hashed;
         $this->attributes['password_hash'] = $hashed;
     }
@@ -113,10 +120,9 @@ class User extends Authenticatable
      */
     public function isSuperAdmin(): bool
     {
-        $email = strtolower($this->email ?? '');
-        $role  = strtolower($this->role ?? '');
+        $role = strtolower($this->role ?? '');
         
-        return ($email === 'admin@homi.test') || ($role === 'superadmin');
+        return $role === 'superadmin';
     }
 
     /**

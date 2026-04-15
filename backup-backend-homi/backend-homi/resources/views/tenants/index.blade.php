@@ -6,6 +6,20 @@
 
 @section('content')
 <div class="space-y-8 py-4">
+    @if(session('success'))
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold flex items-center gap-3">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold flex items-center gap-3">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            {{ session('error') }}
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-1">
@@ -25,25 +39,39 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-100 italic">
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identitas Tenant</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Registration Code</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Domain / URL</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Identitas Tenant</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Registration Code</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Database Info</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Domain / URL</th>
                         <th class="px-8 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Kontrol</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-200">
                     @forelse($items as $item)
                         <tr class="hover:bg-slate-50/50 transition-colors group">
-                            <td class="px-8 py-6">
+                            <td class="px-8 py-6 border-r border-slate-100">
                                 <div class="font-black text-slate-900 leading-none mb-1">{{ $item->name }}</div>
                                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">KODE: {{ $item->code }}</div>
                             </td>
-                            <td class="px-8 py-6">
+                            <td class="px-8 py-6 border-r border-slate-100">
                                 <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-black text-[10px] tracking-widest border border-slate-100 group-hover:bg-white group-hover:border-[var(--homi-blue)] transition-all">
                                     {{ $item->registration_code ?? '---' }}
                                 </span>
                             </td>
-                            <td class="px-8 py-6 text-xs font-bold text-slate-500 italic">
+                            <td class="px-8 py-6 border-r border-slate-100">
+                                <div class="flex flex-col gap-2">
+                                    <span class="font-mono text-[10px] text-slate-500 font-bold bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                                        DB: {{ $item->db_database }}
+                                    </span>
+                                    <form action="{{ route('tenants.migrate', $item->id) }}" method="POST" onsubmit="return confirm('Jalankan migrasi pada database {{ $item->db_database }}?')">
+                                        @csrf
+                                        <button type="submit" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
+                                            Setup DB
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 text-xs font-bold text-slate-500 italic border-r border-slate-100">
                                 {{ $item->domain ?? 'N/A' }}
                             </td>
                             <td class="px-8 py-6 text-right">

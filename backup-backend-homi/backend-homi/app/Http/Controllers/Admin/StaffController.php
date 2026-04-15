@@ -3,14 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Tenant;
+use App\Models\User;
+use App\Services\TenantService;
+use App\Support\Tenancy\TenantManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
 {
+    public function __construct(
+        protected TenantManager $tenantManager,
+        protected TenantService $tenantService
+    ) {}
+
     public function index(Request $request)
     {
         $q = trim((string)$request->get('q', ''));
@@ -63,7 +70,35 @@ class StaffController extends Controller
             'role'      => $data['role'],
             'role_id'   => $data['role'] === 'admin' ? 1 : 0, 
             'tenant_id' => $data['role'] === 'admin' ? $data['tenant_id'] : null,
+            'is_verified' => true,
+            'email_verified_at' => now(),
         ]);
+
+        // SYNC: Jika role admin, duplikat ke database tenant
+        if ($user->role === 'admin' && $user->tenant_id) {
+            $tenant = $this->tenantService->findById($user->tenant_id);
+            if ($tenant) {
+                $this->tenantManager->activate($tenant);
+                
+                // Buat di DB Tenant (Hanya jika belum ada dengan email yang sama)
+                User::updateOrCreate(
+                    ['email' => $user->email],
+                    [
+                        'name'      => $user->name,
+                        'full_name' => $user->full_name,
+                        'username'  => $user->username,
+                        'password'  => $user->password, // Sudah ter-hash dari central
+                        'role'      => 'admin',
+                        'role_id'   => 1,
+                        'is_active' => 1,
+                        'is_verified' => true,
+                        'email_verified_at' => $user->email_verified_at ?? now(),
+                    ]
+                );
+
+                $this->tenantManager->deactivate();
+            }
+        }
 
         return redirect()->route('admin.staff.index')->with('ok', 'Staff berhasil ditambahkan.');
     }
@@ -100,7 +135,42 @@ class StaffController extends Controller
             $updateData['password'] = Hash::make($data['password']);
         }
 
+        $oldTenantId = $staff->tenant_id;
         $staff->update($updateData);
+
+        // SYNC: Update di database tenant
+        if ($staff->role === 'admin' && $staff->tenant_id) {
+            $tenant = $this->tenantService->findById($staff->tenant_id);
+            if ($tenant) {
+                // Jika ganti perumahan, hapus dari yang lama
+                if ($oldTenantId && $oldTenantId != $staff->tenant_id) {
+                    $oldTenant = $this->tenantService->findById($oldTenantId);
+                    if ($oldTenant) {
+                        $this->tenantManager->activate($oldTenant);
+                        User::where('email', $staff->email)->delete();
+                        $this->tenantManager->deactivate();
+                    }
+                }
+
+                // Update/Create di perumahan baru
+                $this->tenantManager->activate($tenant);
+                User::updateOrCreate(
+                    ['email' => $staff->email],
+                    [
+                        'name'      => $staff->name,
+                        'full_name' => $staff->full_name,
+                        'username'  => $staff->username,
+                        'password'  => $staff->password,
+                        'role'      => 'admin',
+                        'role_id'   => 1,
+                        'is_active' => 1,
+                        'is_verified' => true,
+                        'email_verified_at' => $staff->email_verified_at ?? now(),
+                    ]
+                );
+                $this->tenantManager->deactivate();
+            }
+        }
 
         return redirect()->route('admin.staff.index')->with('ok', 'Data staff berhasil diperbarui.');
     }
@@ -109,6 +179,15 @@ class StaffController extends Controller
     {
         if ($staff->id === auth()->id()) {
             return back()->with('error', 'Anda tidak bisa menghapus akun sendiri.');
+        }
+
+        if ($staff->role === 'admin' && $staff->tenant_id) {
+            $tenant = $this->tenantService->findById($staff->tenant_id);
+            if ($tenant) {
+                $this->tenantManager->activate($tenant);
+                User::where('email', $staff->email)->delete();
+                $this->tenantManager->deactivate();
+            }
         }
 
         $staff->delete();

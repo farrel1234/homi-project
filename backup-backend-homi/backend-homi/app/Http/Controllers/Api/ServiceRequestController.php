@@ -37,19 +37,30 @@ class ServiceRequestController extends Controller
             'data_input'  => 'nullable|array',
         ]);
 
-        $sr = ServiceRequest::create([
+        // Cek kolom yang ada di DB untuk menghindari error 500 jika tabel belum di-update
+        $columns = \Illuminate\Support\Facades\Schema::getColumnListing('service_requests');
+        
+        $params = [
             'user_id'         => $request->user()->id,
             'reporter_name'   => $data['reporter_name'],
             'request_type_id' => $data['request_type_id'],
             'request_date'    => $data['request_date'],
             'place'           => $data['place'],
             'subject'         => $data['subject'],
+            'data_input'      => $data['data_input'] ?? null,
+            'status'          => 'submitted',
             'title'           => $data['title'] ?? $data['subject'],
             'description'     => $data['description'] ?? null,
             'category'        => $data['category'] ?? null,
-            'data_input'      => $data['data_input'] ?? null,
-            'status'          => 'submitted',
-        ]);
+        ];
+
+        // Filter: Hanya kirim data yang kolomnya memang ada di DB
+        $filtered = [];
+        foreach ($params as $key => $val) {
+            if (in_array($key, $columns)) $filtered[$key] = $val;
+        }
+
+        $sr = ServiceRequest::create($filtered);
 
         return response()->json([
             'message' => 'Pengajuan berhasil dikirim',

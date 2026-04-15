@@ -25,9 +25,18 @@ class AuthController extends Controller
             'tenant_code' => 'required|string', // Kode registrasi rahasia
         ]);
 
-        // Verifikasi tenant_code (registration_code)
+        // Verifikasi tenant_code (registration_code) - Case-insensitive & Trimmed
         $tenant = $request->attributes->get('tenant');
-        if (! $tenant || $tenant->registration_code !== $request->tenant_code) {
+        $inputCode = strtoupper(trim((string) $request->tenant_code));
+        $registeredCode = strtoupper(trim((string) ($tenant->registration_code ?? '')));
+
+        if (! $tenant || $registeredCode !== $inputCode) {
+            \Illuminate\Support\Facades\Log::warning("Registration Failed: Code Mismatch", [
+                'input' => $inputCode,
+                'expected' => $registeredCode,
+                'tenant_found' => (bool)$tenant,
+                'tenant_name' => $tenant->name ?? 'N/A'
+            ]);
             return $this->errorResponse('Kode registrasi salah. Silakan hubungi pengelola perumahan.', 422);
         }
 
@@ -45,7 +54,11 @@ class AuthController extends Controller
             $existing->otp_code = (string) $otp;
             $existing->otp_purpose = 'register';
             $existing->otp_expires_at = $expiresAt;
-            $existing->tenant_id = $tenant->id;
+            
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'tenant_id')) {
+                $existing->tenant_id = $tenant->id;
+            }
+            
             if ($request->filled('google_id')) {
                 $existing->google_id = $request->google_id;
             }
@@ -78,8 +91,12 @@ class AuthController extends Controller
             'otp_code'       => (string) $otp,
             'otp_purpose'    => 'register',
             'otp_expires_at' => $expiresAt,
-            'tenant_id'      => $tenant->id,
         ];
+        
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'tenant_id')) {
+            $userData['tenant_id'] = $tenant->id;
+        }
+
         if ($request->filled('google_id')) {
             $userData['google_id'] = $request->google_id;
         }
@@ -122,7 +139,8 @@ class AuthController extends Controller
     public function resendOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'       => 'required|email',
+            'tenant_code' => 'required|string', // Pastikan tenant tetap terdeteksi
         ]);
 
         $email = strtolower(trim($request->email));
@@ -154,8 +172,9 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'otp'   => 'required|digits:6',
+            'email'       => 'required|email',
+            'otp'         => 'required|digits:6',
+            'tenant_code' => 'required|string', // Pastikan tenant tetap terdeteksi
         ]);
 
         $email = strtolower(trim($request->email));
@@ -190,12 +209,14 @@ class AuthController extends Controller
             'alamat'    => null,
         ]);
 
+        $tenant = $request->attributes->get('tenant');
         $token = $user->createToken('mobile')->plainTextToken;
 
         return $this->successResponse(
             data: [
-                'user'  => $user,
-                'token' => $token,
+                'user'        => $user,
+                'token'       => $token,
+                'tenant_name' => $tenant->name ?? 'Homi Garden',
             ],
             message: 'Verifikasi OTP berhasil. Akun sudah aktif.'
         );
@@ -229,12 +250,14 @@ class AuthController extends Controller
             $user->save();
         }
 
+        $tenant = $request->attributes->get('tenant');
         $token = $user->createToken('mobile')->plainTextToken;
 
         return $this->successResponse(
             data: [
-                'user'  => $user,
-                'token' => $token,
+                'user'        => $user,
+                'token'       => $token,
+                'tenant_name' => $tenant->name ?? 'Homi Garden',
             ],
             message: 'Login berhasil'
         );

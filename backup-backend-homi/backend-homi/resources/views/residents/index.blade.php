@@ -28,9 +28,49 @@
     </div>
 
     @if(session('ok'))
-        <div class="p-4 rounded-3xl bg-emerald-50 text-emerald-700 text-sm border-2 border-emerald-100 font-black uppercase tracking-widest flex items-center gap-3 animate-fade-in-down">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-            {{ session('ok') }}
+        <div class="space-y-4 animate-fade-in-down">
+            <div class="p-4 rounded-3xl bg-emerald-50 text-emerald-700 text-sm border-2 border-emerald-100 font-black uppercase tracking-widest flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                {{ session('ok') }}
+            </div>
+
+            @if(session('plain_password'))
+                <div class="p-6 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-blue-500/20 border border-slate-800 relative overflow-hidden group">
+                    {{-- Decorative --}}
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-[var(--homi-blue)] rounded-full opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
+                    
+                    <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-[var(--homi-blue)] flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                                </div>
+                                <h4 class="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Login Access Generated</h4>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-12">
+                                <div class="space-y-1">
+                                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email Username</p>
+                                    <p class="text-sm font-black tracking-tight text-white">{{ session('new_resident_email') }}</p>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Temporary Password</p>
+                                    <div class="flex items-center gap-3">
+                                        <p class="text-sm font-black tracking-tight text-[var(--homi-orange)] font-mono">{{ session('plain_password') }}</p>
+                                        <button onclick="navigator.clipboard.writeText('{{ session('plain_password') }}')" class="p-1 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="text-[10px] font-bold text-slate-500 italic max-w-[200px] leading-relaxed">
+                                Silakan salin info login ini untuk diberikan kepada warga. Info password ini hanya muncul <span class="text-white">sekali saja</span>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -38,10 +78,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         @forelse(($items ?? $residents ?? []) as $r)
             @php
-                $u = optional($r->user);
-                $nama = $u->full_name ?? $u->name ?? $u->username ?? 'Warga';
+                $u = $r->user ?? null;
+                $nama = $u ? ($u->full_name ?? $u->name ?? $u->username) : 'Warga';
+                $email = $u->email ?? '-';
+                $username = $u->username ?? '-';
+                
                 // Variation of avatar color based on initial
-                $initial = strtoupper(substr($nama, 0, 1));
+                $initial = strtoupper(substr((string)$nama, 0, 1));
                 $hue = (ord($initial) % 26) * 13.84; 
                 $avatarBg = "hsl({$hue}, 70%, 94%)";
                 $avatarText = "hsl({$hue}, 70%, 40%)";
@@ -65,7 +108,7 @@
                     {{-- Info --}}
                     <div class="space-y-1">
                         <h3 class="font-black text-slate-900 group-hover:text-[var(--homi-blue)] transition-colors">{{ $nama }}</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic truncate max-w-[180px]">{{ $u->email ?? '-' }}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic truncate max-w-[180px]">{{ $email }}</p>
                     </div>
 
                     {{-- Badges --}}
@@ -80,7 +123,7 @@
 
                     {{-- Username & Status --}}
                     <div class="flex items-center justify-between w-full pt-4 mt-2 border-t border-slate-50">
-                        <div class="text-[10px] font-bold text-slate-400 italic">@ {{ $u->username ?? '-' }}</div>
+                        <div class="text-[10px] font-bold text-slate-400 italic">@ {{ $username }}</div>
                         <div class="text-[9px] font-black uppercase tracking-widest {{ ($r->is_public ?? false) ? 'text-emerald-500' : 'text-slate-400' }}">
                             {{ ($r->is_public ?? false) ? 'Publik' : 'Private' }}
                         </div>

@@ -129,7 +129,9 @@ fun FormPengajuanLayananScreen(
     LaunchedEffect(isSelf, profileData) {
         val p = profileData ?: return@LaunchedEffect
         if (isSelf) {
-            nama = p.fullName ?: p.name ?: ""
+            val raw = p.fullName ?: p.name ?: ""
+            nama = if (raw.lowercase().contains("warga")) "" else raw
+            
             noHp = p.phone ?: ""
             nik = p.residentProfile?.nik ?: ""
             rt = p.residentProfile?.rt ?: ""
@@ -187,24 +189,7 @@ fun FormPengajuanLayananScreen(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            // Icon topper
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Handyman,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = "Laporkan kebutuhan perbaikan atau\nbantuan layanan lingkungan Anda.",
                 fontFamily = PoppinsReg,
@@ -288,7 +273,7 @@ fun FormPengajuanLayananScreen(
                 Text("Informasi Pelapor", fontFamily = PoppinsSemi, fontSize = 15.sp, color = BlueMain)
                 Spacer(Modifier.height(20.dp))
 
-                HomiFormField("Nama Pemohon", "Nama Lengkap Anda", nama, { nama = it }, enabled = !isSelf)
+                HomiFormField("Nama Pemohon", "Nama Lengkap Anda", nama, { nama = it }, enabled = !isSelf || nama.isBlank())
                 Spacer(Modifier.height(16.dp))
                 HomiFormField("NIK", "Masukkan 16 digit NIK", nik, { nik = it.filter { c -> c.isDigit() }.take(16) }, keyboardType = KeyboardType.Number, enabled = !isSelf)
                 Spacer(Modifier.height(16.dp))

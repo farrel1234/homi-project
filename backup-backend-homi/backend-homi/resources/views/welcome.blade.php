@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HOMI - Elevate Your Neighborhood Management</title>
+    <link rel="shortcut icon" href="{{ asset('images/homi-logo.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -319,14 +320,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
                 <div class="interactive-btn p-10 rounded-[4rem] bg-slate-50 border border-slate-100 flex flex-col items-center text-center group">
-                    <span class="px-4 py-1 bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Up to 100 Houses</span>
+                    <span class="px-4 py-1 bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Maksimal 100 Rumah</span>
                     <h3 class="text-xl font-black uppercase mb-2 tracking-widest">Starter</h3>
                     <div class="flex flex-col mb-8">
                         <div class="flex items-baseline justify-center">
-                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 100k</span>
-                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 1jt</span>
+                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Tahun</span>
                         </div>
-                        <div class="text-blue-500 text-[10px] font-bold mt-1">Atau Rp 799k / Tahun</div>
+                        <div class="text-blue-500 text-[10px] font-bold mt-1 italic">Hanya Rp 83rb / bulan</div>
                     </div>
                     <ul class="space-y-4 mb-10 text-xs text-gray-500 font-semibold text-left w-full">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> Dashboard Admin Cluster</li>
@@ -341,14 +342,14 @@
 
                 <div class="interactive-btn p-10 rounded-[4rem] bg-homi-blue text-white relative flex flex-col items-center text-center pricing-glow ring-4 ring-blue-50">
                     <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-homi-accent text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">POPULER</div>
-                    <span class="px-4 py-1 bg-white/10 text-blue-200 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Up to 300 Houses</span>
+                    <span class="px-4 py-1 bg-white/10 text-blue-200 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">Maksimal 300 Rumah</span>
                     <h3 class="text-xl font-black uppercase mb-2 tracking-widest italic">Professional</h3>
                     <div class="flex flex-col mb-8 text-white">
                         <div class="flex items-baseline justify-center">
-                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 250k</span>
-                            <span class="text-blue-100 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 2.5jt</span>
+                            <span class="text-blue-100 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Tahun</span>
                         </div>
-                        <div class="text-teal-300 text-[10px] font-bold mt-1 uppercase italic">Hemat! Rp 2.4Jt / Tahun</div>
+                        <div class="text-teal-300 text-[10px] font-bold mt-1 uppercase italic">Hemat! Hanya Rp 208rb / bulan</div>
                     </div>
                     <ul class="space-y-4 mb-10 text-xs text-blue-50 font-semibold text-left w-full">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-teal-300"></i> Semua Fitur Starter</li>
@@ -362,14 +363,14 @@
                 </div>
 
                 <div class="interactive-btn p-10 rounded-[4rem] bg-homi-dark text-white border border-white/5 flex flex-col items-center text-center group">
-                    <span class="px-4 py-1 bg-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">500+ Houses / Unlimited</span>
+                    <span class="px-4 py-1 bg-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-full mb-6 italic">500+ Rumah / Unlimited</span>
                     <h3 class="text-xl font-black uppercase mb-2 tracking-widest">Elite / Enterprise</h3>
                     <div class="flex flex-col mb-8">
                         <div class="flex items-baseline justify-center">
-                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 500k</span>
-                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Bln</span>
+                            <span class="text-4xl font-black font-outfit italic tracking-tighter">Rp 5jt</span>
+                            <span class="text-gray-400 ml-1 font-bold uppercase text-[8px] tracking-widest">/ Tahun</span>
                         </div>
-                        <div class="text-homi-blue text-[10px] font-bold mt-1">Special Deal for Long-term</div>
+                        <div class="text-homi-blue text-[10px] font-bold mt-1 italic">Hanya Rp 416rb / bulan</div>
                     </div>
                     <ul class="space-y-4 mb-10 text-xs text-gray-400 font-semibold text-left w-full">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-homi-blue"></i> White Label / Custom Logo</li>
@@ -384,7 +385,60 @@
             </div>
             
             <div class="mt-16 text-center">
-                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Butuh solusi untuk 1000+ unit? <a href="mailto:pbl.512hebat@gmail.gcom" class="text-homi-blue underline decoration-2 underline-offset-4">Konsultasi Gratis Sekarang</a></p>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Butuh solusi untuk 1000+ unit? <a href="#trial-form" class="text-homi-blue underline decoration-2 underline-offset-4">Minta Trial Gratis Sekarang</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trial Registration Section -->
+    <section id="trial-form" class="py-24 px-6 bg-slate-50 border-y border-slate-100">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-homi-blue/5 rounded-bl-[4rem] -z-10"></div>
+                
+                <div class="mb-10 text-center">
+                    <span class="inline-block px-4 py-1 bg-homi-blue/10 text-homi-blue text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-4">Coba Gratis 30 Hari</span>
+                    <h2 class="text-4xl font-outfit font-black tracking-tighter italic mb-4">Daftarkan Perumahan Anda</h2>
+                    <p class="text-gray-500 font-medium capitalize">Isi data di bawah ini, tim kami akan menyiapkan sistem untuk Anda.</p>
+                </div>
+
+                <form id="requestTrialForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Nama Perumahan</label>
+                        <input type="text" name="name" required placeholder="Contoh: Chelsea Residence" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:border-homi-blue focus:bg-white transition-all outline-none font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Nama Pengelola / RT / RW</label>
+                        <input type="text" name="manager_name" required placeholder="Nama Lengkap" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:border-homi-blue focus:bg-white transition-all outline-none font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Email</label>
+                        <input type="email" name="email" required placeholder="email@contoh.com" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:border-homi-blue focus:bg-white transition-all outline-none font-bold text-slate-900">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Nomor WhatsApp</label>
+                        <input type="text" name="phone" required placeholder="0812345678" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:border-homi-blue focus:bg-white transition-all outline-none font-bold text-slate-900">
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Catatan Tambahan (Opsional)</label>
+                        <textarea name="notes" rows="3" placeholder="Misal: Jumlah rumah 150 unit..." class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:border-homi-blue focus:bg-white transition-all outline-none font-bold text-slate-900"></textarea>
+                    </div>
+
+                    <div class="md:col-span-2 mt-4 text-center">
+                        <button type="submit" id="submitBtn" class="interactive-btn w-full md:w-64 py-5 bg-homi-blue text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-200">
+                            Kirim Permintaan
+                        </button>
+                    </div>
+                </form>
+
+                <div id="successMsg" class="hidden absolute inset-0 bg-white flex flex-col items-center justify-center text-center p-10 z-20">
+                    <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+                        <i data-lucide="check-circle-2" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-3xl font-outfit font-black italic mb-4">Berhasil Terkirim!</h3>
+                    <p class="text-gray-500 font-medium max-w-sm mb-8">Terima kasih atas minat Anda. Kami akan menghubungi Anda melalui WhatsApp atau Email untuk setup dashboard trial dalam waktu maksimal 1x24 jam.</p>
+                    <button onclick="location.reload()" class="text-homi-blue font-black uppercase tracking-widest text-[10px] underline underline-offset-8">Kembali</button>
+                </div>
             </div>
         </div>
     </section>
@@ -454,6 +508,53 @@
     <!-- Lucide init -->
     <script>
         lucide.createIcons();
+
+        // Handle Trial Request Form
+        const trialForm = document.getElementById('requestTrialForm');
+        const successMsg = document.getElementById('successMsg');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (trialForm) {
+            trialForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Disable button
+                const originalText = submitBtn.innerText;
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'MENGIRIM...';
+                submitBtn.style.opacity = '0.5';
+
+                const formData = new FormData(trialForm);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('/api/tenant-requests', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        successMsg.classList.remove('hidden');
+                        trialForm.classList.add('opacity-0');
+                    } else {
+                        alert(result.message || 'Terjadi kesalahan. Silakan coba lagi.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Gagal menghubungi server. Pastikan koneksi internet Anda aktif.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalText;
+                    submitBtn.style.opacity = '1';
+                }
+            });
+        }
     </script>
 </body>
 </html>

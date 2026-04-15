@@ -98,7 +98,8 @@ fun FormSuratKeteranganKematianScreen(
                 .onSuccess { profile ->
                     profileData = profile
                     if (isSelf) {
-                        namaPelapor = profile.fullName ?: profile.name ?: ""
+                        val raw = profile.fullName ?: profile.name ?: ""
+                        namaPelapor = if (raw.lowercase().contains("warga")) "" else raw
                         nikPelapor = profile.residentProfile?.nik ?: ""
                         
                         rt = profile.residentProfile?.rt ?: ""
@@ -120,7 +121,8 @@ fun FormSuratKeteranganKematianScreen(
     LaunchedEffect(isSelf, profileData) {
         val p = profileData ?: return@LaunchedEffect
         if (isSelf) {
-            namaPelapor = p.fullName ?: p.name ?: ""
+            val raw = p.fullName ?: p.name ?: ""
+            namaPelapor = if (raw.lowercase().contains("warga")) "" else raw
             nikPelapor = p.residentProfile?.nik ?: ""
             rt = p.residentProfile?.rt ?: ""
             rw = p.residentProfile?.rw ?: ""
@@ -216,23 +218,6 @@ fun FormSuratKeteranganKematianScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-
-            // Icon topper
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.HistoryEdu,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
             Text(
                 text = "Lengkapi data pelapor dan almarhum\nuntuk pengajuan Surat Keterangan Kematian.",
                 fontFamily = PoppinsReg,
@@ -289,7 +274,7 @@ fun FormSuratKeteranganKematianScreen(
 
                 Text("Data Pelapor", fontFamily = PoppinsSemi, fontSize = 15.sp, color = BlueMain)
                 Spacer(Modifier.height(20.dp))
-                HomiFormField("Nama Pelapor", "Nama lengkap Anda", namaPelapor, { namaPelapor = it }, enabled = !isSelf)
+                HomiFormField("Nama Pelapor", "Nama lengkap Anda", namaPelapor, { namaPelapor = it }, enabled = !isSelf || namaPelapor.isBlank())
                 Spacer(Modifier.height(16.dp))
                 HomiFormField("NIK Pelapor", "16 digit NIK Anda", nikPelapor, { nikPelapor = it.filter { c -> c.isDigit() }.take(16) }, KeyboardType.Number, enabled = !isSelf)
                 Spacer(Modifier.height(16.dp))

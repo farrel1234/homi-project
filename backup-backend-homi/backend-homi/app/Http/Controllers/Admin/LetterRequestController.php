@@ -147,12 +147,20 @@ class LetterRequestController extends Controller
         // ==========================
         $data = is_array($letterRequest->data_input) ? $letterRequest->data_input : [];
 
+        $currentTenant = app(\App\Support\Tenancy\TenantManager::class)->current();
+        $tenantName = $currentTenant?->name ?? 'Perumahan HOMI';
+        $initials = 'HM';
+        if ($currentTenant) {
+            preg_match_all('/\b\w/', $currentTenant->name, $matches);
+            $initials = strtoupper(implode('', $matches[0]));
+        }
+
         // Nomor Surat: kalau belum ada, auto generate
         if (empty($data['nomor_surat'])) {
             $seq = str_pad((string) $letterRequest->id, 3, '0', STR_PAD_LEFT);
             $rt  = $data['rt'] ?? '01';
             $rw  = $data['rw'] ?? '01';
-            $data['nomor_surat'] = $seq . "/RT{$rt}-RW{$rw}/HG/" . date('Y');
+            $data['nomor_surat'] = $seq . "/RT{$rt}-RW{$rw}/{$initials}/" . date('Y');
         }
 
         if (empty($data['tanggal_surat'])) {
@@ -172,7 +180,7 @@ class LetterRequestController extends Controller
         // Default alamat
         if (empty($data['alamat'])) {
             $rp = $letterRequest->user?->residentProfile ?? null;
-            $data['alamat'] = $rp?->alamat ?: 'Perumahan Hawai Garden';
+            $data['alamat'] = $rp?->alamat ?: $tenantName;
         }
 
         // Default RT/RW
@@ -181,6 +189,7 @@ class LetterRequestController extends Controller
 
         // Default nama_rt
         $data['nama_rt'] = $data['nama_rt'] ?? 'Ketua RT';
+        $data['nama_perumahan'] = $data['nama_perumahan'] ?? $tenantName;
 
         // Simpan balik
         $letterRequest->data_input = $data;
@@ -189,8 +198,9 @@ class LetterRequestController extends Controller
         $html = $letterRequest->renderHtml();
 
         $htmlWrapper = view('letter_requests.pdf_base', [
-            'html' => $html,
-            'item' => $letterRequest,
+            'html'       => $html,
+            'item'       => $letterRequest,
+            'tenantName' => $tenantName,
         ])->render();
 
         $pdf = Pdf::loadHTML($htmlWrapper)->setPaper('A4', 'portrait');
@@ -224,22 +234,31 @@ class LetterRequestController extends Controller
 
         $resident = $user->residentProfile ?? null;
 
+        $currentTenant = app(\App\Support\Tenancy\TenantManager::class)->current();
+        $tenantName = $currentTenant?->name ?? 'Perumahan HOMI';
+        $initials = 'HM';
+        if ($currentTenant) {
+            preg_match_all('/\b\w/', $currentTenant->name, $matches);
+            $initials = strtoupper(implode('', $matches[0]));
+        }
+
         // default umum
         $auto = [
-            'nomor_surat'   => '___/HG/___/' . date('Y'),
-            'tanggal_surat' => now()->translatedFormat('d F Y'),
-            'nama'          => $user->full_name ?? $user->username ?? '',
-            'nama_warga'    => $user->full_name ?? $user->username ?? '',
-            'nik'           => $resident->nik ?? '',
-            'alamat'        => $resident->alamat
+            'nomor_surat'    => '___/' . $initials . '/___/' . date('Y'),
+            'tanggal_surat'  => now()->translatedFormat('d F Y'),
+            'nama'           => $user->full_name ?? $user->username ?? '',
+            'nama_warga'     => $user->full_name ?? $user->username ?? '',
+            'nik'            => $resident->nik ?? '',
+            'alamat'         => $resident->alamat
                 ?? (($resident && ($resident->blok || $resident->no_rumah))
                     ? trim(($resident->blok ?? '') . ' ' . ($resident->no_rumah ?? ''))
-                    : 'Perumahan Hawai Garden'),
-            'no_telepon'    => $user->phone ?? '',
-            'keperluan'     => $data['perihal'] ?? 'Pengajuan layanan melalui aplikasi HOMI',
-            'tujuan'        => 'Kelurahan/Instansi terkait',
-            'pejabat'       => 'Admin Perumahan',
-            'jabatan'       => 'Pengelola Perumahan Hawai Garden',
+                    : $tenantName),
+            'no_telepon'     => $user->phone ?? '',
+            'keperluan'      => $data['perihal'] ?? 'Pengajuan layanan melalui aplikasi HOMI',
+            'tujuan'         => 'Kelurahan/Instansi terkait',
+            'pejabat'        => 'Admin Perumahan',
+            'jabatan'        => 'Pengelola ' . $tenantName,
+            'nama_perumahan' => $tenantName,
         ];
 
         // data dari mobile

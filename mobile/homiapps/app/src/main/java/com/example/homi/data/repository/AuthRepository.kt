@@ -37,9 +37,9 @@ class AuthRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun verifyOtp(email: String, otp: String): VerifyOtpData {
+    suspend fun verifyOtp(email: String, otp: String, tenantCode: String): VerifyOtpData {
         return try {
-            val res = api.verifyOtp(VerifyOtpRequest(email, otp))
+            val res = api.verifyOtp(VerifyOtpRequest(email, otp, tenantCode))
             if (res.success && res.data != null) res.data
             else throw Exception(
                 res.message?.ifBlank { "OTP salah / verifikasi gagal." }
@@ -49,10 +49,10 @@ class AuthRepository(private val api: ApiService) {
             throw Exception(extractApiErrorMessage(e, "Verifikasi OTP gagal."))
         }
     }
-
-    suspend fun resendRegisterOtp(email: String) {
+ 
+    suspend fun resendRegisterOtp(email: String, tenantCode: String) {
         try {
-            val res = api.resendOtp(ForgotPasswordRequest(email))
+            val res = api.resendOtp(ForgotPasswordRequest(email, tenantCode))
             if (!res.success) {
                 throw Exception(res.message?.ifBlank { "Gagal kirim ulang OTP." } ?: "Gagal kirim ulang OTP.")
             }
@@ -61,9 +61,9 @@ class AuthRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun forgotPassword(email: String) {
+    suspend fun forgotPassword(email: String, tenantCode: String) {
         try {
-            val res = api.forgotPassword(ForgotPasswordRequest(email))
+            val res = api.forgotPassword(ForgotPasswordRequest(email, tenantCode))
             if (!res.success) {
                 throw Exception(res.message?.ifBlank { "Gagal mengirim OTP reset." } ?: "Gagal mengirim OTP reset.")
             }
@@ -72,9 +72,9 @@ class AuthRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun verifyResetOtp(email: String, otp: String): VerifyResetOtpData {
+    suspend fun verifyResetOtp(email: String, otp: String, tenantCode: String): VerifyResetOtpData {
         return try {
-            val res = api.verifyResetOtp(VerifyOtpRequest(email, otp))
+            val res = api.verifyResetOtp(VerifyOtpRequest(email, otp, tenantCode))
             if (res.success && res.data != null) res.data
             else throw Exception(
                 res.message?.ifBlank { "OTP reset tidak valid." }

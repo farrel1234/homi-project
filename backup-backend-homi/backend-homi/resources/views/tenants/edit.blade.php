@@ -26,14 +26,14 @@
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Nama Tenant <span class="text-red-500">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $tenant->name) }}" required
-                           class="w-full rounded-xl border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
                     @error('name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
                 
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Kode Tenant (Unique) <span class="text-red-500">*</span></label>
                     <input type="text" name="code" value="{{ old('code', $tenant->code) }}" required
-                           class="w-full rounded-xl border-slate-200 text-sm font-mono focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="w-full rounded-xl border border-slate-200 text-sm font-mono focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
                     @error('code') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
@@ -41,7 +41,7 @@
             <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700 text-orange-600">Kode Registrasi (Secret Code untuk Warga) <span class="text-red-500">*</span></label>
                 <input type="text" name="registration_code" value="{{ old('registration_code', $tenant->registration_code) }}" required
-                       class="w-full rounded-xl border-orange-200 bg-orange-50/30 text-sm font-bold focus:border-orange-400 focus:ring-orange-400"
+                       class="w-full rounded-xl border border-orange-200 bg-orange-50/30 text-sm font-bold focus:border-orange-400 focus:ring-orange-400 shadow-sm"
                        placeholder="HW-2024-SEC">
                 <p class="text-[10px] text-slate-500 italic">Kode ini diberikan kepada warga perumahan agar bisa mendaftar di aplikasi mobile.</p>
                 @error('registration_code') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
@@ -50,8 +50,19 @@
             <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700">Domain (Optional)</label>
                 <input type="text" name="domain" value="{{ old('domain', $tenant->domain) }}"
-                       class="w-full rounded-xl border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                       class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
                 @error('domain') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-sm font-bold text-slate-700">Paket Layanan (Plan) <span class="text-red-500">*</span></label>
+                <select name="plan" required class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                    <option value="trial" {{ old('plan', $tenant->plan) == 'trial' ? 'selected' : '' }}>TRIAL (Free 30 Days)</option>
+                    <option value="starter" {{ old('plan', $tenant->plan) == 'starter' ? 'selected' : '' }}>STARTER</option>
+                    <option value="professional" {{ old('plan', $tenant->plan) == 'professional' ? 'selected' : '' }}>PROFESSIONAL</option>
+                    <option value="elite" {{ old('plan', $tenant->plan) == 'elite' ? 'selected' : '' }}>ELITE</option>
+                </select>
+                @error('plan') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <hr class="border-slate-100">
@@ -64,7 +75,7 @@
             <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700">Nama Database <span class="text-red-500">*</span></label>
                 <input type="text" name="db_database" value="{{ old('db_database', $tenant->db_database) }}" required
-                       class="w-full rounded-xl border-slate-200 text-sm font-mono focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                       class="w-full rounded-xl border border-slate-200 text-sm font-mono focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
                 @error('db_database') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -72,14 +83,14 @@
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Username DB <span class="text-red-500">*</span></label>
                     <input type="text" name="db_username" value="{{ old('db_username', $tenant->db_username) }}" required
-                           class="w-full rounded-xl border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
                     @error('db_username') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
                 
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Password DB (Kosongkan jika tetap)</label>
                     <input type="password" name="db_password"
-                           class="w-full rounded-xl border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
+                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm"
                            placeholder="••••••••">
                     @error('db_password') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>

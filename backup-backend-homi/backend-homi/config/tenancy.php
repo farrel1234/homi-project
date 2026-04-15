@@ -58,5 +58,7 @@ return [
     'exempt_paths' => [
         'api/ping',
         'api/__debug/php',
+        'api/tenant-requests',
+        'api/tenants',
     ],
 ];

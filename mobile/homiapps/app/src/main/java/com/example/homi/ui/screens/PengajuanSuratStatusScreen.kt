@@ -3,24 +3,35 @@ package com.example.homi.ui.screens
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.FileDownload
+import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
@@ -32,13 +43,11 @@ import androidx.compose.ui.unit.sp
 import com.example.homi.R
 import com.example.homi.data.model.ServiceRequestDto
 import com.example.homi.data.repository.ServiceRequestRepository
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
-
-// ✅ Accompanist SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +56,15 @@ fun PengajuanSuratStatusScreen(
     repo: ServiceRequestRepository,
     onBack: () -> Unit
 ) {
-    // ===== COLORS =====
-    val BlueMain = Color(0xFF2F7FA3) // Theme Blue
-    val BlueBorder = Color(0xFF2F7FA3)
-    val OrangeBtn = Color(0xFFE26A2C) // Theme Orange
-    val TextMuted = Color(0xFF6B7280)
-    val CardBg = Color.White
+    // ===== PREMIUM COLORS =====
+    val BlueMain = Color(0xFF2F7FA3)
+    val BlueGradient = Brush.verticalGradient(
+        colors = listOf(BlueMain, Color(0xFF1A5E7B))
+    )
+    val SurfaceBg = Color(0xFFF8FAFC)
+    val PrimaryBlue = BlueMain
+    val AccentOrange = Brush.horizontalGradient(listOf(Color(0xFFF37335), Color(0xFFFDC830)))
+    val TextMuted = Color(0xFF64748B)
 
     // ===== Fonts =====
     val poppinsReg = try { FontFamily(Font(R.font.poppins_regular)) } catch (_: Exception) { FontFamily.Default }
@@ -72,27 +84,8 @@ fun PengajuanSuratStatusScreen(
         return when {
             s == "approved" || s == "disetujui" || s == "done" || s == "selesai" -> "approved"
             s == "rejected" || s == "ditolak" -> "rejected"
-            s == "pending" || s == "process" || s == "diproses" || s == "in_progress" || s == "submitted" -> "processing"
-            else -> s.ifBlank { "processing" }
+            else -> "processing"
         }
-    }
-
-    fun statusLabel(norm: String): String = when (norm) {
-        "approved" -> "Disetujui"
-        "rejected" -> "Ditolak"
-        else -> "Diproses"
-    }
-
-    fun statusChipBg(norm: String): Color = when (norm) {
-        "approved" -> Color(0xFFE7F6EC)
-        "rejected" -> Color(0xFFFDECEC)
-        else -> Color(0xFFFFF3D6)
-    }
-
-    fun statusChipText(norm: String): Color = when (norm) {
-        "approved" -> Color(0xFF16A34A)
-        "rejected" -> Color(0xFFDC2626)
-        else -> Color(0xFFF97316)
     }
 
     fun load(refresh: Boolean) {
@@ -100,7 +93,7 @@ fun PengajuanSuratStatusScreen(
             if (refresh) refreshing = true else loading = true
             error = null
             try {
-                item = repo.detail(id) // ✅ fetch terbaru dari server
+                item = repo.detail(id)
             } catch (e: Exception) {
                 error = e.message ?: "Gagal load detail"
             } finally {
@@ -116,81 +109,65 @@ fun PengajuanSuratStatusScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BlueMain)
+            .background(BlueGradient)
             .statusBarsPadding()
     ) {
         // ===== HEADER =====
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(bottom = 24.dp)
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Kembali",
-                    tint = Color.White
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                }
+
+                Text(
+                    text = "Detail Pengajuan",
+                    fontFamily = poppinsSemi,
+                    fontSize = 19.sp,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
                 )
+
+                IconButton(onClick = { load(refresh = true) }, enabled = !refreshing && !loading) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.White)
+                }
             }
 
             Text(
-                text = "Status Pengajuan",
-                fontFamily = poppinsSemi,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-                color = Color.White,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
+                text = "Pantau proses suratmu secara real-time.",
+                fontFamily = poppinsReg,
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
             )
-
-            // ✅ tombol refresh kecil
-            IconButton(
-                onClick = { load(refresh = true) },
-                enabled = !refreshing && !loading
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Refresh",
-                    tint = Color.White
-                )
-            }
         }
 
-        Text(
-            text = "Pantau proses pengajuan surat kamu.\nTarik layar ke bawah untuk memperbarui status.",
-            fontFamily = poppinsReg,
-            fontSize = 12.sp,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            lineHeight = 16.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp)
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        // ===== CONTAINER PUTIH + SWIPE REFRESH =====
+        // ===== MAIN CONTENT =====
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White, shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp))
+                .background(SurfaceBg, RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
         ) {
             SwipeRefresh(
                 state = swipeState,
                 onRefresh = { load(refresh = true) },
                 modifier = Modifier.fillMaxSize()
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 18.dp, vertical = 18.dp)
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     when {
                         loading -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
+                                CircularProgressIndicator(color = PrimaryBlue)
                             }
                         }
 
@@ -200,15 +177,13 @@ fun PengajuanSuratStatusScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Text(
-                                    text = error!!,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontFamily = poppinsReg,
-                                    textAlign = TextAlign.Center
-                                )
+                                Text(text = error!!, color = Color.Red, fontFamily = poppinsReg)
                                 Spacer(Modifier.height(12.dp))
-                                Button(onClick = { load(refresh = false) }) {
-                                    Text("Coba lagi", fontFamily = poppinsSemi)
+                                Button(
+                                    onClick = { load(refresh = false) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                                ) {
+                                    Text("Coba lagi", color = Color.White, fontFamily = poppinsSemi)
                                 }
                             }
                         }
@@ -217,12 +192,11 @@ fun PengajuanSuratStatusScreen(
                             val data = item
                             if (data == null) {
                                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Data tidak ditemukan.", fontFamily = poppinsReg, color = TextMuted)
+                                    Text("Data tidak ditemukan", fontFamily = poppinsReg)
                                 }
                             } else {
                                 val norm = normalizeStatus(data.status)
                                 val canDownload = norm == "approved" && !data.pdfUrl.isNullOrBlank()
-
                                 val nomorPengajuan = "REQ-${id.toString().padStart(4, '0')}"
                                 val tanggalLabel = formatIsoDate(data.requestDate ?: "-")
 
@@ -230,138 +204,159 @@ fun PengajuanSuratStatusScreen(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .verticalScroll(rememberScrollState())
+                                        .padding(horizontal = 20.dp)
+                                        .animateContentSize(animationSpec = tween(300))
                                 ) {
-                                    Card(
-                                        colors = CardDefaults.cardColors(containerColor = CardBg),
-                                        shape = RoundedCornerShape(18.dp),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                        border = BorderStroke(2.dp, BlueBorder),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp)
-                                        ) {
-                                            Text(
-                                                text = "Ringkasan Pengajuan",
-                                                fontFamily = poppinsSemi,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 14.sp,
-                                                color = BlueBorder
-                                            )
-
-                                            Spacer(Modifier.height(14.dp))
-
-                                            InfoRow(
-                                                label = "Jenis Surat",
-                                                value = data.type?.name ?: "-",
-                                                fontReg = poppinsReg,
-                                                fontSemi = poppinsSemi
-                                            )
-                                            Spacer(Modifier.height(8.dp))
-
-                                            InfoRow(
-                                                label = "Nomor Pengajuan",
-                                                value = nomorPengajuan,
-                                                fontReg = poppinsReg,
-                                                fontSemi = poppinsSemi
-                                            )
-                                            Spacer(Modifier.height(8.dp))
-
-                                            InfoRow(
-                                                label = "Tanggal",
-                                                value = tanggalLabel,
-                                                fontReg = poppinsReg,
-                                                fontSemi = poppinsSemi
-                                            )
-
-                                            Spacer(Modifier.height(14.dp))
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(statusChipBg(norm), RoundedCornerShape(10.dp))
-                                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                            ) {
-                                                Text(
-                                                    text = "Status : ${statusLabel(norm)}",
-                                                    fontFamily = poppinsSemi,
-                                                    fontSize = 12.sp,
-                                                    color = statusChipText(norm)
-                                                )
-                                            }
-
-                                            Spacer(Modifier.height(14.dp))
-
-                                            Button(
-                                                onClick = {
-                                                    scope.launch {
-                                                        downloading = true
-                                                        try {
-                                                            val bytes = repo.downloadPdfBytes(id)
-                                                            val uri = savePdfToDownloads(ctx, "surat_$id.pdf", bytes)
-                                                            if (uri != null) {
-                                                                Toast.makeText(ctx, "PDF tersimpan di Download/HOMI", Toast.LENGTH_SHORT).show()
-                                                                // ✅ Coba buka PDF setelah download
-                                                                openPdfFile(ctx, uri)
-                                                            } else {
-                                                                Toast.makeText(ctx, "Gagal simpan PDF", Toast.LENGTH_LONG).show()
-                                                            }
-                                                        } catch (e: Exception) {
-                                                            Toast.makeText(ctx, e.message ?: "Download gagal", Toast.LENGTH_LONG).show()
-                                                        } finally {
-                                                            downloading = false
-                                                        }
-                                                    }
-                                                },
-                                                enabled = canDownload && !downloading,
-                                                shape = RoundedCornerShape(12.dp),
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = OrangeBtn,
-                                                    disabledContainerColor = OrangeBtn.copy(alpha = 0.45f)
-                                                ),
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(46.dp)
-                                            ) {
-                                                if (downloading) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(18.dp),
-                                                        strokeWidth = 2.dp,
-                                                        color = Color.White
-                                                    )
-                                                    Spacer(Modifier.width(10.dp))
-                                                }
-                                                Text(
-                                                    text = "Download PDF",
-                                                    fontFamily = poppinsSemi,
-                                                    color = Color.White
-                                                )
-                                            }
-
-                                            Spacer(Modifier.height(10.dp))
-
-                                            Text(
-                                                text = if (canDownload) "PDF siap diunduh"
-                                                else "PDF akan aktif setelah admin menyetujui pengajuan.",
-                                                fontFamily = poppinsReg,
-                                                fontSize = 11.sp,
-                                                color = TextMuted
-                                            )
-
-                                            if (!data.adminNote.isNullOrBlank()) {
-                                                Spacer(Modifier.height(10.dp))
-                                                Text(
-                                                    text = "Catatan admin: ${data.adminNote}",
-                                                    fontFamily = poppinsReg,
-                                                    fontSize = 11.sp,
-                                                    color = TextMuted
-                                                )
-                                            }
+                                    // 📘 CARD 1: RINGKASAN DATA
+                                    PremiumCard {
+                                        Column {
+                                            CardHeader(icon = Icons.Outlined.Description, title = "Ringkasan Pengajuan", color = PrimaryBlue, fontSemi = poppinsSemi)
+                                            Spacer(Modifier.height(20.dp))
+                                            InfoRowModern("Jenis Surat", data.type?.name ?: "-", poppinsReg, poppinsSemi)
+                                            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Color(0xFFE2E8F0))
+                                            InfoRowModern("No. Pengajuan", nomorPengajuan, poppinsReg, poppinsSemi)
+                                            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Color(0xFFE2E8F0))
+                                            InfoRowModern("Tgl Diajukan", tanggalLabel, poppinsReg, poppinsSemi)
                                         }
                                     }
 
-                                    Spacer(Modifier.height(18.dp))
+                                    Spacer(Modifier.height(16.dp))
+
+                                    // 🕒 CARD 2: TIMELINE STATUS
+                                    PremiumCard {
+                                        Column {
+                                            CardHeader(icon = Icons.Default.History, title = "Lacak Progress", color = PrimaryBlue, fontSemi = poppinsSemi)
+                                            Spacer(Modifier.height(24.dp))
+                                            StatusTimeline(norm, poppinsReg, poppinsSemi)
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(16.dp))
+
+                                    // 📄 CARD 3: DETAIL TAMBAHAN
+                                    PremiumCard {
+                                        Column {
+                                            CardHeader(icon = Icons.Default.Info, title = "Informasi Tambahan", color = PrimaryBlue, fontSemi = poppinsSemi)
+                                            Spacer(Modifier.height(20.dp))
+                                            InfoRowModern("Nama Pelapor", data.reporterName ?: "-", poppinsReg, poppinsSemi)
+                                            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Color(0xFFE2E8F0))
+                                            InfoRowModern("Perihal", data.subject ?: "-", poppinsReg, poppinsSemi)
+                                            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Color(0xFFE2E8F0))
+                                            InfoRowModern("Lokasi", data.place ?: "-", poppinsReg, poppinsSemi)
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(16.dp))
+
+                                    // 📥 CARD 4: AKSI & DOWNLOAD
+                                    PremiumCard {
+                                        Column {
+                                            if (canDownload) {
+                                                Button(
+                                                    onClick = {
+                                                        scope.launch {
+                                                            downloading = true
+                                                            try {
+                                                                val bytes = repo.downloadPdfBytes(id)
+                                                                val uri = savePdfToDownloads(ctx, "surat_$id.pdf", bytes)
+                                                                if (uri != null) {
+                                                                    Toast.makeText(ctx, "PDF tersimpan!", Toast.LENGTH_SHORT).show()
+                                                                    openPdfFile(ctx, uri)
+                                                                }
+                                                            } catch (e: Exception) {
+                                                                Toast.makeText(ctx, e.message ?: "Gagal", Toast.LENGTH_LONG).show()
+                                                            } finally {
+                                                                downloading = false
+                                                            }
+                                                        }
+                                                    },
+                                                    enabled = !downloading,
+                                                    shape = RoundedCornerShape(16.dp),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                                    contentPadding = PaddingValues(),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(56.dp)
+                                                        .shadow(4.dp, RoundedCornerShape(16.dp))
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxSize()
+                                                            .background(AccentOrange, RoundedCornerShape(16.dp)),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        if (downloading) {
+                                                            CircularProgressIndicator(Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                                                        } else {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Icon(Icons.Rounded.FileDownload, null, tint = Color.White)
+                                                                Spacer(Modifier.width(8.dp))
+                                                                Text("Download Surat Resmi", fontFamily = poppinsSemi, color = Color.White, fontSize = 15.sp)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp))
+                                                        .padding(16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = if (norm == "rejected") "Pengajuan Anda ditolak." else "Surat masih dalam proses verifikasi RT/RW.",
+                                                        fontFamily = poppinsSemi,
+                                                        fontSize = 13.sp,
+                                                        color = TextMuted,
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+
+                                            if (!data.adminNote.isNullOrBlank()) {
+                                                Spacer(Modifier.height(20.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .background(Color(0xFFFFF7ED), RoundedCornerShape(12.dp))
+                                                        .border(1.dp, Color(0xFFFFEDD5), RoundedCornerShape(12.dp))
+                                                        .padding(16.dp)
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.Top) {
+                                                        Icon(Icons.Outlined.HelpOutline, null, tint = Color(0xFFEA580C), modifier = Modifier.size(18.dp))
+                                                        Spacer(Modifier.width(10.dp))
+                                                        Column {
+                                                            Text("Catatan Verifikator", fontFamily = poppinsSemi, fontSize = 12.sp, color = Color(0xFFC2410C))
+                                                            Spacer(Modifier.height(4.dp))
+                                                            Text(data.adminNote, fontFamily = poppinsReg, fontSize = 13.sp, color = Color(0xFF9A3412))
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(Modifier.height(20.dp))
+                                            OutlinedButton(
+                                                onClick = {
+                                                    try {
+                                                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                            setData(Uri.parse("https://wa.me/6281234567890?text=Halo%20Admin%20Homi,%20saya%20ingin%20tanya%20status%20pengajuan%20$nomorPengajuan"))
+                                                        }
+                                                        ctx.startActivity(intent)
+                                                    } catch (e: Exception) {}
+                                                },
+                                                shape = RoundedCornerShape(16.dp),
+                                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                                border = BorderStroke(1.5.dp, Color(0xFF10B981)),
+                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF10B981))
+                                            ) {
+                                                Icon(Icons.Rounded.SupportAgent, null)
+                                                Spacer(Modifier.width(8.dp))
+                                                Text("Bantuan Admin via WhatsApp", fontFamily = poppinsSemi, fontSize = 14.sp)
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.height(40.dp))
                                 }
                             }
                         }
@@ -372,44 +367,132 @@ fun PengajuanSuratStatusScreen(
     }
 }
 
-/**
- * Row tampilan "Label : Value"
- */
 @Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    fontReg: FontFamily,
-    fontSemi: FontFamily
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
+fun PremiumCard(content: @Composable () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = Modifier.fillMaxWidth().shadow(6.dp, RoundedCornerShape(24.dp), spotColor = Color(0x1A000000))
     ) {
-        Text(
-            text = label,
-            fontFamily = fontReg,
-            fontSize = 12.sp,
-            color = Color(0xFF111827),
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = " : ",
-            fontFamily = fontReg,
-            fontSize = 12.sp,
-            color = Color(0xFF111827)
-        )
-        Text(
-            text = value,
-            fontFamily = fontSemi,
-            fontSize = 12.sp,
-            color = Color(0xFF111827),
-            modifier = Modifier.weight(1f)
-        )
+        Box(modifier = Modifier.padding(24.dp)) {
+            content()
+        }
     }
 }
 
-fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): android.net.Uri? {
+@Composable
+fun CardHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, color: Color, fontSemi: FontFamily) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier.size(36.dp).background(color.copy(alpha = 0.1f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(title, fontFamily = fontSemi, fontSize = 16.sp, color = Color(0xFF1E293B))
+    }
+}
+
+@Composable
+private fun InfoRowModern(label: String, value: String, fontReg: FontFamily, fontSemi: FontFamily) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(text = label, fontFamily = fontReg, fontSize = 13.sp, color = Color(0xFF64748B))
+        Text(text = value, fontFamily = fontSemi, fontSize = 14.sp, color = Color(0xFF0F172A), textAlign = TextAlign.End, modifier = Modifier.weight(1f).padding(start = 16.dp))
+    }
+}
+
+@Composable
+private fun StatusTimeline(status: String, fontReg: FontFamily, fontSemi: FontFamily) {
+    val steps = listOf("Sedang Diajukan", "Proses Verifikasi", "Selesai")
+    val currentIndex = when (status) {
+        "approved", "rejected" -> 2
+        "processing" -> 1
+        else -> 0
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        steps.forEachIndexed { index, label ->
+            val isActive = index <= currentIndex
+            val isLast = index == steps.size - 1
+            val color = if (isActive) {
+                if (status == "rejected" && index == 2) Color(0xFFEF4444) // Error Red
+                else Color(0xFF0EA5E9) // Vibrant Blue
+            } else Color(0xFFE2E8F0)
+
+            Row(verticalAlignment = Alignment.Top) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(32.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(
+                                if (isActive) color.copy(alpha = 0.15f) else color.copy(alpha = 0.3f),
+                                CircleShape
+                            )
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(if (isActive) 14.dp else 10.dp)
+                                .background(color, CircleShape)
+                        ) {
+                            if (isActive) {
+                                Icon(
+                                    imageVector = if (status == "rejected" && index == 2) Icons.Default.Close else Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        }
+                    }
+                    if (!isLast) {
+                        Box(
+                            modifier = Modifier
+                                .width(2.5.dp)
+                                .height(40.dp)
+                                .background(if (index < currentIndex) color else Color(0xFFE2E8F0))
+                        )
+                    }
+                }
+
+                Spacer(Modifier.width(16.dp))
+
+                Column {
+                    val displayLabel = if (status == "rejected" && index == 2) "Ditolak"
+                    else if (status == "approved" && index == 2) "Disetujui"
+                    else label
+                    
+                    Text(
+                        text = displayLabel,
+                        fontFamily = fontSemi,
+                        fontSize = 15.sp,
+                        color = if (isActive) Color(0xFF0F172A) else Color(0xFF94A3B8)
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = when (index) {
+                            0 -> "Pengajuan berhasil masuk ke sistem pengelola."
+                            1 -> "Dokumen sedang divalidasi oleh RT/RW setempat."
+                            else -> if (status == "rejected") "Pengajuan Anda tidak dapat diproses."
+                            else "Surat resmi telah diterbitkan dan siap diunduh."
+                        },
+                        fontFamily = fontReg,
+                        fontSize = 12.sp,
+                        color = Color(0xFF64748B),
+                        lineHeight = 16.sp
+                    )
+                    if (!isLast) Spacer(Modifier.height(24.dp))
+                }
+            }
+        }
+    }
+}
+
+fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): Uri? {
     return try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = context.contentResolver
@@ -419,74 +502,56 @@ fun savePdfToDownloads(context: Context, fileName: String, bytes: ByteArray): an
                 put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/HOMI")
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
-
             val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
-            resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return null
-
+            resolver.openOutputStream(uri)?.use { it.write(bytes) }
             values.clear()
             values.put(MediaStore.MediaColumns.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
-
             uri
         } else {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val homiDir = File(downloadsDir, "HOMI")
             if (!homiDir.exists()) homiDir.mkdirs()
-
             val outFile = File(homiDir, fileName)
             FileOutputStream(outFile).use { it.write(bytes) }
-
-            MediaScannerConnection.scanFile(
-                context,
-                arrayOf(outFile.absolutePath),
-                arrayOf("application/pdf"),
-                null
-            )
-            android.net.Uri.fromFile(outFile)
+            MediaScannerConnection.scanFile(context, arrayOf(outFile.absolutePath), arrayOf("application/pdf"), null)
+            Uri.fromFile(outFile)
         }
     } catch (e: Exception) {
-        e.printStackTrace()
         null
     }
 }
 
-fun openPdfFile(context: Context, uri: android.net.Uri) {
+fun openPdfFile(context: Context, uri: Uri) {
     try {
-        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "application/pdf")
-            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
     } catch (e: Exception) {
-        Toast.makeText(context, "Tidak ada aplikasi penampil PDF", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "Tidak ada penampil PDF", Toast.LENGTH_LONG).show()
     }
 }
+
 private fun formatIsoDate(t: String): String {
     if (t.isBlank() || t == "-") return "-"
-    // Jika format "2026-03-29..." (ISO)
     if (t.length >= 10 && t[4] == '-' && t[7] == '-') {
         return try {
             val y = t.substring(0, 4)
             val m = t.substring(5, 7)
             val d = t.substring(8, 10).toInt().toString()
             val bln = when (m) {
-                "01" -> "Januari"
-                "02" -> "Februari"
-                "03" -> "Maret"
-                "04" -> "April"
-                "05" -> "Mei"
-                "06" -> "Juni"
-                "07" -> "Juli"
-                "08" -> "Agustus"
-                "09" -> "September"
-                "10" -> "Oktober"
-                "11" -> "November"
-                "12" -> "Desember"
+                "01" -> "Januari" "02" -> "Februari" "03" -> "Maret" "04" -> "April"
+                "05" -> "Mei" "06" -> "Juni" "07" -> "Juli" "08" -> "Agustus"
+                "09" -> "September" "10" -> "Oktober" "11" -> "November" "12" -> "Desember"
                 else -> m
             }
             "$d $bln $y"
-        } catch (e: Exception) { t }
+        } catch (e: Exception) {
+            t
+        }
     }
     return t
 }

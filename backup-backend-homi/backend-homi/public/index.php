@@ -10,6 +10,13 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
     require $maintenance;
 }
 
+// EARLY DEBUG LOGGER
+file_put_contents(
+    __DIR__.'/../storage/logs/early_requests.log', 
+    date('Y-m-d H:i:s') . " - " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI'] . "\n", 
+    FILE_APPEND
+);
+
 // Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,7 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.homi.R
@@ -54,25 +57,21 @@ fun DaftarScreen(
     preEmail: String = "",
     googleId: String = ""
 ) {
-    // Theme HOMI
     val poppins = FontFamily(Font(R.font.poppins_semibold))
-    val blue = Color(0xFF2F7FA3) // BlueMain
+    val blue = Color(0xFF256D85)
     val orange = Color(0xFFFFA06B)
-    val bg = Color(0xFF2F7FA3) // Background to match the Topper
 
-    // Form state
     var fullName by remember { mutableStateOf(preName) }
     var email by remember { mutableStateOf(preEmail) }
-
-    // Minimal profile info for registration
-    var tenantCode by remember { mutableStateOf("") } // Kode tenant rahasia
-
-    // Password
+    var tenantCode by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    var loading by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var errorText by remember { mutableStateOf<String?>(null) }
 
+    var loading by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus = LocalFocusManager.current
@@ -81,22 +80,28 @@ fun DaftarScreen(
     val api = remember { ApiClient.getApi(tokenStore) }
     val authRepo = remember { AuthRepository(api) }
 
-    // Validasi
     val isEmailValid = remember(email) { email.trim().contains("@") && email.trim().contains(".") }
     val isPassValid = remember(password) { password.length >= 6 }
-    val isFormValid =
-        fullName.isNotBlank() &&
-                isEmailValid &&
-                isPassValid &&
-                password == confirmPassword &&
-                tenantCode.isNotBlank()
+    
+    // Dynamic error message
+    LaunchedEffect(fullName, email, password, confirmPassword, tenantCode) {
+        errorText = when {
+            tenantCode.isBlank() -> "Masukkan kode registrasi perumahan."
+            fullName.isBlank() -> "Nama lengkap wajib diisi."
+            email.isNotBlank() && !isEmailValid -> "Format email tidak valid."
+            password.isNotBlank() && !isPassValid -> "Kata sandi minimal 6 karakter."
+            confirmPassword.isNotBlank() && password != confirmPassword -> "Konfirmasi kata sandi tidak cocok."
+            else -> null
+        }
+    }
+
+    val isFormValid = fullName.isNotBlank() && isEmailValid && isPassValid && password == confirmPassword && tenantCode.isNotBlank()
 
     val tfColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFFFBFBFB),
-        unfocusedContainerColor = Color(0xFFFBFBFB),
         focusedBorderColor = blue,
-        unfocusedBorderColor = Color.LightGray,
-        cursorColor = blue
+        unfocusedBorderColor = Color.Gray,
+        focusedContainerColor = Color(0xFFF8F8F8),
+        unfocusedContainerColor = Color(0xFFF8F8F8)
     )
 
     fun extractApiMessage(raw: String?): String? {
@@ -121,80 +126,94 @@ fun DaftarScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
-        containerColor = bg
+        contentWindowInsets = WindowInsets(0.dp) // Edge to edge
     ) { pad ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(pad)
-                .statusBarsPadding()
         ) {
-            // TOPPER THEME
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onGoLogin) {
-                    Image(
-                        painter = painterResource(id = R.drawable.panahkembali),
-                        contentDescription = "Kembali",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                Text(
-                    text = "Daftar Warga Baru",
-                    fontFamily = poppins,
-                    fontSize = 22.sp,
-                    color = Color.White,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(Modifier.width(40.dp))
-            }
-
-            Text(
-                text = "Silakan lengkapi data diri Anda untuk bergabung bersama komunitas Hawaii Garden.",
-                fontFamily = FontFamily(Font(R.font.poppins_regular)),
-                fontSize = 12.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+            // Background Image
+            Image(
+                painter = painterResource(id = R.drawable.login), // Use same premium background
+                contentDescription = "Background",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
 
-            Spacer(Modifier.height(16.dp))
-
-            Card(
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.fillMaxSize()
+            // Back button
+            IconButton(
+                onClick = onGoLogin,
+                modifier = Modifier
+                    .padding(top = 40.dp, start = 16.dp)
+                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
             ) {
-                Column(
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Bottom Sheet Container
+                Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .imePadding()
-                        .verticalScroll(scroll)
-                        .padding(start = 24.dp, end = 24.dp, top = 24.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+                    color = Color.White.copy(alpha = 0.95f),
+                    tonalElevation = 8.dp
                 ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(scroll)
+                            .padding(horizontal = 24.dp, vertical = 32.dp)
+                    ) {
                         Text(
-                            "Data Akun",
+                            text = "Daftar Warga Baru",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
                             fontFamily = poppins,
-                            fontSize = 16.sp,
-                            color = orange,
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            color = blue,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Text(
+                            text = "Silakan lengkapi data untuk bergabung ke perumahan Anda.",
+                            fontSize = 13.sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                         )
 
-                        // Nama
+                        // Tenant Code
+                        OutlinedTextField(
+                            value = tenantCode,
+                            onValueChange = { tenantCode = it },
+                            label = { Text("Kode Registrasi Perumahan", fontFamily = poppins) },
+                            placeholder = { Text("Contoh: LBH002") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = tfColors,
+                            enabled = !loading,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) })
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Full Name
                         OutlinedTextField(
                             value = fullName,
                             onValueChange = { fullName = it },
-                            label = { Text("Nama Lengkap") },
+                            label = { Text("Nama Lengkap", fontFamily = poppins) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -210,82 +229,71 @@ fun DaftarScreen(
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            label = { Text("Email Aktif") },
+                            label = { Text("Email Aktif", fontFamily = poppins) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = tfColors,
                             enabled = !loading,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-                            supportingText = { if (email.isNotBlank() && !isEmailValid) Text("Format email tidak valid", color = Color.Red, fontSize = 11.sp) }
+                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) })
                         )
 
-                        Spacer(Modifier.height(32.dp))
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
-                        Spacer(Modifier.height(24.dp))
-                        
-                        Text(
-                            "Keamanan Akun",
-                            fontFamily = poppins,
-                            fontSize = 16.sp,
-                            color = orange,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-
-                        // Kode Registrasi (Tenant Code)
-                        OutlinedTextField(
-                            value = tenantCode,
-                            onValueChange = { tenantCode = it },
-                            label = { Text("Kode Registrasi") },
-                            placeholder = { Text("Masukkan kode dari pengelola") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = tfColors,
-                            enabled = !loading,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-                            supportingText = { Text("Wajib diisi sesuai kode perumahan Anda", fontSize = 11.sp) }
-                        )
-
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(16.dp))
 
                         // Password
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
-                            label = { Text("Buat Kata Sandi") },
+                            label = { Text("Buat Kata Sandi", fontFamily = poppins) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = tfColors,
                             enabled = !loading,
-                            visualTransformation = PasswordVisualTransformation(),
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-                            supportingText = { if (password.isNotBlank() && !isPassValid) Text("Password minimal 6 karakter", color = Color.Red, fontSize = 11.sp) }
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(painter = painterResource(id = if (passwordVisible) R.drawable.show else R.drawable.hide), contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.Gray)
+                                }
+                            }
                         )
 
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(16.dp))
 
-                        // Konfirmasi
+                        // Confirm Password
                         OutlinedTextField(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
-                            label = { Text("Ulangi Kata Sandi") },
+                            label = { Text("Ketik Ulang Sandi", fontFamily = poppins) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = tfColors,
                             enabled = !loading,
-                            visualTransformation = PasswordVisualTransformation(),
+                            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
-                            supportingText = { if (confirmPassword.isNotBlank() && confirmPassword != password) Text("Konfirmasi kata sandi tidak cocok", color = Color.Red, fontSize = 11.sp) }
+                            trailingIcon = {
+                                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                    Icon(painter = painterResource(id = if (confirmPasswordVisible) R.drawable.show else R.drawable.hide), contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.Gray)
+                                }
+                            }
                         )
 
                         Spacer(Modifier.height(32.dp))
+
+                        errorText?.let {
+                            Text(
+                                it,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                            )
+                        }
 
                         Button(
                             onClick = {
@@ -302,7 +310,7 @@ fun DaftarScreen(
                                             googleId.ifBlank { null }
                                         )
                                         loading = false
-                                        onGoOtp(email.trim(), "", "", "", "", "")
+                                        onGoOtp(email.trim(), tenantCode.trim(), "", "", "", "")
                                     } catch (e: Throwable) {
                                         loading = false
                                         showError(e)
@@ -310,34 +318,50 @@ fun DaftarScreen(
                                 }
                             },
                             enabled = isFormValid && !loading,
-                            colors = ButtonDefaults.buttonColors(containerColor = orange),
-                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = orange,
+                                disabledContainerColor = Color.LightGray.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth().height(56.dp)
                         ) {
                             if (loading) {
                                 CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = Color.White)
                                 Spacer(Modifier.width(12.dp))
                             }
-                            Text("Daftar Sekarang", color = Color.White, fontFamily = poppins, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(
+                                text = if (loading) "Mendaftar..." else "Daftar Sekarang",
+                                color = Color.White,
+                                fontFamily = poppins,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
                         }
 
                         Spacer(Modifier.height(24.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Sudah punya akun?", fontSize = 14.sp, color = Color.Gray)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Sudah punya akun?", fontSize = 14.sp, fontFamily = poppins, color = Color.Black)
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = "Masuk di sini",
                                 fontSize = 14.sp,
                                 fontFamily = poppins,
                                 color = blue,
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = TextDecoration.Underline,
                                 modifier = Modifier.clickable(enabled = !loading) { onGoLogin() }
                             )
                         }
 
-                        Spacer(Modifier.height(48.dp)) // Fix cut-off at bottom
+                        Spacer(Modifier.height(32.dp))
                     }
                 }
             }
+        }
     }
 }

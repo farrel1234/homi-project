@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.homi"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.pbl.homi"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -68,18 +68,18 @@ dependencies {
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
 
 
+    // Auth & Identity
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation ("com.google.android.gms:play-services-auth:21.2.0")
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     // Retrofit + OkHttp (PAKAI 1 VERSION SAJA)
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    implementation("androidx.compose.material:material-icons-extended:<versi-compose-kamu>")
+    implementation("androidx.compose.material:material-icons-extended")
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.34.0")

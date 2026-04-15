@@ -10,19 +10,19 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
             <a href="{{ route('service-requests.index') }}" 
-               class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm">
-                <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current stroke-2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+               class="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm">
+                <svg viewBox="0 0 24 24" class="h-4 w-4 md:h-5 md:w-5 fill-none stroke-current stroke-2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </a>
             <div>
-                <h1 class="homi-title">ID #{{ $item->id }}</h1>
-                <p class="homi-subtitle">{{ $item->type->name ?? 'Layanan Umum' }}</p>
+                <h1 class="text-xl md:text-2xl font-black text-slate-900 leading-tight">ID #{{ $item->id }}</h1>
+                <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $item->type->name ?? 'Layanan Umum' }}</p>
             </div>
         </div>
         
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 w-full sm:w-auto">
             @if($item->pdf_path || $item->status === 'approved')
                 <a href="{{ route('service-requests.download', $item->id) }}"
-                   class="homi-btn homi-btn-primary">
+                   class="homi-btn homi-btn-primary w-full sm:w-auto justify-center text-xs">
                     <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                     Download PDF
                 </a>
@@ -163,7 +163,7 @@
                                 </div>
                                 @endif
 
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                         <label class="homi-label">RT</label>
                                         <input type="text" name="rt" class="homi-input" placeholder="01" value="{{ old('rt', $item->user->residentProfile->rt ?? '') }}">

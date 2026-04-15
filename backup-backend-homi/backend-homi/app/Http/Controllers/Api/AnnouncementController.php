@@ -11,11 +11,33 @@ class AnnouncementController extends Controller
     // GET /api/announcements
     public function index(Request $request)
     {
-        $tenantId = $request->user()->tenant_id;
+        $query = Announcement::whereNotNull('published_at');
 
-        $announcements = Announcement::whereNotNull('published_at')
-            ->where('tenant_id', $tenantId)
-            ->orderByDesc('is_pinned')
+        // Filter: Hanya yang publik (jika kolom ada)
+        if (\Illuminate\Support\Facades\Schema::hasColumn('announcements', 'is_public')) {
+            $query->where('is_public', true);
+        }
+
+        // Filter: Penjadwalan (jika kolom ada)
+        $now = now();
+        if (\Illuminate\Support\Facades\Schema::hasColumn('announcements', 'start_at')) {
+            $query->where(function($q) use ($now) {
+                $q->whereNull('start_at')->orWhere('start_at', '<=', $now);
+            });
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('announcements', 'end_at')) {
+            $query->where(function($q) use ($now) {
+                $q->whereNull('end_at')->orWhere('end_at', '>=', $now);
+            });
+        }
+
+        // Hanya filter tenant_id jika kolomnya ada DAN kita tidak sedang di database tenant (Dedicated)
+        // Jika app('currentTenant') ada, berarti koneksi DB sudah terisolasi ke perumahan tsb.
+        if (\Illuminate\Support\Facades\Schema::hasColumn('announcements', 'tenant_id') && !app()->bound('currentTenant')) {
+            $query->where('tenant_id', $request->user()->tenant_id);
+        }
+
+        $announcements = $query->orderByDesc('is_pinned')
             ->orderByDesc('published_at')
             ->get();
 
@@ -62,15 +84,17 @@ class AnnouncementController extends Controller
             $imagePath = $request->file('image')->store('announcements', 'public');
         }
 
-        $announcement = Announcement::create([
+        $hasTenantId = \Illuminate\Support\Facades\Schema::hasColumn('announcements', 'tenant_id');
+
+        $announcement = Announcement::create(array_filter([
             'title'        => $data['title'],
-            'tenant_id'    => $user->tenant_id,
+            'tenant_id'    => $hasTenantId ? $user->tenant_id : null,
             'content'      => $data['content'],
             'is_pinned'    => $request->boolean('is_pinned'),
             'published_at' => now(),
             'created_by'   => $user->id,
             'image_path'   => $imagePath,
-        ]);
+        ], fn($val, $key) => ($key === 'tenant_id' && !$hasTenantId) ? false : true));
 
         // 🔥 Broadcast Kirim Push Notification FCM ke semua user di tenant yang sama
         $firebase = new \App\Services\FirebaseService();

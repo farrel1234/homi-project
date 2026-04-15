@@ -39,17 +39,17 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-100 italic">
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Profil Staff</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Username</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Role</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Perumahan</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Profil Staff</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Username</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Role</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100">Perumahan</th>
                         <th class="px-8 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Kontrol</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-200">
                     @forelse($items as $item)
                         <tr class="hover:bg-slate-50/50 transition-colors group">
-                            <td class="px-8 py-6">
+                            <td class="px-8 py-6 border-r border-slate-100">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-black text-xs group-hover:bg-[var(--homi-blue)] group-hover:text-white transition-all">
                                         {{ strtoupper(substr($item->full_name ?? $item->name, 0, 1)) }}
@@ -60,12 +60,12 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-8 py-6">
+                            <td class="px-8 py-6 border-r border-slate-100">
                                 <span class="text-xs font-bold text-slate-500 italic">
                                     @ {{ $item->username }}
                                 </span>
                             </td>
-                            <td class="px-8 py-6">
+                            <td class="px-8 py-6 border-r border-slate-100">
                                 @if($item->isSuperAdmin())
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[9px] font-black uppercase tracking-widest shadow-sm border border-rose-100">
                                         Super Admin
@@ -76,7 +76,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-8 py-6 uppercase tracking-widest font-black text-[9px]">
+                            <td class="px-8 py-6 uppercase tracking-widest font-black text-[9px] border-r border-slate-100">
                                 @if($item->isSuperAdmin())
                                     <span class="text-slate-300 italic">Semua Perumahan</span>
                                 @else

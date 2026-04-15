@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.homi.R
+import com.example.homi.ui.components.OtpSuccessPopup
 import com.example.homi.data.local.TokenStore
 import com.example.homi.data.remote.ApiClient
 import com.example.homi.data.repository.AuthRepository
@@ -48,10 +49,12 @@ fun KonfirmasiDaftarScreen(
     // data dari savedStateHandle (yang kamu set dari DaftarScreen via NavHost)
     val prev = navController.previousBackStackEntry?.savedStateHandle
     val email = prev?.get<String>("register_email").orEmpty()
+    val tenantCode = prev?.get<String>("register_tenant_code").orEmpty()
 
     var loading by remember { mutableStateOf(false) }
     var resendLoading by remember { mutableStateOf(false) }
     var resendCountdown by remember { mutableStateOf(0) }
+    var isSuccess by remember { mutableStateOf(false) }
 
     // OTP 6 digit
     val digits = remember { mutableStateListOf("", "", "", "", "", "") }
@@ -66,6 +69,16 @@ fun KonfirmasiDaftarScreen(
         if (resendCountdown > 0) {
             delay(1000)
             resendCountdown--
+        }
+    }
+
+    LaunchedEffect(isSuccess) {
+        if (isSuccess) {
+            delay(2000)
+            navController.navigate(Routes.Beranda) {
+                popUpTo(Routes.Login) { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -173,18 +186,12 @@ fun KonfirmasiDaftarScreen(
                             loading = true
                             scope.launch {
                                 try {
-                                    val verified = repo.verifyOtp(email, otp)
-
+                                    val verified = repo.verifyOtp(email, otp, tenantCode)
                                     tokenStore.saveToken(verified.token)
                                     tokenStore.saveName(verified.user.name)
 
                                     loading = false
-                                    snackbar.showSnackbar("Verifikasi berhasil!")
-
-                                    navController.navigate(Routes.Beranda) {
-                                        popUpTo(Routes.Login) { inclusive = true }
-                                        launchSingleTop = true
-                                    }
+                                    isSuccess = true
                                 } catch (e: Exception) {
                                     loading = false
                                     snackbar.showSnackbar(e.message ?: "Verifikasi gagal.")
@@ -227,7 +234,7 @@ fun KonfirmasiDaftarScreen(
                                 resendLoading = true
                                 scope.launch {
                                     try {
-                                        repo.resendRegisterOtp(email)
+                                        repo.resendRegisterOtp(email, tenantCode)
                                         resendCountdown = 30
                                         snackbar.showSnackbar("OTP baru sudah dikirim.")
                                     } catch (e: Exception) {
@@ -257,6 +264,10 @@ fun KonfirmasiDaftarScreen(
 
             Spacer(Modifier.height(12.dp))
 
+        }
+
+        if (isSuccess) {
+            OtpSuccessPopup()
         }
     }
 

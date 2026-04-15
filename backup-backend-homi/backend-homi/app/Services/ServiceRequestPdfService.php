@@ -22,6 +22,9 @@ class ServiceRequestPdfService
         $letterType = $sr->type?->letterType;
         $templateHtml = (string) ($letterType->template_html ?? '');
 
+        $currentTenant = app(\App\Support\Tenancy\TenantManager::class)->current();
+        $tenantName = $currentTenant?->name ?? 'Perumahan HOMI';
+
         if ($letterType && trim($templateHtml) !== '') {
             // ✅ KUNCI: Gunakan logika renderHtml di model (robust regex)
             $filled = $sr->renderHtml();
@@ -43,10 +46,10 @@ class ServiceRequestPdfService
         return view('pdf.kop_surat', [
             'body' => $bodyOnly,
             'extraCss' => $extraCss,
-            'kopLine1' => 'PENGELOLA PERUMAHAN HAWAI GARDEN',
-            'kopLine2' => 'KETUA RT / RW',
+            'kopLine1' => 'PENGELOLA ' . strtoupper($tenantName),
+            'kopLine2' => 'KETUA RT',
             'kopLine3' => 'KOTA BATAM',
-            'kopLine4' => 'Hawai Garden Batam Center',
+            'kopLine4' => $tenantName . ' Batam',
         ])->render();
     }
 
@@ -110,39 +113,40 @@ class ServiceRequestPdfService
         }
         $data = is_array($data) ? $data : [];
 
-        // Mapping fields dari data_input (yang dikirim mobile) ke placeholder formal
-        $rawName = $data['nama_warga'] ?? ($data['nama'] ?? ($sr->reporter_name ?? ''));
-        $isGeneric = str_contains(strtolower($rawName), 'warga');
+        $rawName = trim((string)($data['nama_warga'] ?? ($data['nama_pemohon'] ?? ($data['nama'] ?? ($sr->reporter_name ?? '')))));
+        $isGeneric = empty($rawName) || str_contains(strtolower($rawName), 'warga');
         
-        $userFullName = $sr->user->full_name ?? ($sr->user->name ?? '');
-        $isUserGeneric = str_contains(strtolower($userFullName), 'warga');
+        $userFullName = trim((string)($sr->user->full_name ?? ($sr->user->name ?? '')));
+        $isUserGeneric = empty($userFullName) || str_contains(strtolower($userFullName), 'warga');
 
-        // Prioritas: 
-        // 1. Nama di data_input (selama bukan "Warga")
-        // 2. Full Name di User model (selama bukan "Warga")
-        // 3. Reporter Name (selama bukan "Warga")
-        // 4. Default: User name atau placeholder
-        
-        if (!$isGeneric && !empty($rawName)) {
+        // Prioritas pencarian nama asli:
+        if (!$isGeneric) {
             $data['nama'] = $rawName;
-        } elseif (!$isUserGeneric && !empty($userFullName)) {
+        } elseif (!$isUserGeneric) {
             $data['nama'] = $userFullName;
         } else {
-            $data['nama'] = $rawName ?: ($userFullName ?: '....................');
+            // Kalau semuanya generic "Warga" atau kosong, kembalikan titik-titik
+            $data['nama'] = '....................';
         }
 
         $data['nik'] = $data['nik'] ?? ($sr->user->residentProfile->nik ?? '....................');
         
-        $perumahan = "Perumahan Hawai Garden";
+        $currentTenant = app(\App\Support\Tenancy\TenantManager::class)->current();
+        $perumahan = $currentTenant?->name ?? "Perumahan HOMI";
         $blok = $data['blok'] ?? ($sr->user->residentProfile->blok ?? '...');
-        $noRumah = $data['noRumah'] ?? ($data['no_rumah'] ?? ($sr->user->residentProfile->no_rumah ?? '...'));
+        $noRumah = $data['noRumah'] ?? ($data['no_rumah'] ?? ($sr->user->residentProfile->no_rumah ?? ''));
         
-        // Anti-duplikasi: kalau blok sudah mengandung nama perumahan, jangan pprefix lagi
+        $cleanNoRumah = trim((string)$noRumah);
+        $suffixNo = ($cleanNoRumah === '-' || $cleanNoRumah === '') ? '' : " No. {$cleanNoRumah}";
+
+        // Anti-duplikasi: kalau blok sudah mengandung nama perumahan, jangan prefix lagi
         if (Str::contains(Str::lower($blok), Str::lower($perumahan))) {
-            $data['alamat'] = "{$blok} No. {$noRumah}";
+            $data['alamat'] = "{$blok}{$suffixNo}";
         } else {
-            $data['alamat'] = "{$perumahan} Blok {$blok} No. {$noRumah}";
+            $data['alamat'] = "{$perumahan} Blok {$blok}{$suffixNo}";
         }
+        
+        $data['nama_perumahan'] = $perumahan;
 
         $data['no_rumah'] = $noRumah;
         $data['alamat_ktp'] = $data['alamat_ktp'] ?? ($sr->user->residentProfile->alamat ?? $data['alamat']);

@@ -73,7 +73,7 @@
                 <div class="space-y-2">
                     <label class="homi-label">Target Penerima</label>
                     <select name="target" id="target" class="homi-input font-black uppercase tracking-widest text-xs">
-                        <option value="all" @selected(old('target','all')==='all')>SELURUH WARGA HAWAII GARDEN</option>
+                        <option value="all" @selected(old('target','all')==='all')>SELURUH WARGA {{ strtoupper($tenant->name ?? 'WARGA') }}</option>
                         <option value="one" @selected(old('target')==='one')>SATU WARGA SPESIFIK</option>
                     </select>
                 </div>

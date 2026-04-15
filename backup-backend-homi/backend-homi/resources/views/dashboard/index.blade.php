@@ -15,7 +15,7 @@
                 Selamat Datang, {{ auth()->user()->full_name ?? auth()->user()->name ?? 'Admin' }}! 👋
             </h1>
             <p class="text-slate-500 text-sm mt-1">
-                Hari ini adalah {{ now()->translatedFormat('l, d F Y') }}. Berikut adalah ringkasan aktivitas di Hawaii Garden.
+                Hari ini adalah {{ now()->translatedFormat('l, d F Y') }}. Berikut adalah ringkasan aktivitas di {{ session('tenant_name', 'perumahan') }}.
             </p>
         </div>
         <div class="flex items-center gap-2">
