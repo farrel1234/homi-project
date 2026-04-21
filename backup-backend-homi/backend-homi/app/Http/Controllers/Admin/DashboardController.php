@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\FeeInvoice;
 use App\Models\Complaint;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -16,14 +17,19 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // ========== LOGIK KHUSUS SUPER ADMIN ==========
+        /*
+        =====================================
+        SUPER ADMIN
+        =====================================
+        */
         if ($user->isSuperAdmin()) {
-            $totalTenants = \App\Models\Tenant::count();
-            $activeTenants = \App\Models\Tenant::where('is_active', true)->count();
+
+            $totalTenants    = \App\Models\Tenant::count();
+            $activeTenants   = \App\Models\Tenant::where('is_active', true)->count();
             $pendingRequests = \App\Models\TenantRequest::where('status', 'pending')->count();
-            
-            $recentRequests = \App\Models\TenantRequest::orderByDesc('created_at')->take(5)->get();
-            $recentTenants  = \App\Models\Tenant::orderByDesc('created_at')->take(5)->get();
+
+            $recentRequests = \App\Models\TenantRequest::latest()->take(5)->get();
+            $recentTenants  = \App\Models\Tenant::latest()->take(5)->get();
 
             return view('dashboard.super', compact(
                 'totalTenants',
@@ -34,55 +40,80 @@ class DashboardController extends Controller
             ));
         }
 
-        // ========== LOGIK TENANT ADMIN (DEFAULT) ==========
-        // Parameter tunggakan
-        $atRiskDays = 14;
+        /*
+        =====================================
+        DASHBOARD TENANT
+        =====================================
+        */
+
+        $atRiskDays   = 14;
         $highRiskDays = 30;
 
-        // ========== CARD RINGKASAN ATAS ==========
+        /*
+        =====================================
+        CARD ATAS
+        =====================================
+        */
 
-        // Total warga
         $totalResidents = Resident::count();
-
-        // Total pengumuman
         $totalAnnouncements = Announcement::count();
 
-        // Pembayaran pending (review_status)
         $pendingPaymentsCount = Payment::where('review_status', 'pending')->count();
 
-        // Total nominal pending (ambil dari fee_invoices.amount)
         $totalPendingAmount = Payment::query()
             ->where('review_status', 'pending')
             ->leftJoin('fee_invoices', 'fee_payments.invoice_id', '=', 'fee_invoices.id')
             ->sum('fee_invoices.amount');
 
-        // Pengajuan layanan
-        $serviceRequestCount  = ServiceRequest::count();
-        $serviceRequestsToday = ServiceRequest::whereDate('created_at', now()->toDateString())->count();
+        $serviceRequestCount = ServiceRequest::count();
 
-        // Pengaduan warga
+        $serviceRequestsToday = ServiceRequest::whereDate(
+            'created_at',
+            now()->toDateString()
+        )->count();
+
         $complaintCount = Complaint::count();
-        $complaintsToday = Complaint::whereDate('created_at', now()->toDateString())->count();
+
+        $complaintsToday = Complaint::whereDate(
+            'created_at',
+            now()->toDateString()
+        )->count();
+
         $pendingComplaintsCount = Complaint::where('status', 'baru')->count();
 
-        // ========== PENGUMUMAN UTAMA + LAINNYA ==========
+        /*
+        =====================================
+        PENGUMUMAN
+        =====================================
+        */
 
-        $mainAnnouncement = Announcement::orderByDesc('created_at')->first();
+        $mainAnnouncement = Announcement::latest()->first();
 
-        $nextAnnouncements = Announcement::when($mainAnnouncement, function ($q) use ($mainAnnouncement) {
-                $q->where('id', '!=', $mainAnnouncement->id);
-            })
-            ->orderByDesc('created_at')
-            ->take(3)
-            ->get();
+        $nextAnnouncements = Announcement::when(
+            $mainAnnouncement,
+            fn($q) => $q->where('id', '!=', $mainAnnouncement->id)
+        )
+        ->latest()
+        ->take(3)
+        ->get();
 
-        // ========== PEMBAYARAN TERBARU ==========
+        /*
+        =====================================
+        PAYMENT TERBARU
+        =====================================
+        */
+
         $latestPayments = Payment::with(['user', 'invoice'])
-            ->orderByDesc('created_at')
+            ->latest()
             ->take(5)
             ->get();
 
-        // ========== CHART 1: TOTAL APPROVED 6 BULAN TERAKHIR ==========
+        /*
+        =====================================
+        CHART BULANAN
+        =====================================
+        */
+
         $start = now()->subMonths(5)->startOfMonth();
         $end   = now()->endOfMonth();
 
@@ -90,15 +121,17 @@ class DashboardController extends Controller
             ->where('review_status', 'approved')
             ->whereBetween('fee_payments.created_at', [$start, $end])
             ->leftJoin('fee_invoices', 'fee_payments.invoice_id', '=', 'fee_invoices.id')
-            ->selectRaw('DATE_FORMAT(fee_payments.created_at, "%Y-%m") as ym, COALESCE(SUM(fee_invoices.amount),0) as total')
+            ->selectRaw('DATE_FORMAT(fee_payments.created_at,"%Y-%m") as ym')
+            ->selectRaw('COALESCE(SUM(fee_invoices.amount),0) as total')
             ->groupBy('ym')
             ->orderBy('ym')
-            ->pluck('total', 'ym'); // ['2025-09' => 3000000, ...]
+            ->pluck('total', 'ym');
 
         $monthlyLabels = [];
         $monthlyData   = [];
 
         for ($i = 5; $i >= 0; $i--) {
+
             $month = now()->subMonths($i)->startOfMonth();
             $ym    = $month->format('Y-m');
 
@@ -111,7 +144,12 @@ class DashboardController extends Controller
             'data'   => $monthlyData,
         ];
 
-        // ========== CHART 2: KOMPOSISI NOMINAL PER REVIEW STATUS ==========
+        /*
+        =====================================
+        CHART STATUS
+        =====================================
+        */
+
         $statusMap = [
             'approved' => 'Disetujui',
             'pending'  => 'Menunggu',
@@ -120,9 +158,10 @@ class DashboardController extends Controller
 
         $statusRaw = Payment::query()
             ->leftJoin('fee_invoices', 'fee_payments.invoice_id', '=', 'fee_invoices.id')
-            ->selectRaw('fee_payments.review_status as st, COALESCE(SUM(fee_invoices.amount),0) as total')
+            ->selectRaw('fee_payments.review_status as st')
+            ->selectRaw('COALESCE(SUM(fee_invoices.amount),0) as total')
             ->groupBy('st')
-            ->pluck('total', 'st'); // ['approved' => 5000000, 'pending' => 1500000, ...]
+            ->pluck('total', 'st');
 
         $statusLabels = [];
         $statusData   = [];
@@ -137,19 +176,23 @@ class DashboardController extends Controller
             'data'   => $statusData,
         ];
 
-        // ========== DATA TUNGGAKAN (ARREARS SUMMARY) ==========
+        /*
+        =====================================
+        RISIKO TUNGGAKAN
+        =====================================
+        */
+
         $unpaidInvoices = FeeInvoice::query()
             ->where('status', 'unpaid')
-            ->where('due_date', '<', now())
             ->get();
 
         $atRiskCount = 0;
         $highRiskCount = 0;
         $totalArrearsAmount = 0;
-        $userArrears = [];
 
         foreach ($unpaidInvoices as $inv) {
-            $daysOverdue = now()->diffInDays($inv->due_date);
+
+            $daysOverdue = now()->diffInDays($inv->period);
             $totalArrearsAmount += $inv->amount;
 
             if ($daysOverdue >= $highRiskDays) {
@@ -157,38 +200,75 @@ class DashboardController extends Controller
             } elseif ($daysOverdue >= $atRiskDays) {
                 $atRiskCount++;
             }
-
-            if (!isset($userArrears[$inv->user_id])) {
-                $userArrears[$inv->user_id] = [
-                    'name' => $inv->user->full_name ?? $inv->user->name ?? 'Warga',
-                    'blok' => $inv->user->residentProfile->blok ?? '-',
-                    'no_rumah' => $inv->user->residentProfile->no_rumah ?? '-',
-                    'amount' => 0,
-                    'days_overdue' => 0,
-                    'action_url' => route('admin.fees.invoices.index', ['user_id' => $inv->user_id])
-                ];
-            }
-
-            $userArrears[$inv->user_id]['amount'] += $inv->amount;
-            $userArrears[$inv->user_id]['days_overdue'] = max($userArrears[$inv->user_id]['days_overdue'], $daysOverdue);
         }
 
-        // Sort by amount descending and take top 5
-        usort($userArrears, fn($a, $b) => $b['amount'] <=> $a['amount']);
-        $topArrears = array_slice($userArrears, 0, 5);
-
         $arrearsSummary = [
-            'at_risk_count' => $atRiskCount,
-            'high_risk_count' => $highRiskCount,
-            'at_risk_days' => $atRiskDays,
-            'high_risk_days' => $highRiskDays,
+            'at_risk_count'        => $atRiskCount,
+            'high_risk_count'      => $highRiskCount,
             'total_arrears_amount' => $totalArrearsAmount,
-            'top_arrears' => $topArrears,
-            'cta_url' => route('admin.notifications.create', ['type' => 'arrears_warning']),
-            'cta_label' => 'Kirim Pengingat'
+            'top_arrears'          => [],
+            'cta_url'              => route('admin.prioritas-tunggakan'),
+            'cta_label'            => 'Lihat Detail'
         ];
 
-        // ========== KIRIM KE VIEW ==========
+        /*
+        =====================================
+        PRIORITAS TUNGGAKAN (SAW)
+        =====================================
+        */
+
+        $rows = DB::table('fee_invoices')
+            ->join('users', 'users.id', '=', 'fee_invoices.user_id')
+            ->join('fee_types', 'fee_types.id', '=', 'fee_invoices.fee_type_id')
+            ->select(
+                'users.name',
+                DB::raw('SUM(fee_invoices.amount) as total_tunggakan'),
+                DB::raw('COUNT(*) as jumlah_bulan'),
+                DB::raw('COUNT(DISTINCT fee_invoices.fee_type_id) as jenis_tunggakan')
+            )
+            ->where('fee_invoices.status', 'unpaid')
+            ->groupBy('users.id', 'users.name')
+            ->get();
+
+        $prioritySummary = [
+            'high'   => 0,
+            'medium' => 0,
+            'low'    => 0,
+            'total'  => 0
+        ];
+
+        if ($rows->count() > 0) {
+
+            $maxTotal = $rows->max('total_tunggakan');
+            $maxBulan = $rows->max('jumlah_bulan');
+            $maxJenis = $rows->max('jenis_tunggakan');
+
+            foreach ($rows as $row) {
+
+                $n1 = $maxTotal > 0 ? $row->total_tunggakan / $maxTotal : 0;
+                $n2 = $maxBulan > 0 ? $row->jumlah_bulan / $maxBulan : 0;
+                $n3 = $maxJenis > 0 ? $row->jenis_tunggakan / $maxJenis : 0;
+
+                $skor = ($n1 * 0.50) + ($n2 * 0.35) + ($n3 * 0.15);
+
+                if ($skor >= 0.80) {
+                    $prioritySummary['high']++;
+                } elseif ($skor >= 0.60) {
+                    $prioritySummary['medium']++;
+                } else {
+                    $prioritySummary['low']++;
+                }
+
+                $prioritySummary['total'] += $row->total_tunggakan;
+            }
+        }
+
+        /*
+        =====================================
+        RETURN VIEW
+        =====================================
+        */
+
         return view('dashboard.index', compact(
             'totalResidents',
             'totalAnnouncements',
@@ -204,7 +284,8 @@ class DashboardController extends Controller
             'latestPayments',
             'chartMonthly',
             'chartStatus',
-            'arrearsSummary'
+            'arrearsSummary',
+            'prioritySummary'
         ));
     }
 }

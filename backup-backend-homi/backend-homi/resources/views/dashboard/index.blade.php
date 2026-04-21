@@ -319,9 +319,66 @@
                 </div>
             </div>
 
+
+ {{-- PRIORITAS TUNGGAKAN --}}
+<div class="bg-gradient-to-br from-red-500 to-red-600 border border-red-500 rounded-3xl shadow-lg p-6 text-white overflow-hidden relative group">
+
+    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors"></div>
+
+    <div class="relative">
+
+        {{-- HEADER --}}
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5 15l4-4 4 4 6-6"/>
+                </svg>
+            </div>
+
+            <h2 class="text-sm font-black uppercase tracking-[0.2em] text-white">
+                Prioritas Tunggakan
+            </h2>
         </div>
 
+        {{-- ISI --}}
+        <div class="space-y-3 text-sm mb-6">
+
+            <div class="flex justify-between border-b border-white/10 pb-2">
+                <span>Tinggi</span>
+                <span class="font-black">{{ $prioritySummary['high'] ?? 0 }}</span>
+            </div>
+
+            <div class="flex justify-between border-b border-white/10 pb-2">
+                <span>Sedang</span>
+                <span class="font-black">{{ $prioritySummary['medium'] ?? 0 }}</span>
+            </div>
+
+            <div class="flex justify-between border-b border-white/10 pb-2">
+                <span>Rendah</span>
+                <span class="font-black">{{ $prioritySummary['low'] ?? 0 }}</span>
+            </div>
+
+            <div class="flex justify-between pt-1">
+                <span class="font-semibold">Total</span>
+                <span class="font-black">
+                    Rp {{ number_format($prioritySummary['total'] ?? 0,0,',','.') }}
+                </span>
+            </div>
+
+        </div>
+
+        {{-- BUTTON --}}
+        <a href="{{ route('admin.prioritas-tunggakan') }}"
+           class="block w-full py-3 bg-white text-red-600 rounded-2xl text-center text-xs font-black hover:bg-red-50 transition-colors">
+            Lihat Detail
+        </a>
+
     </div>
+
+</div>
+    </div>
+</div>
 
     {{-- 5. FINANCIAL CHARTS --}}
     <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">

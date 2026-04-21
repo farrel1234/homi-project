@@ -18,6 +18,7 @@
         ['label' => 'Pembayaran', 'route' => 'payments.index', 'active' => ['payments.*'], 'icon' => 'payments'],
         ['label' => 'Notifikasi', 'route' => 'admin.notifications.index', 'active' => ['admin.notifications.*'], 'icon' => 'notifications'],
         ['label' => 'Tagihan Iuran', 'route' => 'admin.fees.invoices.index', 'active' => ['admin.fees.invoices.*'], 'icon' => 'invoices'],
+       ['label' => 'Prioritas Tunggakan', 'route' => 'admin.prioritas-tunggakan', 'active' => ['admin.prioritas-tunggakan'], 'icon' => 'ranking'],
         ['label' => 'QR Iuran', 'route' => 'admin.fees.qr.index', 'active' => ['admin.fees.qr.*'], 'icon' => 'qr'],
     ];
 
@@ -113,6 +114,14 @@
                                     @break
                                 @case('tenants')
                                     <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
+                                    @break
+                                @case('ranking')
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+                                        <path d="M4 20h16"/>
+                                        <path d="M6 20V14"/>
+                                        <path d="M12 20V10"/>
+                                        <path d="M18 20V6"/>
+                                    </svg>
                                     @break
                             @endswitch
                         </span>

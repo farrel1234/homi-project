@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\{
     FeeInvoiceController,
     FeeQrController,
     PaymentOcrController,
+    PrioritasTunggakanController,
     ServiceRequestController as AdminServiceRequestController,
     AppNotificationController,
     TenantController,
@@ -55,19 +56,33 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth')->group(function () {
 
         Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('admin.dashboard');
+
+        /*
+        ==========================================
+        PRIORITAS TUNGGAKAN (TAMBAHAN BARU)
+        ==========================================
+        */
+        Route::get('/prioritas-tunggakan', [PrioritasTunggakanController::class, 'index'])
+            ->name('admin.prioritas-tunggakan');
 
         // ===================== PENGUMUMAN =====================
         Route::resource('announcements', AnnouncementController::class);
-        Route::post('announcements/{announcement}/toggle-active', [AnnouncementController::class, 'toggleActive'])
-            ->name('announcements.toggle-active');
+
+        Route::post(
+            'announcements/{announcement}/toggle-active',
+            [AnnouncementController::class, 'toggleActive']
+        )->name('announcements.toggle-active');
 
         // ===================== DATA WARGA =====================
-        // IMPORTANT: taruh IMPORT routes SEBELUM resource residents
         Route::get('residents/import', [ResidentController::class, 'importForm'])
             ->name('residents.import.form');
+
         Route::post('residents/import', [ResidentController::class, 'importCsv'])
             ->name('residents.import');
+
         Route::get('residents/template.csv', [ResidentController::class, 'downloadTemplate'])
             ->name('residents.template');
 
@@ -77,15 +92,19 @@ Route::prefix('admin')->group(function () {
         Route::resource('complaints', ComplaintController::class);
 
         // ===================== LETTER REQUESTS =====================
-        Route::resource('letter-requests', LetterRequestController::class)->only(['index', 'show', 'update']);
+        Route::resource('letter-requests', LetterRequestController::class)
+            ->only(['index', 'show', 'update']);
+
         Route::post('letter-requests/{letterRequest}/approve', [LetterRequestController::class, 'approve'])
             ->name('letter-requests.approve');
-        Route::post('letter-requests/{letterRequest}/reject',  [LetterRequestController::class, 'reject'])
+
+        Route::post('letter-requests/{letterRequest}/reject', [LetterRequestController::class, 'reject'])
             ->name('letter-requests.reject');
+
         Route::get('letter-requests/{letterRequest}/download', [LetterRequestController::class, 'download'])
             ->name('letter-requests.download');
 
-        // ===================== SERVICE REQUESTS (pengajuan surat dari mobile) =====================
+        // ===================== SERVICE REQUESTS =====================
         Route::resource('service-requests', AdminServiceRequestController::class)
             ->only(['index', 'show', 'update']);
 
@@ -103,32 +122,36 @@ Route::prefix('admin')->group(function () {
 
         // ===================== PEMBAYARAN =====================
         Route::resource('payments', PaymentController::class)->only(['index', 'show']);
-        Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
-        Route::post('payments/{payment}/reject',  [PaymentController::class, 'reject'])->name('payments.reject');
-        Route::post('payments/{payment}/cancel',  [PaymentController::class, 'cancel'])->name('payments.cancel');
-        Route::post('payments/bulk',              [PaymentController::class, 'bulk'])->name('payments.bulk');
 
-        // OCR Scan
+        Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])
+            ->name('payments.approve');
+
+        Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])
+            ->name('payments.reject');
+
+        Route::post('payments/{payment}/cancel', [PaymentController::class, 'cancel'])
+            ->name('payments.cancel');
+
+        Route::post('payments/bulk', [PaymentController::class, 'bulk'])
+            ->name('payments.bulk');
+
         Route::post('payments/{payment}/scan-ocr', [PaymentOcrController::class, 'scan'])
             ->name('payments.scan-ocr');
 
         Route::post('payments/{id}/quick-approve', [QuickPaymentValidationController::class, 'approve'])
             ->name('payments.quick-approve');
-        Route::post('payments/{id}/quick-reject',  [QuickPaymentValidationController::class, 'reject'])
+
+        Route::post('payments/{id}/quick-reject', [QuickPaymentValidationController::class, 'reject'])
             ->name('payments.quick-reject');
 
-        // ===================== FEES (IURAN) - ADMIN PAGES =====================
+        // ===================== FEES =====================
         Route::prefix('fees')->name('admin.fees.')->group(function () {
 
-            // QR
             Route::get('qr', [FeeQrController::class, 'index'])->name('qr.index');
             Route::post('qr', [FeeQrController::class, 'store'])->name('qr.store');
             Route::post('qr/{id}/activate', [FeeQrController::class, 'activate'])->name('qr.activate');
-
-            // hapus QR (hanya nonaktif)
             Route::delete('qr/{id}', [FeeQrController::class, 'destroy'])->name('qr.destroy');
 
-            // Invoices
             Route::get('invoices', [FeeInvoiceController::class, 'index'])->name('invoices.index');
             Route::get('invoices/create', [FeeInvoiceController::class, 'create'])->name('invoices.create');
             Route::post('invoices', [FeeInvoiceController::class, 'store'])->name('invoices.store');
@@ -138,6 +161,7 @@ Route::prefix('admin')->group(function () {
 
         // ===================== NOTIFICATIONS =====================
         Route::prefix('notifications')->name('admin.notifications.')->group(function () {
+
             Route::get('/', [AppNotificationController::class, 'index'])->name('index');
             Route::get('/create', [AppNotificationController::class, 'create'])->name('create');
             Route::post('/', [AppNotificationController::class, 'store'])->name('store');
@@ -146,22 +170,27 @@ Route::prefix('admin')->group(function () {
                 ->name('send-risk');
         });
 
-        // ===================== STAFF MANAGEMENT =====================
+        // ===================== STAFF =====================
         Route::resource('staff', StaffController::class)
             ->names('admin.staff')
             ->parameters(['staff' => 'staff']);
 
         // ===================== TENANTS =====================
         Route::resource('tenants', TenantController::class);
-        Route::post('tenants/{tenant}/migrate', [TenantController::class, 'migrateDatabase'])->name('tenants.migrate');
 
-        // IMPERSONATE / SWITCH TENANT (Super Admin only)
-        Route::get('tenants/{id}/switch', [\App\Http\Controllers\Admin\ImpersonateTenantController::class, 'switch'])->name('admin.tenants.switch');
+        Route::post('tenants/{tenant}/migrate', [TenantController::class, 'migrateDatabase'])
+            ->name('tenants.migrate');
 
-        // ===================== TENANT REQUESTS (ADMIN) =====================
-        Route::resource('tenant-requests', AdminTenantRequestController::class)->only(['index', 'update', 'destroy']);
+        Route::get(
+            'tenants/{id}/switch',
+            [\App\Http\Controllers\Admin\ImpersonateTenantController::class, 'switch']
+        )->name('admin.tenants.switch');
+
+        // ===================== TENANT REQUESTS =====================
+        Route::resource('tenant-requests', AdminTenantRequestController::class)
+            ->only(['index', 'update', 'destroy']);
+
         Route::get('tenant-requests/{tenantRequest}/approve', [AdminTenantRequestController::class, 'approve'])
             ->name('tenant-requests.approve');
-
     });
 });
