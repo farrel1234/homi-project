@@ -1,7 +1,7 @@
 version: '3.8'
 services:
 
-  # PHP Service
+  # PHP-FPM App Service
   app:
     build:
       context: .
@@ -15,26 +15,48 @@ services:
     tty: true
     environment:
       SERVICE_NAME: homi-app
-      SERVICE_TAGS: dev
+      SERVICE_TAGS: prod
     working_dir: /var/www
     volumes:
       - ./:/var/www
+      - ./storage:/var/www/storage
     networks:
       - homi-network
+    depends_on:
+      - db
 
-  # Nginx Service
+  # Nginx Web Service
   web:
     image: nginx:alpine
     container_name: homi-webserver
     restart: unless-stopped
     tty: true
     ports:
-      - "8080:80"
+      # Port 8001 dipakai agar tidak bentrok dengan project lain di VPS
+      # Nginx reverse proxy di host akan forward dari domain ke port ini
+      - "8001:80"
     volumes:
       - ./:/var/www
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - homi-network
+    depends_on:
+      - app
+
+  # Queue Worker Service (untuk job Laravel — notifikasi, dll.)
+  queue:
+    image: homi-app
+    container_name: homi-queue
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    volumes:
+      - ./:/var/www
+    networks:
+      - homi-network
+    depends_on:
+      - app
+      - db
 
   # MySQL Service
   db:
@@ -43,13 +65,14 @@ services:
     restart: unless-stopped
     tty: true
     ports:
+      # Port 33066 agar tidak bentrok dengan MySQL host (port 3306)
       - "33066:3306"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
-      SERVICE_TAGS: dev
+      SERVICE_TAGS: prod
       SERVICE_NAME: mysql
     volumes:
       - homi-db-data:/var/lib/mysql
@@ -63,3 +86,4 @@ networks:
 volumes:
   homi-db-data:
     driver: local
+

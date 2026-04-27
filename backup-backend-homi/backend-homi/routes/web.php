@@ -32,6 +32,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('portal');
 
+// Halaman download APK (publik, tanpa login)
+Route::get('/download', function () {
+    return view('download');
+})->name('download.app');
+
 Route::get('/admin', function () {
     if (auth()->check()) {
         return redirect()->route('admin.dashboard');

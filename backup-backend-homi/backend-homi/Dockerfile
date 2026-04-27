@@ -16,7 +16,8 @@ RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev \
     icu-dev \
-    git
+    git \
+    shadow
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -26,20 +27,36 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Create system user to run Composer and Artisan Commands
-RUN adduser -G www-data -u $uid -D $user
+RUN useradd -G www-data -u $uid -d /home/$user -m $user
 
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
+# ── INSTALL DEPENDENCIES ──────────────────────────────────────
+# Copy composer files first (layer cache optimization)
+# Jika composer.json tidak berubah, layer ini tidak di-rebuild
+COPY composer.json composer.lock ./
 
-# Copy existing application directory permissions
+# Install PHP dependencies (tanpa dev dependencies untuk production)
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --prefer-dist \
+    --optimize-autoloader
+
+# Copy seluruh source code aplikasi
 COPY --chown=$user:www-data . /var/www
 
-# Change current user to www
+# Set permission untuk storage & cache
+RUN chown -R $user:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Change current user to app user
 USER $user
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
 CMD ["php-fpm"]
+

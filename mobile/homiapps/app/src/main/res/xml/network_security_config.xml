@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Hanya perbolehkan Cleartext (HTTP) untuk localhost/emulator saat testing -->
+    <!-- Perbolehkan HTTP (cleartext) untuk development lokal -->
     <domain-config cleartextTrafficPermitted="true">
+        <!-- Emulator Android Studio -->
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">localhost</domain>
+
+        <!-- HP fisik via WiFi (IP lokal komputer) -->
+        <domain includeSubdomains="true">192.168.1.31</domain>
+
+        <!-- Wildcard untuk seluruh subnet LAN (agar tidak perlu update setiap ganti jaringan) -->
+        <domain includeSubdomains="true">192.168.0.1</domain>
+        <domain includeSubdomains="true">192.168.1.1</domain>
     </domain-config>
-    
-    <!-- Mencegah cleartext HTTP secara global (wajib HTTPS di production) -->
+
+    <!-- Blokir HTTP di luar jaringan lokal (wajib HTTPS di production) -->
     <base-config cleartextTrafficPermitted="false" />
 </network-security-config>
