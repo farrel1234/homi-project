@@ -46,6 +46,9 @@ import com.example.homi.ui.viewmodel.NotificationViewModel
 import kotlinx.coroutines.flow.flow
 import com.example.homi.util.DateUtils
 import androidx.compose.material3.HorizontalDivider
+import com.example.homi.ui.components.OnboardingTutorial
+import kotlinx.coroutines.launch
+
 
 /* ===== Tokens ===== */
 private val BlueMain     = Color(0xFF2F7FA3)
@@ -131,6 +134,31 @@ fun DashboardScreen(
     }
 
     val latest = annState.list.firstOrNull()
+
+    val scope = rememberCoroutineScope()
+    // Inisialisasi initial = true agar tidak memicu tutorial saat loading data dari DataStore
+    val hasSeenOnboarding by tokenStore.hasSeenOnboardingFlow.collectAsState(initial = true)
+    var showOnboarding by remember { mutableStateOf(false) }
+
+    LaunchedEffect(hasSeenOnboarding) {
+        // Hanya tampilkan jika data benar-benar false
+        if (hasSeenOnboarding == false) {
+            showOnboarding = true
+        }
+    }
+
+    if (showOnboarding) {
+        OnboardingTutorial(
+            onDismiss = {
+                showOnboarding = false
+                scope.launch { tokenStore.saveHasSeenOnboarding(true) }
+            },
+            onComplete = {
+                showOnboarding = false
+                scope.launch { tokenStore.saveHasSeenOnboarding(true) }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier

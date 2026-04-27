@@ -79,6 +79,8 @@ class AnnouncementController extends Controller
          * - dan published_at kosong
          */
         if (($data['is_public'] ?? true) && empty($data['published_at'])) {
+            // ✅ Single active enforcement: Turn off others if this one is public
+            Announcement::query()->update(['is_public' => false]);
             $data['published_at'] = now();
         }
 
@@ -138,7 +140,12 @@ class AnnouncementController extends Controller
         $publishedAt = $data['published_at'] ?? $announcement->published_at;
 
         if ($isPublic && empty($publishedAt)) {
+            // ✅ Single active enforcement: Turn off others
+            Announcement::where('id', '!=', $announcement->id)->update(['is_public' => false]);
             $data['published_at'] = now();
+        } elseif ($isPublic) {
+            // If already has published_at but we are ensuring it's public now
+            Announcement::where('id', '!=', $announcement->id)->update(['is_public' => false]);
         }
 
         $announcement->update($this->filterColumns('announcements', $data));
@@ -165,9 +172,13 @@ class AnnouncementController extends Controller
     {
         $announcement->is_public = !$announcement->is_public;
 
-        // Jika diaktifkan tapi belum punya published_at, set sekarang
-        if ($announcement->is_public && !$announcement->published_at) {
-            $announcement->published_at = now();
+        // ✅ Single active enforcement: If activating, deactivate others first
+        if ($announcement->is_public) {
+            Announcement::where('id', '!=', $announcement->id)->update(['is_public' => false]);
+            
+            if (!$announcement->published_at) {
+                $announcement->published_at = now();
+            }
         }
 
         $announcement->save();

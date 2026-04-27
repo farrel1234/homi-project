@@ -8,6 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ReportProblem
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,10 +21,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.homi.ui.components.HomiDialog
 import com.example.homi.data.local.TokenStore
 import com.example.homi.data.model.RequestTypeIds
 import com.example.homi.data.remote.ApiClient
@@ -54,6 +58,7 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
     val authRepo = remember { AuthRepository(api) }
 
     val tenantCode by tokenStore.tenantCodeFlow.collectAsState(initial = "")
+    val token by tokenStore.tokenFlow.collectAsState(initial = null)
 
     val notifVm: NotificationViewModel =
         viewModel(factory = NotificationViewModelFactory(notifRepo))
@@ -78,9 +83,15 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                             popUpTo(Routes.Splash) { inclusive = true }
                         }
                     } else {
-                        // Jika sudah pernah onboarding, langsung ke Login
-                        navController.navigate(Routes.Login) {
-                            popUpTo(Routes.Splash) { inclusive = true }
+                        // Cek apakah sudah punya token (Auto-Login)
+                        if (!token.isNullOrBlank()) {
+                            navController.navigate(Routes.Beranda) {
+                                popUpTo(Routes.Splash) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.Login) {
+                                popUpTo(Routes.Splash) { inclusive = true }
+                            }
                         }
                     }
                 }
@@ -499,10 +510,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 vm.reset()
             }
 
+            if (state.isBlockedByArrears) {
+                HomiDialog(
+                    onDismissRequest = { vm.reset() },
+                    title = "Layanan Ditangguhkan",
+                    description = state.error,
+                    icon = Icons.Outlined.ReportProblem,
+                    iconTint = Color(0xFFE26A2C),
+                    confirmButtonText = "Lihat Tagihan",
+                    onConfirm = {
+                        vm.reset()
+                        navController.navigate(Routes.Pembayaran)
+                    },
+                    dismissButtonText = "Tutup",
+                    confirmButtonColor = Color(0xFFE26A2C)
+                )
+            }
+
             LaunchedEffect(state.error) {
                 val msg = state.error ?: return@LaunchedEffect
-                Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
-                vm.reset()
+                if (!state.isBlockedByArrears) {
+                    Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
+                    vm.reset()
+                }
             }
 
             FormPengajuanLayananScreen(
@@ -549,10 +579,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 vm.reset()
             }
 
+            if (state.isBlockedByArrears) {
+                HomiDialog(
+                    onDismissRequest = { vm.reset() },
+                    title = "Layanan Ditangguhkan",
+                    description = state.error,
+                    icon = Icons.Outlined.ReportProblem,
+                    iconTint = Color(0xFFE26A2C),
+                    confirmButtonText = "Lihat Tagihan",
+                    onConfirm = {
+                        vm.reset()
+                        navController.navigate(Routes.Pembayaran)
+                    },
+                    dismissButtonText = "Tutup",
+                    confirmButtonColor = Color(0xFFE26A2C)
+                )
+            }
+
             LaunchedEffect(state.error) {
                 val msg = state.error ?: return@LaunchedEffect
-                Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
-                vm.reset()
+                if (!state.isBlockedByArrears) {
+                    Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
+                    vm.reset()
+                }
             }
 
             FormSuratDomisiliScreen(
@@ -588,10 +637,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 vm.reset()
             }
 
+            if (state.isBlockedByArrears) {
+                HomiDialog(
+                    onDismissRequest = { vm.reset() },
+                    title = "Layanan Ditangguhkan",
+                    description = state.error,
+                    icon = Icons.Outlined.ReportProblem,
+                    iconTint = Color(0xFFE26A2C),
+                    confirmButtonText = "Lihat Tagihan",
+                    onConfirm = {
+                        vm.reset()
+                        navController.navigate(Routes.Pembayaran)
+                    },
+                    dismissButtonText = "Tutup",
+                    confirmButtonColor = Color(0xFFE26A2C)
+                )
+            }
+
             LaunchedEffect(state.error) {
                 val msg = state.error ?: return@LaunchedEffect
-                Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
-                vm.reset()
+                if (!state.isBlockedByArrears) {
+                    Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
+                    vm.reset()
+                }
             }
 
             FormSuratPengantarScreen(
@@ -627,10 +695,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 vm.reset()
             }
 
+            if (state.isBlockedByArrears) {
+                HomiDialog(
+                    onDismissRequest = { vm.reset() },
+                    title = "Layanan Ditangguhkan",
+                    description = state.error,
+                    icon = Icons.Outlined.ReportProblem,
+                    iconTint = Color(0xFFE26A2C),
+                    confirmButtonText = "Lihat Tagihan",
+                    onConfirm = {
+                        vm.reset()
+                        navController.navigate(Routes.Pembayaran)
+                    },
+                    dismissButtonText = "Tutup",
+                    confirmButtonColor = Color(0xFFE26A2C)
+                )
+            }
+
             LaunchedEffect(state.error) {
                 val msg = state.error ?: return@LaunchedEffect
-                Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
-                vm.reset()
+                if (!state.isBlockedByArrears) {
+                    Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
+                    vm.reset()
+                }
             }
 
             FormSuratKeteranganUsahaScreen(
@@ -666,10 +753,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 vm.reset()
             }
 
+            if (state.isBlockedByArrears) {
+                HomiDialog(
+                    onDismissRequest = { vm.reset() },
+                    title = "Layanan Ditangguhkan",
+                    description = state.error,
+                    icon = Icons.Outlined.ReportProblem,
+                    iconTint = Color(0xFFE26A2C),
+                    confirmButtonText = "Lihat Tagihan",
+                    onConfirm = {
+                        vm.reset()
+                        navController.navigate(Routes.Pembayaran)
+                    },
+                    dismissButtonText = "Tutup",
+                    confirmButtonColor = Color(0xFFE26A2C)
+                )
+            }
+
             LaunchedEffect(state.error) {
                 val msg = state.error ?: return@LaunchedEffect
-                Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
-                vm.reset()
+                if (!state.isBlockedByArrears) {
+                    Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
+                    vm.reset()
+                }
             }
 
             FormSuratKeteranganKematianScreen(
@@ -705,10 +811,29 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 vm.reset()
             }
 
+            if (state.isBlockedByArrears) {
+                HomiDialog(
+                    onDismissRequest = { vm.reset() },
+                    title = "Layanan Ditangguhkan",
+                    description = state.error,
+                    icon = Icons.Outlined.ReportProblem,
+                    iconTint = Color(0xFFE26A2C),
+                    confirmButtonText = "Lihat Tagihan",
+                    onConfirm = {
+                        vm.reset()
+                        navController.navigate(Routes.Pembayaran)
+                    },
+                    dismissButtonText = "Tutup",
+                    confirmButtonColor = Color(0xFFE26A2C)
+                )
+            }
+
             LaunchedEffect(state.error) {
                 val msg = state.error ?: return@LaunchedEffect
-                Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
-                vm.reset()
+                if (!state.isBlockedByArrears) {
+                    Toast.makeText(ctxLocal, msg, Toast.LENGTH_LONG).show()
+                    vm.reset()
+                }
             }
 
             FormSuratBelumMenikahScreen(

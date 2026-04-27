@@ -156,6 +156,7 @@ Route::prefix('admin')->group(function () {
             Route::get('invoices/create', [FeeInvoiceController::class, 'create'])->name('invoices.create');
             Route::post('invoices', [FeeInvoiceController::class, 'store'])->name('invoices.store');
             Route::post('invoices/bulk-destroy', [FeeInvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-destroy');
+            Route::post('invoices/{invoice}/remind', [FeeInvoiceController::class, 'sendReminder'])->name('invoices.remind');
             Route::delete('invoices/{invoice}', [FeeInvoiceController::class, 'destroy'])->name('invoices.destroy');
         });
 

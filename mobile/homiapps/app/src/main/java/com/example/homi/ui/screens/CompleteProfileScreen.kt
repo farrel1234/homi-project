@@ -60,7 +60,7 @@ fun CompleteProfileScreen(
     val datePickerState = rememberDatePickerState()
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val houseTypes = listOf("Ruby", "Emerald", "Sapphire", "Diamond")
+    val houseTypes = listOf("Tipe 36", "Tipe 45", "Tipe 60", "Tipe 72")
 
     LaunchedEffect(Unit) {
         vm.loadProfile()

@@ -94,6 +94,7 @@ fun FormLaporanScreen(
     var loading by remember { mutableStateOf(false) }
     var showSuccess by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isBlockedByArrears by remember { mutableStateOf(false) }
 
     // FETCH PROFILE
     LaunchedEffect(Unit) {
@@ -203,7 +204,24 @@ fun FormLaporanScreen(
                 showSuccess = true
                 onCreated(id)
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Gagal mengirim laporan"
+                var finalMsg = e.message ?: "Gagal mengirim laporan"
+                var isBlocked = false
+
+                if (e is retrofit2.HttpException) {
+                    val errorBody = e.response()?.errorBody()?.string()
+                    if (errorBody != null) {
+                        try {
+                            val json = com.google.gson.JsonParser.parseString(errorBody).asJsonObject
+                            if (json.has("status") && json.get("status").asString == "blocked_by_arrears") {
+                                isBlocked = true
+                                if (json.has("message")) finalMsg = json.get("message").asString
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+
+                errorMessage = finalMsg
+                isBlockedByArrears = isBlocked
             } finally {
                 loading = false
             }
@@ -488,6 +506,24 @@ fun FormLaporanScreen(
             iconTint = SuccessGreen,
             confirmButtonText = "Selesai",
             onConfirm = { showSuccess = false }
+        )
+    }
+
+    if (isBlockedByArrears) {
+        HomiDialog(
+            onDismissRequest = { isBlockedByArrears = false },
+            title = "Layanan Ditangguhkan",
+            description = errorMessage,
+            icon = Icons.Outlined.ReportProblem,
+            iconTint = Color(0xFFE26A2C),
+            confirmButtonText = "Lihat Tagihan",
+            onConfirm = {
+                isBlockedByArrears = false
+                // Ideally we'd navigate to Payments here, but we don't have navController easily accessible here
+                // unless we pass it or a callback. For now, just dismiss.
+            },
+            dismissButtonText = "Tutup",
+            confirmButtonColor = Color(0xFFE26A2C)
         )
     }
 }

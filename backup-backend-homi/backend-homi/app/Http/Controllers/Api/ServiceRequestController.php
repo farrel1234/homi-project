@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RequestType;
 use App\Models\ServiceRequest;
 use App\Services\ServiceRequestPdfService;
+use App\Services\DelinquencyCheckService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,18 @@ class ServiceRequestController extends Controller
             // ini kunci buat template surat
             'data_input'  => 'nullable|array',
         ]);
+
+        // 🛑 INTEGRASI BLOKIR TUNGGAKAN
+        $delinquencyService = app(DelinquencyCheckService::class);
+        $check = $delinquencyService->checkHardArrears($request->user());
+
+        if ($check['is_delinquent']) {
+            return response()->json([
+                'message' => $check['message'],
+                'unpaid_count' => $check['unpaid_count'],
+                'status' => 'blocked_by_arrears'
+            ], 403);
+        }
 
         // Cek kolom yang ada di DB untuk menghindari error 500 jika tabel belum di-update
         $columns = \Illuminate\Support\Facades\Schema::getColumnListing('service_requests');

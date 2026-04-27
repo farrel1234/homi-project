@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FirebaseService;
+use App\Services\HomiNotificationService;
 
 class AppNotificationController extends Controller
 {
@@ -80,7 +81,7 @@ class AppNotificationController extends Controller
         return redirect()->route('admin.notifications.index')->with('ok', 'Notifikasi berhasil dikirim.');
     }
 
-    public function sendRiskWarning(Request $request, $userId, FirebaseService $firebaseService)
+    public function sendRiskWarning(Request $request, $userId, HomiNotificationService $notifier)
     {
         $user = User::findOrFail($userId);
 
@@ -93,36 +94,21 @@ class AppNotificationController extends Controller
         $period = $validated['period'] ?? null;
         $score  = isset($validated['score']) ? round((float)$validated['score'] * 100) : null;
 
-        $title = 'Pengingat Iuran';
+        $title = '🔔 Pengingat Iuran (AI Risk Warning)';
         $msg = 'Halo ' . ($user->full_name ?? $user->name ?? 'Warga') .
             ', kami mengingatkan iuran Anda agar tidak terlambat. ' .
             ($period ? "Periode: {$period}. " : '') .
-            ($score !== null ? "Risiko terlambat terdeteksi: {$score}%. " : '') .
-            'Jika sudah bayar, abaikan pesan ini. Jika ada kendala, silakan hubungi pengurus.';
+            ($score !== null ? "\n\nSistem AI kami mendeteksi risiko keterlambatan pada pembayaran ini. " : '') .
+            'Mohon segera lakukan pelunasan untuk kenyamanan bersama.';
 
         $payload = ['route' => 'TagihanIuran'];
         if (!empty($validated['invoice_id'])) $payload['invoice_id'] = (int)$validated['invoice_id'];
         if ($period) $payload['period'] = $period;
+        if ($score) $payload['ai_score'] = $validated['score'];
 
-        $notif = AppNotification::create([
-            'user_id' => (int)$user->id,
-            'sent_by' => Auth::id(),
-            'title'   => $title,
-            'message' => $msg,
-            'type'    => 'risk_warning',
-            'data'    => $payload,
-        ]);
+        // Menggunakan service multi-channel (In-App, FCM, Email, WA)
+        $notifier->notify($user, $title, $msg, 'risk_warning', $payload);
 
-        // Send FCM
-        if ($user->fcm_token) {
-            $firebaseService->sendNotification(
-                $user->fcm_token,
-                $title,
-                $msg,
-                $payload
-            );
-        }
-
-        return back()->with('ok', 'Notifikasi pengingat berhasil dikirim.');
+        return back()->with('ok', 'Notifikasi pengingat multi-channel berhasil dikirim.');
     }
 }

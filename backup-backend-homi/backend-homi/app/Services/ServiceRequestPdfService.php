@@ -106,95 +106,134 @@ class ServiceRequestPdfService
     public function buildData(ServiceRequest $sr): array
     {
         // data_input bisa null/string/array
-        $data = $sr->data_input;
-        if (is_string($data)) {
-            $decoded = json_decode($data, true);
-            $data = json_last_error() === JSON_ERROR_NONE ? $decoded : [];
+        $raw = $sr->data_input;
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $raw = json_last_error() === JSON_ERROR_NONE ? $decoded : [];
         }
-        $data = is_array($data) ? $data : [];
+        $raw = is_array($raw) ? $raw : [];
 
-        $rawName = trim((string)($data['nama_warga'] ?? ($data['nama_pemohon'] ?? ($data['nama'] ?? ($sr->reporter_name ?? '')))));
+        // ✅ Kumpulkan semua data awal (alias snake vs camel)
+        $data = [];
+        foreach ($raw as $k => $v) {
+            $key = trim((string) $k);
+            $val = is_scalar($v) ? (string) $v : json_encode($v, JSON_UNESCAPED_UNICODE);
+            foreach (array_unique([$key, Str::snake($key), Str::camel($key)]) as $alias) {
+                if ($alias !== '') $data[$alias] = $val;
+            }
+        }
+
+        // ✅ Fallback Nama & NIK (Prioritas: Input > ResidentProfile > Generic)
+        $rawName = trim((string)($data['nama'] ?? ($data['nama_warga'] ?? ($data['nama_pemohon'] ?? ($sr->reporter_name ?? '')))));
         $isGeneric = empty($rawName) || str_contains(strtolower($rawName), 'warga');
         
         $userFullName = trim((string)($sr->user->full_name ?? ($sr->user->name ?? '')));
         $isUserGeneric = empty($userFullName) || str_contains(strtolower($userFullName), 'warga');
 
-        // Prioritas pencarian nama asli:
         if (!$isGeneric) {
             $data['nama'] = $rawName;
         } elseif (!$isUserGeneric) {
             $data['nama'] = $userFullName;
         } else {
-            // Kalau semuanya generic "Warga" atau kosong, kembalikan titik-titik
             $data['nama'] = '....................';
         }
 
         $data['nik'] = $data['nik'] ?? ($sr->user->residentProfile->nik ?? '....................');
         
+        // ✅ Alamat & Perumahan
         $currentTenant = app(\App\Support\Tenancy\TenantManager::class)->current();
         $perumahan = $currentTenant?->name ?? "Perumahan HOMI";
+        $data['nama_perumahan'] = $perumahan;
+
         $blok = $data['blok'] ?? ($sr->user->residentProfile->blok ?? '...');
-        $noRumah = $data['noRumah'] ?? ($data['no_rumah'] ?? ($sr->user->residentProfile->no_rumah ?? ''));
-        
+        $noRumah = $data['no_rumah'] ?? ($data['no_rumah'] ?? ($sr->user->residentProfile->no_rumah ?? ''));
         $cleanNoRumah = trim((string)$noRumah);
         $suffixNo = ($cleanNoRumah === '-' || $cleanNoRumah === '') ? '' : " No. {$cleanNoRumah}";
 
-        // Anti-duplikasi: kalau blok sudah mengandung nama perumahan, jangan prefix lagi
         if (Str::contains(Str::lower($blok), Str::lower($perumahan))) {
             $data['alamat'] = "{$blok}{$suffixNo}";
         } else {
             $data['alamat'] = "{$perumahan} Blok {$blok}{$suffixNo}";
         }
         
-        $data['nama_perumahan'] = $perumahan;
-
-        $data['no_rumah'] = $noRumah;
-        $data['alamat_ktp'] = $data['alamat_ktp'] ?? ($sr->user->residentProfile->alamat ?? $data['alamat']);
-
-        $data['jenis_kelamin'] = $data['jenis_kelamin'] ?? ($sr->user->residentProfile->jenis_kelamin ?? 'Laki-laki / Perempuan');
-        
+        // ✅ Tempat/Tanggal Lahir (Formatted)
         $tempatLahir = $data['tempat_lahir'] ?? ($sr->user->residentProfile->tempat_lahir ?? '..........');
         $tanggalLahirRaw = $data['tanggal_lahir'] ?? ($sr->user->residentProfile->tanggal_lahir ?? null);
-        
-        if (is_string($tanggalLahirRaw) && str_contains($tanggalLahirRaw, 'T')) {
-            $tanggalLahirRaw = explode('T', $tanggalLahirRaw)[0];
-        }
-
-        $tanggalLahirFormat = $tanggalLahirRaw ? \Carbon\Carbon::parse($tanggalLahirRaw)->translatedFormat('d F Y') : '..-..-....';
-        $data['tmpt_tgl_lahir'] = "{$tempatLahir}, {$tanggalLahirFormat}";
+        $data['tmpt_tgl_lahir'] = $this->formatBirthInfo($tempatLahir, $tanggalLahirRaw);
         
         $data['tempat_lahir'] = $tempatLahir;
-        $data['tanggal_lahir'] = $tanggalLahirFormat;
+        $data['tanggal_lahir'] = $this->formatDateIndo($tanggalLahirRaw);
 
-        $data['agama'] = $data['agama'] ?? ($data['religion'] ?? 'Islam');
-        $data['kewarganegaraan'] = $data['kewarganegaraan'] ?? ($data['nationality'] ?? 'Indonesia');
-        $data['status_perkawinan'] = $data['status_perkawinan'] ?? ($data['marital_status'] ?? 'Belum Kawin');
-        $data['pekerjaan'] = $data['pekerjaan'] ?? ($sr->user->residentProfile->pekerjaan ?? '....................');
+        // ✅ Kompatibilitas Khusus "Surat Keterangan Usaha"
+        // Mobile kirim 'jenis_usaha', template expect 'bidang_usaha'
+        $data['bidang_usaha'] = $data['bidang_usaha'] ?? ($data['jenis_usaha'] ?? '....................');
+        $data['nama_usaha'] = $data['nama_usaha'] ?? '....................';
+        $data['alamat_usaha'] = $data['alamat_usaha'] ?? '....................';
+        $data['lama_usaha'] = $data['lama_usaha'] ?? '....................';
 
+        // ✅ Kompatibilitas Khusus "Surat Kematian"
+        $data['nama_alm'] = $data['nama_alm'] ?? '....................';
+        $data['nik_alm'] = $data['nik_alm'] ?? '....................';
+        $data['alamat_alm'] = $data['alamat_alm'] ?? '....................';
+        $data['penyebab'] = $data['penyebab'] ?? 'Sakit / Lainnya';
+        $data['hubungan'] = $data['hubungan'] ?? 'Keluarga';
+        $data['tempat_kematian'] = $data['tempat_kematian'] ?? '....................';
+        
+        $tglMate = $data['tanggal_kematian'] ?? null;
+        $data['tanggal_kematian'] = $this->formatDateIndo($tglMate);
+
+        $tempatLahirAlm = $data['tempat_lahir_alm'] ?? '..........';
+        $tglLahirAlmRaw = $data['tanggal_lahir_alm'] ?? null;
+        $data['tmpt_tgl_lahir_alm'] = $this->formatBirthInfo($tempatLahirAlm, $tglLahirAlmRaw);
+
+        $data['nama_pelapor'] = $data['nama_pelapor'] ?? $data['nama'];
+        $data['nik_pelapor'] = $data['nik_pelapor'] ?? $data['nik'];
+
+        // ✅ Info RT/RW
         $data['rt'] = $data['rt'] ?? ($sr->user->residentProfile->rt ?? '00... ');
         $data['rw'] = $data['rw'] ?? ($sr->user->residentProfile->rw ?? '00... ');
         $data['nama_rt'] = $data['nama_rt'] ?? ($sr->user->residentProfile->nama_rt ?? '....................');
-        $data['nama_pejabat'] = $data['nama_rt'];
-        $data['pj_label'] = "Ketua RT";
+        $data['pj_label'] = "KETUA RT";
         
-        $data['tanggal_surat'] = $data['tanggal_surat'] ?? now()->translatedFormat('d F Y');
+        // ✅ Status Lainnya
+        $data['agama'] = $data['agama'] ?? ($data['religion'] ?? 'Islam');
+        $data['status_perkawinan'] = $data['status_perkawinan'] ?? ($data['marital_status'] ?? 'Belum Kawin');
+        $data['pekerjaan'] = $data['pekerjaan'] ?? ($sr->user->residentProfile->pekerjaan ?? '....................');
+        $data['kewarganegaraan'] = $data['kewarganegaraan'] ?? ($data['nationality'] ?? 'Indonesia');
+        $data['jenis_kelamin'] = $data['jenis_kelamin'] ?? ($sr->user->residentProfile->jenis_kelamin ?? 'Laki-laki / Perempuan');
+        
+        // ✅ Meta Surat
+        $data['tanggal_surat'] = now()->translatedFormat('d F Y');
         $data['keperluan'] = $data['keperluan'] ?? ($sr->subject ?? '....................');
         $data['tujuan_instansi'] = $data['tujuan_instansi'] ?? ($data['tujuan'] ?? 'Kelurahan / Instansi Terkait');
 
-        // Flag untuk mengecek apakah ini layanan teknis/umum (tanpa template surat formal di DB)
-        $data['is_layanan'] = !($sr->type?->letter_type_id);
-
-        if (empty($data['lokasi_domisili'])) {
-             $data['lokasi_domisili'] = $data['alamat'];
-        }
-
         if (empty($data['nomor_surat'])) {
-            $prefix = $data['is_layanan'] ? 'LYN' : 'SKU';
+            $isLayanan = !($sr->type?->letter_type_id);
+            $prefix = $isLayanan ? 'LYN' : 'SKU';
             $seq = str_pad((string) $sr->id, 3, '0', STR_PAD_LEFT);
-            $data['nomor_surat'] = "{$seq}/ {$prefix} / " . date('m') . "-MS / " . $this->romanMonth(date('n')) . " / " . date('Y');
+            $data['nomor_surat'] = "{$seq}/{$prefix}/" . date('m') . "-MS/" . $this->romanMonth(date('n')) . "/" . date('Y');
         }
 
         return $data;
+    }
+
+    private function formatBirthInfo(string $place, $date): string
+    {
+        $formattedDate = $this->formatDateIndo($date);
+        return "{$place}, {$formattedDate}";
+    }
+
+    private function formatDateIndo($date): string
+    {
+        if (!$date) return '..-..-....';
+        try {
+            if (is_string($date) && str_contains($date, 'T')) {
+                $date = explode('T', $date)[0];
+            }
+            return \Carbon\Carbon::parse($date)->translatedFormat('d F Y');
+        } catch (\Exception $e) {
+            return (string)$date;
+        }
     }
 
     private function romanMonth(int $month): string

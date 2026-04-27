@@ -100,6 +100,18 @@ class ComplaintController extends Controller
             'foto'              => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
+        // 🛑 INTEGRASI BLOKIR TUNGGAKAN
+        $delinquencyService = app(\App\Services\DelinquencyCheckService::class);
+        $check = $delinquencyService->checkHardArrears($request->user());
+
+        if ($check['is_delinquent']) {
+            return response()->json([
+                'message' => $check['message'],
+                'unpaid_count' => $check['unpaid_count'],
+                'status' => 'blocked_by_arrears'
+            ], 403);
+        }
+
         // ===== KONVERSI TANGGAL KE Y-m-d =====
         $rawTanggal = trim($request->input('tanggal_pengaduan'));
 

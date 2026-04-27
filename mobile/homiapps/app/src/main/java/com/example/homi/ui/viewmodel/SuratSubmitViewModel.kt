@@ -13,6 +13,7 @@ import java.util.Locale
 data class SuratSubmitState(
     val loading: Boolean = false,
     val error: String? = null,
+    val isBlockedByArrears: Boolean = false,
     val createdId: Long? = null
 )
 
@@ -63,8 +64,28 @@ class SuratSubmitViewModel(
 
                 _state.value = SuratSubmitState(createdId = newId)
             } catch (e: Exception) {
+                val errorMsg = e.message ?: "Gagal submit"
+                var isBlocked = false
+                var finalMsg = errorMsg
+
+                if (e is retrofit2.HttpException) {
+                    val errorBody = e.response()?.errorBody()?.string()
+                    if (errorBody != null) {
+                        try {
+                            val json = com.google.gson.JsonParser.parseString(errorBody).asJsonObject
+                            if (json.has("status") && json.get("status").asString == "blocked_by_arrears") {
+                                isBlocked = true
+                                finalMsg = if (json.has("message")) json.get("message").asString else errorMsg
+                            } else if (json.has("message")) {
+                                finalMsg = json.get("message").asString
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+
                 _state.value = SuratSubmitState(
-                    error = e.message ?: "Gagal submit"
+                    error = finalMsg,
+                    isBlockedByArrears = isBlocked
                 )
             }
         }
@@ -115,8 +136,28 @@ class SuratSubmitViewModel(
 
                 _state.value = SuratSubmitState(createdId = newId)
             } catch (e: Exception) {
+                val errorMsg = e.message ?: "Gagal submit"
+                var isBlocked = false
+                var finalMsg = errorMsg
+
+                if (e is retrofit2.HttpException) {
+                    val errorBody = e.response()?.errorBody()?.string()
+                    if (errorBody != null) {
+                        try {
+                            val json = com.google.gson.JsonParser.parseString(errorBody).asJsonObject
+                            if (json.has("status") && json.get("status").asString == "blocked_by_arrears") {
+                                isBlocked = true
+                                finalMsg = if (json.has("message")) json.get("message").asString else errorMsg
+                            } else if (json.has("message")) {
+                                finalMsg = json.get("message").asString
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+
                 _state.value = SuratSubmitState(
-                    error = e.message ?: "Gagal submit"
+                    error = finalMsg,
+                    isBlockedByArrears = isBlocked
                 )
             }
         }

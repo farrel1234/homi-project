@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Services\DelinquencyNaiveBayes;
+use App\Services\DelinquencyCheckService;
 
 class FeeInvoiceController extends Controller
 {
@@ -20,7 +21,7 @@ class FeeInvoiceController extends Controller
         9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
     ];
 
-    public function index(Request $request, DelinquencyNaiveBayes $nb)
+    public function index(Request $request, DelinquencyNaiveBayes $nb, DelinquencyCheckService $checker)
     {
         $q = FeeInvoice::query()->with(['user', 'feeType']);
 
@@ -45,18 +46,33 @@ class FeeInvoiceController extends Controller
             return $it->period->format('Y-m');
         });
 
-        // Hitung Prediksi NB untuk tagihan yang belum bayar
-        $items->getCollection()->each(function($it) use ($nb) {
-            if ($it->status === 'unpaid' && $it->user_id) {
-                try {
-                    $res = $nb->predict((int)$it->user_id, $it->period);
-                    $it->nb_delinquent = (bool)($res['label'] ?? false);
-                    $it->nb_prob = (float)($res['prob'] ?? 0);
-                } catch (\Throwable $e) {
+        // Hitung Prediksi NB & Status Blokir Layanan
+        $items->getCollection()->each(function($it) use ($nb, $checker) {
+            if ($it->user_id) {
+                // 1. Prediksi AI (hanya untuk yang belum bayar)
+                if ($it->status === 'unpaid') {
+                    try {
+                        $res = $nb->predict((int)$it->user_id, $it->period);
+                        $it->nb_delinquent = (bool)($res['label'] ?? false);
+                        $it->nb_prob = (float)($res['prob'] ?? 0);
+                    } catch (\Throwable $e) {
+                        $it->nb_delinquent = false;
+                    }
+                } else {
                     $it->nb_delinquent = false;
                 }
+
+                // 2. Cek Hard Arrears (Status Blokir Layanan)
+                $check = $checker->checkHardArrears($it->user);
+                $it->is_service_blocked = $check['is_delinquent'];
+                $it->block_message = $check['message'];
             }
         });
+
+        // ✅ Re-sort collection: Prioritas Risiko AI Tinggi di atas
+        $items->setCollection(
+            $items->getCollection()->sortByDesc('nb_delinquent')->values()
+        );
 
         $monthNames = $this->monthNames;
 
@@ -213,6 +229,25 @@ class FeeInvoiceController extends Controller
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus tagihan terpilih: ' . $e->getMessage());
         }
+    }
+
+    public function sendReminder(FeeInvoice $invoice, \App\Services\HomiNotificationService $notifier)
+    {
+        $user = $invoice->user;
+        if (!$user) return back()->with('error', 'Warga tidak ditemukan.');
+
+        $title = "🔔 Pengingat Tagihan Iuran";
+        $amountFormatted = "Rp " . number_format($invoice->amount, 0, ',', '.');
+        $message = "Halo {$user->full_name}, kami mengingatkan kembali untuk tagihan iuran periode " . 
+                   optional($invoice->period)->format('M Y') . " sebesar {$amountFormatted}. " .
+                   "Mohon segera lakukan pembayaran. Terima kasih.";
+
+        $notifier->notify($user, $title, $message, 'warning', [
+            'invoice_id' => $invoice->id,
+            'screen' => 'TagihanIuran'
+        ]);
+
+        return back()->with('success', 'Pengingat berhasil dikirim ke ' . $user->full_name);
     }
 
     private function activeQr(): ?PaymentQrCode

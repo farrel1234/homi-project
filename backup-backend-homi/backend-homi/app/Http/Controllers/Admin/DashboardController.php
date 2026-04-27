@@ -10,10 +10,12 @@ use App\Models\ServiceRequest;
 use App\Models\FeeInvoice;
 use App\Models\Complaint;
 use Illuminate\Support\Facades\DB;
+use App\Services\DelinquencyNaiveBayes;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(DelinquencyNaiveBayes $nb)
     {
         $user = auth()->user();
 
@@ -178,27 +180,39 @@ class DashboardController extends Controller
 
         /*
         =====================================
-        RISIKO TUNGGAKAN
+        RISIKO TUNGGAKAN (NAIVE BAYES AI)
         =====================================
         */
 
         $unpaidInvoices = FeeInvoice::query()
             ->where('status', 'unpaid')
-            ->get();
+            ->orderBy('period', 'desc')
+            ->get()
+            ->groupBy('user_id');
 
-        $atRiskCount = 0;
-        $highRiskCount = 0;
+        $atRiskCount = 0;   // Manual Overdue
+        $highRiskCount = 0; // AI Predicted Label 1
         $totalArrearsAmount = 0;
 
-        foreach ($unpaidInvoices as $inv) {
+        foreach ($unpaidInvoices as $userId => $userInvoices) {
+            
+            $latestInv = $userInvoices->first();
+            $totalArrearsAmount += $userInvoices->sum('amount');
 
-            $daysOverdue = now()->diffInDays($inv->period);
-            $totalArrearsAmount += $inv->amount;
-
-            if ($daysOverdue >= $highRiskDays) {
-                $highRiskCount++;
-            } elseif ($daysOverdue >= $atRiskDays) {
+            // 1. Cek Manual (Berisiko > 14 hari)
+            $daysOverdue = now()->diffInDays(Carbon::parse($latestInv->period));
+            if ($daysOverdue >= $atRiskDays && $daysOverdue < $highRiskDays) {
                 $atRiskCount++;
+            }
+
+            // 2. Cek AI Naive Bayes (Kritis)
+            try {
+                $res = $nb->predict((int)$userId, Carbon::parse($latestInv->period));
+                if ($res['label'] === 1) {
+                    $highRiskCount++;
+                }
+            } catch (\Throwable $e) {
+                // Skip jika model belum siap
             }
         }
 

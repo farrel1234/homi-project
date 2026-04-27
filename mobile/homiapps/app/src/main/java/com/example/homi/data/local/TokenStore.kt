@@ -71,6 +71,7 @@ class TokenStore(private val context: Context) {
             prefs.remove(KEY_TOKEN)
             prefs.remove(KEY_NAME)
             prefs.remove(KEY_NIK)
+            prefs.remove(KEY_HAS_SEEN_ONBOARDING)
         }
     }
 }

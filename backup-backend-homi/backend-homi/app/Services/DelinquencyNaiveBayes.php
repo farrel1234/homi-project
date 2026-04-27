@@ -30,7 +30,7 @@ class DelinquencyNaiveBayes
             'last_status'   => ['paid_on_time', 'paid_late', 'unpaid'],
             'amount_bucket' => ['<=50k', '50-150k', '>150k'],
             'pekerjaan'     => ['Karyawan Swasta', 'PNS / ASN', 'Wiraswasta', 'Buruh', 'Tidak Bekerja', 'Lainnya'],
-            'house_type'    => ['Ruby', 'Emerald', 'Sapphire', 'Diamond'],
+            'house_type'    => ['Tipe 36', 'Tipe 45', 'Tipe 60', 'Tipe 72'],
         ];
 
         $samples = [];
@@ -236,7 +236,7 @@ class DelinquencyNaiveBayes
             ->first();
 
         $occ = $profile->pekerjaan ?? 'Lainnya';
-        $ht  = $profile->house_type ?? 'Ruby'; // Default ke tipe dasar jika kosong
+        $ht  = $profile->house_type ?? 'Tipe 36'; // Default ke tipe dasar jika kosong
 
         // paidAtMap yang hanya diketahui <= asOf
         $paidAtMap = [];
@@ -388,7 +388,6 @@ class DelinquencyNaiveBayes
                     // Categorical (Map)
                     $p = $probs[$c][$val] ?? 0.05; // small penalty if category unknown
                 } else {
-                    // Bernoulli (Single value in array/float)
                     // NB: Scorer format likelihood[f][class]
                     $p_val_1 = (float)($probs[$c][0] ?? 0.5);
                     $p = ((int)$val === 1) ? $p_val_1 : (1 - $p_val_1);

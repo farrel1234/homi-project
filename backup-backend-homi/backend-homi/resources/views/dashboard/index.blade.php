@@ -285,7 +285,7 @@
                         <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         </div>
-                        <h2 class="text-sm font-black uppercase tracking-[0.2em] text-rose-400">Risiko Tunggakan</h2>
+                        <h2 class="text-sm font-black uppercase tracking-[0.2em] text-rose-400">AI PREDIKSI RISIKO</h2>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 mb-5">
@@ -294,7 +294,7 @@
                             <p class="text-2xl font-black">{{ $arrearsSummary['at_risk_count'] ?? 0 }} <span class="text-xs font-medium text-slate-400">Warga</span></p>
                         </div>
                         <div class="bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl">
-                            <p class="text-[10px] font-bold text-rose-300 uppercase tracking-widest mb-1">Kritis</p>
+                            <p class="text-[10px] font-bold text-rose-300 uppercase tracking-widest mb-1">Kritis (AI)</p>
                             <p class="text-2xl font-black text-rose-400">{{ $arrearsSummary['high_risk_count'] ?? 0 }} <span class="text-xs font-medium text-rose-300/50">Warga</span></p>
                         </div>
                     </div>

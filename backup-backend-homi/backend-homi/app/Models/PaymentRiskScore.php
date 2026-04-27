@@ -15,6 +15,7 @@ class PaymentRiskScore extends Model
         'predicted_delinquent',
         'features_json',
         'computed_at',
+        'notified_at',
     ];
 
     protected $casts = [
@@ -23,7 +24,13 @@ class PaymentRiskScore extends Model
         'predicted_delinquent' => 'boolean',
         'features_json' => 'array',
         'computed_at' => 'datetime',
+        'notified_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

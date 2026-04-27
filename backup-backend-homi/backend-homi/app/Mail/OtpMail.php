@@ -22,7 +22,7 @@ class OtpMail extends Mailable
     public function build()
     {
         return $this
-            ->subject('Kode Verifikasi Akun HOMI')
-            ->markdown('emails.otp');
+            ->subject('🚀 Langkah Terakhir: Verifikasi Akun Homi Anda')
+            ->view('emails.otp');
     }
 }

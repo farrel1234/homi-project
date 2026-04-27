@@ -7,7 +7,7 @@
     {{-- Header & Search --}}
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-1">
-            <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase italic">Notifikasi Sentral</h1>
+            <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase italic">Notifikasi</h1>
             <p class="text-slate-500 font-medium">Riwayat pesan broadcast dan personal ke aplikasi warga</p>
         </div>
         

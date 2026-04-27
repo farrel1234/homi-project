@@ -143,11 +143,18 @@
                                                         {{ optional($it->user)->full_name ?? optional($it->user)->name ?? ('User #'.$it->user_id) }}
                                                     </div>
                                                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: #{{ $it->id }}</div>
+                                                    <div class="mt-1">
+                                                        @if($it->is_service_blocked)
+                                                            <span class="text-[8px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 uppercase italic">Akses Layanan: Diblokir</span>
+                                                        @else
+                                                            <span class="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase italic">Akses Layanan: Aktif</span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                                 @if(isset($it->nb_delinquent) && $it->nb_delinquent)
                                                     <div class="group relative">
                                                         <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-[8px] font-black uppercase tracking-tighter border border-amber-200 cursor-help">
-                                                            NB RISK
+                                                            Risiko Menunggak (AI)
                                                         </span>
                                                         <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[9px] font-bold rounded shadow-xl z-50">
                                                             Warga diprediksi berpotensi menunggak ({{ round($it->nb_prob * 100) }}% probability) berdasarkan profil & histori.
@@ -167,7 +174,30 @@
                                                 {{ strtoupper($status) }}
                                             </span>
                                         </td>
-                                        <td class="px-8 py-5 text-right">
+                                        <td class="px-8 py-5 text-right flex justify-end gap-2">
+                                            @if($status === 'unpaid' || $status === 'pending')
+                                                {{-- Tombol Pengingat Standar --}}
+                                                <form method="POST" action="{{ route('admin.fees.invoices.remind', $it->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" title="Kirim Pengingat (App, Push, WA)" class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-300 hover:border-amber-200 hover:text-amber-500 transition-all">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                                    </button>
+                                                </form>
+
+                                                {{-- Tombol AI Warning (Hanya jika NB Risk Terdeteksi) --}}
+                                                @if(isset($it->nb_delinquent) && $it->nb_delinquent)
+                                                    <form method="POST" action="{{ route('admin.notifications.send-risk', $it->user_id) }}" class="inline">
+                                                        @csrf
+                                                        <input type="hidden" name="invoice_id" value="{{ $it->id }}">
+                                                        <input type="hidden" name="period" value="{{ optional($it->period)->format('M Y') }}">
+                                                        <input type="hidden" name="score" value="{{ $it->nb_prob }}">
+                                                        <button type="submit" title="Kirim AI Risk Warning (Multi-channel)" class="p-2.5 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
+
                                             <form method="POST" action="{{ route('admin.fees.invoices.destroy', $it->id) }}" onsubmit="return confirm('Hapus tagihan ini?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
