@@ -19,10 +19,14 @@ class IsAdmin
         $isAdmin = false;
 
         if (isset($user->role_id) && (int) $user->role_id === 1) $isAdmin = true;
-        if (isset($user->role) && in_array(strtolower((string) $user->role), ['admin', 'superadmin'], true)) $isAdmin = true;
+        if (isset($user->role) && strtolower((string) $user->role) === 'admin') $isAdmin = true;
 
         if (!$isAdmin) {
-            return response()->json(['message' => 'Forbidden (admin only)'], 403);
+            // Jika dia Super Admin tapi nyasar ke route Admin Perumahan
+            if ($user->isSuperAdmin()) {
+                return redirect()->route('admin.dashboard')->with('error', 'Admin Pusat tidak memiliki akses ke fitur perumahan spesifik.');
+            }
+            return abort(403, 'Akses khusus Admin Perumahan.');
         }
 
         return $next($request);

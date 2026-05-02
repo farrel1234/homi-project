@@ -36,13 +36,45 @@ class DatabaseSeeder extends Seeder
                 ['code' => 'hawaii-garden'],
                 [
                     'name' => 'Hawaii Garden',
-                    'db_host' => '127.0.0.1',
-                    'db_port' => '3306',
+                    'db_host' => config('database.connections.mysql.host', '127.0.0.1'),
+                    'db_port' => config('database.connections.mysql.port', '3306'),
                     'db_database' => 'homi_hawaii_db',
-                    'db_username' => 'root',
-                    'db_password' => '',
+                    'db_username' => config('database.connections.mysql.username', 'root'),
+                    'db_password' => config('database.connections.mysql.password', ''),
                     'registration_code' => 'HWG123',
                     'is_active' => true,
+                    'plan' => 'professional'
+                ]
+            );
+
+            \App\Models\Tenant::updateOrCreate(
+                ['code' => 'taman-lembah-hijau'],
+                [
+                    'name' => 'Taman Lembah Hijau',
+                    'db_host' => config('database.connections.mysql.host', '127.0.0.1'),
+                    'db_port' => config('database.connections.mysql.port', '3306'),
+                    'db_database' => 'homi_hijau_db',
+                    'db_username' => config('database.connections.mysql.username', 'root'),
+                    'db_password' => config('database.connections.mysql.password', ''),
+                    'registration_code' => 'TLH999',
+                    'is_active' => true,
+                    'plan' => 'elite'
+                ]
+            );
+
+            \App\Models\Tenant::updateOrCreate(
+                ['code' => 'kawasan-trial'],
+                [
+                    'name' => 'Kawasan Trial Demo',
+                    'db_host' => config('database.connections.mysql.host', '127.0.0.1'),
+                    'db_port' => config('database.connections.mysql.port', '3306'),
+                    'db_database' => 'homi_trial_db',
+                    'db_username' => config('database.connections.mysql.username', 'root'),
+                    'db_password' => config('database.connections.mysql.password', ''),
+                    'registration_code' => 'TRIAL01',
+                    'is_active' => true,
+                    'plan' => 'trial',
+                    'trial_ends_at' => now()->addDays(14)
                 ]
             );
         }
@@ -81,6 +113,13 @@ class DatabaseSeeder extends Seeder
                     ]
                 );
             }
+
+            // Jalankan Mock Seeder Khusus Perumahan
+            $this->call([
+                MockUserSeeder::class,
+                MockFinanceSeeder::class,
+                MockActivitySeeder::class,
+            ]);
         }
 
         // Seeder pengajuan

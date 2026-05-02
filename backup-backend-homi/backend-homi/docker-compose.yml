@@ -19,6 +19,8 @@ services:
     working_dir: /var/www
     volumes:
       - ./:/var/www
+      # Trik rahasia: Biarkan vendor/ di-handle Linux native biar super ngebut di lokal!
+      - /var/www/vendor
       - ./storage:/var/www/storage
     networks:
       - homi-network
@@ -37,6 +39,7 @@ services:
       - "8001:80"
     volumes:
       - ./:/var/www
+      - /var/www/vendor
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - homi-network
@@ -52,6 +55,7 @@ services:
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
     volumes:
       - ./:/var/www
+      - /var/www/vendor
     networks:
       - homi-network
     depends_on:

@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'tenant_id')) {
-                $table->unsignedBigInteger('tenant_id')->nullable()->after('role_id')->index();
+                $table->unsignedBigInteger('tenant_id')->nullable()->after('role')->index();
             }
         });
     }

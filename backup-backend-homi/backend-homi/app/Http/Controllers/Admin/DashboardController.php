@@ -25,7 +25,7 @@ class DashboardController extends Controller
         =====================================
         */
         if ($user->isSuperAdmin()) {
-
+            // Paksa pakai koneksi 'mysql' (pusat) agar tidak error saat sedang impersonate tenant
             $totalTenants    = \App\Models\Tenant::count();
             $activeTenants   = \App\Models\Tenant::where('is_active', true)->count();
             $pendingRequests = \App\Models\TenantRequest::where('status', 'pending')->count();

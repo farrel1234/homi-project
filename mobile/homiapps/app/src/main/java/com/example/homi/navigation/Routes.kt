@@ -6,6 +6,7 @@ object Routes {
     const val TampilanAwal = "tampilan_awal"
     const val TampilanAwal2 = "tampilan_awal_2"
     const val TampilanAwal3 = "tampilan_awal_3"
+    const val TenantSelection = "tenant_selection"
 
     // ===== AUTH =====
     const val Login = "login"

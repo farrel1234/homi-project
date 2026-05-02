@@ -9,23 +9,33 @@
 </head>
 <body class="min-h-screen">
 @php
-    $navItems = [
-        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard'], 'icon' => 'dashboard'],
-        ['label' => 'Data Warga', 'route' => 'residents.index', 'active' => ['residents.*'], 'icon' => 'residents'],
-        ['label' => 'Pengumuman', 'route' => 'announcements.index', 'active' => ['announcements.*'], 'icon' => 'announcements'],
-        ['label' => 'Pengaduan', 'route' => 'complaints.index', 'active' => ['complaints.*'], 'icon' => 'complaints'],
-        ['label' => 'Pengajuan Surat & Layanan', 'route' => 'service-requests.index', 'active' => ['service-requests.*'], 'icon' => 'services'],
-        ['label' => 'Pembayaran', 'route' => 'payments.index', 'active' => ['payments.*'], 'icon' => 'payments'],
-        ['label' => 'Notifikasi', 'route' => 'admin.notifications.index', 'active' => ['admin.notifications.*'], 'icon' => 'notifications'],
-        ['label' => 'Tagihan Iuran', 'route' => 'admin.fees.invoices.index', 'active' => ['admin.fees.invoices.*'], 'icon' => 'invoices'],
-       ['label' => 'Prioritas Tunggakan', 'route' => 'admin.prioritas-tunggakan', 'active' => ['admin.prioritas-tunggakan'], 'icon' => 'ranking'],
-        ['label' => 'QR Iuran', 'route' => 'admin.fees.qr.index', 'active' => ['admin.fees.qr.*'], 'icon' => 'qr'],
-    ];
+    $user = auth()->user();
+    $isSuperAdmin = $user && $user->isSuperAdmin();
+    $isImpersonating = session()->has('impersonated_tenant_id');
 
-    if (auth()->check() && auth()->user()->isSuperAdmin()) {
-        $navItems[] = ['label' => 'Manajemen Staff', 'route' => 'admin.staff.index', 'active' => ['admin.staff.*'], 'icon' => 'residents'];
-        $navItems[] = ['label' => 'Manajemen Tenant', 'route' => 'tenants.index', 'active' => ['tenants.*'], 'icon' => 'tenants'];
-        $navItems[] = ['label' => 'Permintaan Trial', 'route' => 'tenant-requests.index', 'active' => ['tenant-requests.*'], 'icon' => 'letters'];
+    // Tentukan menu berdasarkan role ATAU status penyamaran (impersonate)
+    if ($isSuperAdmin && !$isImpersonating) {
+        // Menu Khusus Admin Pusat (Super Admin)
+        $navItems = [
+            ['label' => 'Dashboard Pusat', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard'], 'icon' => 'dashboard'],
+            ['label' => 'Manajemen Tenant', 'route' => 'tenants.index', 'active' => ['tenants.*'], 'icon' => 'tenants'],
+            ['label' => 'Permintaan Trial', 'route' => 'tenant-requests.index', 'active' => ['admin.tenant-requests.*', 'tenant-requests.*'], 'icon' => 'letters'],
+            ['label' => 'Manajemen Staff', 'route' => 'admin.staff.index', 'active' => ['admin.staff.*'], 'icon' => 'residents'],
+        ];
+    } else {
+        // Menu Khusus Admin Perumahan (Tenant Admin / Impersonating)
+        $navItems = [
+            ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard'], 'icon' => 'dashboard'],
+            ['label' => 'Data Warga', 'route' => 'residents.index', 'active' => ['residents.*'], 'icon' => 'residents'],
+            ['label' => 'Pengumuman', 'route' => 'announcements.index', 'active' => ['announcements.*'], 'icon' => 'announcements'],
+            ['label' => 'Pengaduan', 'route' => 'complaints.index', 'active' => ['complaints.*'], 'icon' => 'complaints'],
+            ['label' => 'Surat & Layanan', 'route' => 'service-requests.index', 'active' => ['service-requests.*'], 'icon' => 'services'],
+            ['label' => 'Pembayaran', 'route' => 'payments.index', 'active' => ['payments.*'], 'icon' => 'payments'],
+            ['label' => 'Notifikasi', 'route' => 'admin.notifications.index', 'active' => ['admin.notifications.*'], 'icon' => 'notifications'],
+            ['label' => 'Tagihan Iuran', 'route' => 'admin.fees.invoices.index', 'active' => ['admin.fees.invoices.*'], 'icon' => 'invoices'],
+            ['label' => 'Prioritas Tunggakan', 'route' => 'admin.prioritas-tunggakan', 'active' => ['admin.prioritas-tunggakan'], 'icon' => 'ranking'],
+            ['label' => 'QR Iuran', 'route' => 'admin.fees.qr.index', 'active' => ['admin.fees.qr.*'], 'icon' => 'qr'],
+        ];
     }
 
     $displayName = auth()->check()
@@ -41,25 +51,26 @@
     <div id="sidebar-overlay" class="fixed inset-0 z-40 hidden bg-slate-900/45 backdrop-blur-[1px] lg:hidden"></div>
 
     <aside id="app-sidebar"
-           class="fixed inset-y-0 left-0 z-50 w-[285px] -translate-x-full border-r border-sky-800/30
+           class="fixed inset-y-0 left-0 z-50 w-[280px] -translate-x-full border-r border-sky-800/30
                   bg-gradient-to-b from-[#0d5f84] via-[#1f6f8b] to-[#287f9f]
-                  text-white shadow-2xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0">
+                  text-white shadow-2xl transition-transform duration-300 ease-in-out 
+                  lg:static lg:translate-x-0 lg:flex lg:flex-col lg:min-w-[280px]">
         <div class="flex h-full flex-col">
-            <div class="border-b border-white/15 px-5 py-5">
-                <div class="flex items-center gap-3">
-                    <div class="h-12 w-12 overflow-hidden rounded-2xl bg-white/90 ring-2 ring-white/40">
-                        <img src="{{ asset('images/homi-logo.png') }}" alt="HOMI" class="h-full w-full object-cover">
+            <div class="border-b border-white/10 px-6 py-6">
+                <div class="flex items-center gap-4">
+                    <div class="h-14 w-14 overflow-hidden rounded-2xl bg-white/95 p-2 ring-4 ring-white/10 shadow-xl animate-float">
+                        <img src="{{ asset('images/homi-logo.png') }}" alt="HOMI" class="h-full w-full object-contain">
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase tracking-[0.18em] text-white/70">Admin Console</p>
-                        <h1 class="text-lg font-bold leading-tight">HOMI</h1>
-                        <p class="text-xs text-white/80">{{ session('tenant_name', 'Multi-Tenant System') }}</p>
+                        <h1 class="text-xl font-extrabold tracking-tight leading-tight text-white">HOMI</h1>
+                        <p class="text-[11px] font-medium text-sky-200/80">{{ session('tenant_name', 'Multi-Tenant System') }}</p>
                     </div>
                 </div>
             </div>
 
             <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
                 @foreach($navItems as $item)
+                    {{-- Render regular items --}}
                     @php
                         $isActive = false;
                         foreach (($item['active'] ?? [$item['route']]) as $pattern) {
@@ -71,17 +82,17 @@
 
                         $href = \Illuminate\Support\Facades\Route::has($item['route'])
                             ? route($item['route'])
-                            : route('admin.dashboard');
+                            : '#';
                     @endphp
 
                     <a href="{{ $href }}"
-                       class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition
+                       class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all duration-300
                               {{ $isActive
-                                  ? 'bg-white text-[#1f6f8b] shadow-md shadow-sky-900/15'
-                                  : 'text-white/90 hover:bg-white/12 hover:text-white' }}">
-                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border
-                                     {{ $isActive ? 'border-[#d7eaf3] bg-[#eef6fb] text-[#1f6f8b]' : 'border-white/25 bg-white/10 text-white' }}">
-                            @switch($item['icon'])
+                                  ? 'nav-active translate-x-1'
+                                  : 'text-white/80 hover:bg-white/10 hover:text-white hover:translate-x-1' }}">
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300
+                                     {{ $isActive ? '' : 'bg-white/10 text-white group-hover:bg-white/20' }}">
+                            @switch($item['icon'] ?? 'dashboard')
                                 @case('dashboard')
                                     <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]"><path d="M4 13h7V4H4zM13 20h7v-9h-7zM13 11h7V4h-7zM4 20h7v-5H4z"/></svg>
                                     @break
@@ -128,6 +139,19 @@
                         <span class="truncate">{{ $item['label'] }}</span>
                     </a>
                 @endforeach
+
+                {{-- Tombol BALIK KE PUSAT (Hanya muncul jika Impersonating) --}}
+                @if($isImpersonating)
+                    <div class="mt-8 pt-4 border-t border-white/10">
+                        <a href="{{ route('admin.dashboard') }}" 
+                           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold bg-orange-500 text-white shadow-lg hover:bg-orange-600 transition">
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+                                <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[2]"><path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                            </span>
+                            <span class="truncate">Kembali ke Pusat</span>
+                        </a>
+                    </div>
+                @endif
             </nav>
 
             <div class="border-t border-white/15 px-4 py-4">
@@ -170,19 +194,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    @if(auth()->check() && auth()->user()->isSuperAdmin())
-                        <div class="hidden sm:block">
-                            <select onchange="window.location.href='/admin/tenants/' + this.value + '/switch'" 
-                                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                                <option value="central" {{ !session('impersonated_tenant_id') ? 'selected' : '' }}>-- Dashboard Pusat --</option>
-                                @foreach(\App\Models\Tenant::where('is_active', true)->orderBy('name')->get() as $t)
-                                    <option value="{{ $t->id }}" {{ session('impersonated_tenant_id') == $t->id ? 'selected' : '' }}>
-                                        {{ $t->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
 
                     <div class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 sm:block">
                         @yield('page_subtitle', 'Panel Admin HOMI')
@@ -198,8 +209,12 @@
             </div>
         </header>
 
-        <main class="flex-1">
-            <div class="w-full px-6 py-6 lg:px-6 xl:px-10 lg:py-8">
+        <main class="flex-1 relative">
+            {{-- Background decorative elements --}}
+            <div class="absolute top-0 right-0 -z-10 w-1/2 h-1/2 bg-sky-100/30 blur-[120px] rounded-full pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 -z-10 w-1/3 h-1/3 bg-orange-100/20 blur-[100px] rounded-full pointer-events-none"></div>
+            
+            <div class="w-full px-6 py-8 lg:px-10 lg:py-10">
                 @yield('content')
             </div>
         </main>

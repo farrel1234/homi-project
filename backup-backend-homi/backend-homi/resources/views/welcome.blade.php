@@ -99,7 +99,6 @@
                 </div>
                 <div class="flex flex-col">
                     <span class="text-2xl font-black tracking-tighter text-homi-dark leading-none">HOMI</span>
-                    <span class="text-[10px] uppercase tracking-widest text-homi-blue font-bold">Smart Neighborhood</span>
                 </div>
             </div>
 
@@ -107,6 +106,8 @@
                 <a href="#features" class="hover:text-homi-blue transition-colors">Fitur</a>
                 <a href="#advantages" class="hover:text-homi-blue transition-colors">Kelebihan</a>
                 <a href="#pricing" class="hover:text-homi-blue transition-colors">Harga</a>
+                <a href="#trial-form" class="hover:text-homi-blue transition-colors">Coba Sekarang</a>
+                <a href="#mobile-app" class="hover:text-homi-blue transition-colors text-homi-blue font-black underline decoration-2 underline-offset-8">Download</a>
             </div>
 
             <div class="flex items-center space-x-4">
@@ -130,10 +131,7 @@
 
         <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div class="opacity-0 animate-fade-in-up">
-                <div class="inline-flex items-center space-x-2 px-4 py-2 bg-blue-50/50 text-homi-blue rounded-full border border-blue-100 mb-8">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    <span class="text-xs font-black uppercase tracking-widest">Next-Gen Management Portal</span>
-                </div>
+
                 
                 <h1 class="text-5xl lg:text-[5.5rem] font-outfit font-black leading-[0.95] text-homi-dark mb-8 tracking-tighter">
                     Kelola <span class="text-transparent bg-clip-text bg-gradient-to-r from-homi-blue to-teal-500">Perumahan</span> <br/> Tanpa Batas.
@@ -148,16 +146,16 @@
                         Lihat Penawaran
                         <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                     </a>
+                    <a href="{{ asset('downloads/homi-app.apk') }}" class="interactive-btn w-full sm:w-auto px-10 py-5 bg-homi-accent text-white rounded-3xl font-black text-lg shadow-2xl shadow-orange-200 flex items-center justify-center gap-3">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        Download APK
+                    </a>
                     <a href="mailto:pbl.512hebat@gmail.com" class="interactive-btn w-full sm:w-auto px-10 py-5 bg-white text-homi-dark border-2 border-gray-100 rounded-3xl font-black text-lg hover:border-homi-blue transition-colors flex items-center justify-center gap-3">
                         Minta Demo
                     </a>
                 </div>
 
-                <div class="mt-16 flex items-center gap-8 grayscale opacity-50">
-                    <img src="{{ asset('images/homi-logo.png') }}" alt="Partner" class="h-8 object-contain">
-                    <div class="w-px h-6 bg-gray-200"></div>
-                    <span class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Trusted by Modern Estates</span>
-                </div>
+
             </div>
 
             <div class="relative hidden lg:block opacity-0 animate-fade-in-up" style="animation-delay: 0.2s">
@@ -241,6 +239,81 @@
                     </div>
                     <h4 class="text-xl font-black mb-4 tracking-tight uppercase">Aduan Real-time</h4>
                     <p class="text-sm text-gray-500 leading-relaxed font-medium capitalize">Warga bisa melaporkan kerusakan fasilitas dengan foto & lokasi yang langsung diterima dashboard admin.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mobile App Showcase Section -->
+    <section id="mobile-app" class="py-32 px-6 bg-slate-50 overflow-hidden">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+            {{-- Visual HP --}}
+            <div class="lg:w-1/2 relative flex justify-center">
+                <div class="absolute -top-20 -left-20 w-80 h-80 bg-homi-blue/10 rounded-full blur-[100px] -z-10"></div>
+                <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-homi-accent/10 rounded-full blur-[100px] -z-10"></div>
+                
+                {{-- Mockup HP --}}
+                <div class="relative w-[300px] h-[600px] bg-slate-950 rounded-[3rem] p-3 shadow-[0_50px_100px_-20px_rgba(47,127,163,0.3)] border-[8px] border-slate-900 group">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-20"></div>
+                    <div class="w-full h-full overflow-hidden rounded-[2.2rem] bg-[#2A7596]">
+                        <img src="{{ asset('images/homi-mobile.png') }}" alt="HOMI Mobile" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700">
+                    </div>
+                </div>
+
+                {{-- Floating Badge --}}
+                <div class="absolute top-1/4 -right-8 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 animate-float">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-50 text-homi-blue rounded-xl flex items-center justify-center">
+                            <i data-lucide="smartphone" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
+                            <p class="text-xs font-bold text-slate-900">Pembayaran Terverifikasi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Text Content --}}
+            <div class="lg:w-1/2 space-y-10">
+                <div class="space-y-4">
+                    <span class="px-4 py-1 bg-homi-blue/10 text-homi-blue text-[10px] font-black uppercase tracking-[0.2em] rounded-full">Mobile Experience</span>
+                    <h2 class="text-4xl lg:text-5xl font-outfit font-black italic tracking-tighter leading-tight">Aplikasi Warga <br/> Dalam Genggaman.</h2>
+                    <p class="text-lg text-gray-500 font-medium leading-relaxed">Berikan kemudahan bagi warga Anda untuk mengurus segala keperluan perumahan hanya dengan satu aplikasi mobile yang ringan dan intuitif.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="flex items-center gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="w-12 h-12 bg-amber-50 text-homi-accent rounded-2xl flex items-center justify-center shrink-0">
+                            <i data-lucide="credit-card" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800 uppercase tracking-tight">Bayar Iuran <br/> Tanpa Ribet</p>
+                    </div>
+                    <div class="flex items-center gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                            <i data-lucide="file-check-2" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800 uppercase tracking-tight">E-Surat <br/> Mandiri 24/7</p>
+                    </div>
+                    <div class="flex items-center gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="w-12 h-12 bg-blue-50 text-homi-blue rounded-2xl flex items-center justify-center shrink-0">
+                            <i data-lucide="megaphone" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800 uppercase tracking-tight">Info Cluster <br/> Terkini</p>
+                    </div>
+                    <div class="flex items-center gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shrink-0">
+                            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800 uppercase tracking-tight">Lapor Keluhan <br/> Sekali Klik</p>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <a href="{{ asset('downloads/homi-app.apk') }}" class="interactive-btn group inline-flex items-center gap-4 px-10 py-5 bg-homi-dark text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-sm shadow-2xl">
+                        <i data-lucide="download" class="w-5 h-5 group-hover:animate-bounce"></i>
+                        Download APK Warga
+                    </a>
                 </div>
             </div>
         </div>

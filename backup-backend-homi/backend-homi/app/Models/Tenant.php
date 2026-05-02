@@ -9,6 +9,8 @@ class Tenant extends Model
 {
     use HasFactory;
 
+    protected $connection = 'central';
+
     protected $fillable = [
         'name',
         'code',

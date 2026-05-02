@@ -38,6 +38,7 @@ return Application::configure()
         // Alias middleware custom
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
+            'is_superadmin' => \App\Http\Middleware\IsSuperAdmin::class,
             'tenant' => \App\Http\Middleware\ResolveTenant::class,
             'check_feature' => \App\Http\Middleware\CheckTenantFeature::class,
         ]);

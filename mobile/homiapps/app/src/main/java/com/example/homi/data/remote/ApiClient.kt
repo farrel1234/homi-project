@@ -42,14 +42,9 @@ object ApiClient {
 
             // 3) Biar Laravel selalu balikin JSON
             val acceptJsonInterceptor = Interceptor { chain ->
-                val builder = chain.request().newBuilder()
+                val req = chain.request().newBuilder()
                     .header("Accept", "application/json")
-                val tenantCode = ApiConfig.tenantCode.trim()
-                if (tenantCode.isNotEmpty()) {
-                    builder.header(ApiConfig.TENANT_HEADER, tenantCode)
-                }
-
-                val req = builder.build()
+                    .build()
                 chain.proceed(req)
             }
 
@@ -63,14 +58,12 @@ object ApiClient {
                 // Accept JSON
                 .addInterceptor(acceptJsonInterceptor)
 
-                // Authorization
+                // Authorization & Tenant
                 .addInterceptor(
-                    AuthInterceptor {
-                        // runBlocking TIDAK perlu karena getApi bukan suspend,
-                        // tapi tokenFlow.first() itu suspend -> maka kita ambil lewat kotlinx.coroutines.runBlocking
-                        // biar tetap sync dan simple (sesuai pattern kamu).
-                        kotlinx.coroutines.runBlocking { tokenStore.tokenFlow.first() }
-                    }
+                    AuthInterceptor(
+                        tokenProvider = { kotlinx.coroutines.runBlocking { tokenStore.tokenFlow.first() } },
+                        tenantCodeProvider = { kotlinx.coroutines.runBlocking { tokenStore.tenantCodeFlow.first() } }
+                    )
                 )
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)

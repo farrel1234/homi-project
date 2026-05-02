@@ -75,9 +75,14 @@
                                 {{ $item->domain ?? 'N/A' }}
                             </td>
                             <td class="px-8 py-6 text-right">
-                                <div class="flex items-center justify-end gap-2 text-decoration-none">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.tenants.switch', $item->id) }}" 
+                                       title="Masuk ke Dashboard Perumahan"
+                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-emerald-500 hover:border-emerald-500 hover:bg-emerald-50 transition-all no-underline">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                                    </a>
                                     <a href="{{ route('tenants.edit', $item->id) }}" 
-                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all">
+                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all no-underline">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </a>
                                     <form action="{{ route('tenants.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tenant {{ $item->name }}?')">

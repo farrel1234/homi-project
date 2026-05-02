@@ -26,9 +26,10 @@ class TenantManager
     {
         $connectionName = config('database.default', 'mysql');
         
-        // Kembalikan ke database pusat (Central / Register utama)
-        // Kita gunakan nama 'homi' yang sudah pasti ada di Laragon user
-        config(["database.connections.{$connectionName}.database" => 'homi']);
+        // Ambil nama database pusat dari config central, fallback ke env jika tidak ada
+        $centralDB = config('database.connections.central.database', env('DB_DATABASE', 'homi'));
+        
+        config(["database.connections.{$connectionName}.database" => $centralDB]);
 
         DB::purge($connectionName);
         DB::reconnect($connectionName);

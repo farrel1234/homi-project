@@ -38,6 +38,8 @@ import com.example.homi.util.fixLocalhostUrl
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.homi.data.remote.ApiConfig
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -83,8 +85,15 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                             popUpTo(Routes.Splash) { inclusive = true }
                         }
                     } else {
-                        // Cek apakah sudah punya token (Auto-Login)
-                        if (!token.isNullOrBlank()) {
+                        // Cek apakah sudah punya kode perumahan
+                        val currentTenantCode = kotlinx.coroutines.runBlocking { tokenStore.tenantCodeFlow.first() }
+                        val isTenantSet = currentTenantCode != ApiConfig.DEFAULT_TENANT_CODE && currentTenantCode.isNotBlank()
+
+                        if (!isTenantSet) {
+                            navController.navigate(Routes.TenantSelection) {
+                                popUpTo(Routes.Splash) { inclusive = true }
+                            }
+                        } else if (!token.isNullOrBlank()) {
                             navController.navigate(Routes.Beranda) {
                                 popUpTo(Routes.Splash) { inclusive = true }
                             }
@@ -138,9 +147,24 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                 onNextClicked = {
                     scope.launch {
                         tokenStore.saveHasSeenOnboarding(true)
-                        navController.navigate(Routes.Login) {
+                        navController.navigate(Routes.TenantSelection) {
                             launchSingleTop = true
                             popUpTo(Routes.TampilanAwal3) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
+        // =================== TENANT SELECTION ===================
+        composable(route = Routes.TenantSelection) {
+            TenantSelectionScreen(
+                onCodeConfirmed = { code ->
+                    scope.launch {
+                        tokenStore.saveTenantCode(code)
+                        navController.navigate(Routes.Login) {
+                            popUpTo(Routes.TenantSelection) { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 }
