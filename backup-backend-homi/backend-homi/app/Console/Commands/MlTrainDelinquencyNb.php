@@ -73,19 +73,17 @@ class MlTrainDelinquencyNb extends Command
             $counts[$label]++;
         }
 
-        // 3. Hitung Priors (P(Y))
         $total = count($dataset);
         $priors = [
             0 => $counts[0] / $total,
             1 => $counts[1] / $total
         ];
 
-        // 4. Hitung Likelihood (P(X|Y))
-        // Kita hitung probabilitas setiap fitur muncul di setiap kelas (0/1)
+   
         $likelihood = [
             'amount_bucket' => [
-                0 => [], // Probabilities for class 0
-                1 => []  // Probabilities for class 1
+                0 => [], 
+                1 => [] 
             ]
         ];
 
@@ -96,12 +94,11 @@ class MlTrainDelinquencyNb extends Command
                     ->where('x.amount_bucket', $bucket)
                     ->count();
                 
-                // Laplace Smoothing (agar tidak 0)
+        
                 $likelihood['amount_bucket'][$label][$bucket] = ($countMatches + 1) / ($counts[$label] + 3);
             }
         }
 
-        // 5. Simpan Model ke Database
         $modelJson = [
             'name' => $name,
             'priors' => [$priors[0], $priors[1]],

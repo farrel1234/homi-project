@@ -30,9 +30,6 @@ class NotifyDelinquencyRisk extends Command
     public function handle(HomiNotificationService $notifier)
     {
         $this->info("=== Memulai Pengiriman Notifikasi Prediksi Menunggak ===");
-
-        // Cari skor risiko yang prediksinya delinquent (1) dan belum pernah dinotifikasi
-        // Untuk periode bulan sekarang atau yang akan datang
         $riskScores = PaymentRiskScore::where('predicted_delinquent', 1)
             ->whereNull('notified_at')
             ->whereDate('period', '>=', now()->startOfMonth()->toDateString())
@@ -65,8 +62,6 @@ class NotifyDelinquencyRisk extends Command
                     'screen' => 'TagihanIuran',
                     'type' => 'risk_warning'
                 ]);
-
-                // Update agar tidak dikirim lagi untuk periode yang sama
                 $rs->update(['notified_at' => now()]);
                 $sentCount++;
 
