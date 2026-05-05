@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /login/
+Disallow: /admin/login
+
+# Sitemap link (uncomment if you have one)
+# Sitemap: http://besthomi.online/sitemap.xml

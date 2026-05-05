@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'HOMI Admin')</title>
+    <meta name="description" content="Panel Administrasi HOMI - Kelola layanan warga dan data perumahan dengan mudah.">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" href="{{ asset('images/homi-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

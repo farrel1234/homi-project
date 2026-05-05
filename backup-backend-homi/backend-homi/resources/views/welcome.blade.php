@@ -3,7 +3,25 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HOMI - Elevate Your Neighborhood Management</title>
+    <title>HOMI - Solusi Manajemen Perumahan & Warga Digital Terpadu</title>
+    <meta name="description" content="HOMI adalah platform manajemen perumahan pintar yang memudahkan pengelolaan iuran warga, layanan E-Surat, pengaduan real-time, dan transparansi data perumahan dalam satu aplikasi.">
+    <meta name="keywords" content="manajemen perumahan, aplikasi warga, iuran perumahan, e-surat, rukun tetangga, rukun warga, pengaduan warga digital, homi smart portal">
+    <meta name="author" content="HOMI Project Team">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="HOMI - Elevate Your Neighborhood Management">
+    <meta property="og:description" content="Kelola perumahan jadi lebih mudah dengan HOMI. Layanan surat, pembayaran iuran, dan pengaduan warga dalam satu aplikasi terintegrasi.">
+    <meta property="og:image" content="{{ asset('images/homi-logo.png') }}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url('/') }}">
+    <meta property="twitter:title" content="HOMI - Manajemen Perumahan Digital">
+    <meta property="twitter:description" content="Platform automasi manajemen warga dan perumahan terbaik di Indonesia.">
+    <meta property="twitter:image" content="{{ asset('images/homi-logo.png') }}">
+
     <link rel="shortcut icon" href="{{ asset('images/homi-logo.png') }}">
 
     <!-- Google Fonts -->
