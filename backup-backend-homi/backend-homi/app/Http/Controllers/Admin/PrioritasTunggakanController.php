@@ -22,27 +22,19 @@ class PrioritasTunggakanController extends Controller
             ->select(
                 'users.name',
                 DB::raw('SUM(fee_invoices.amount) as total_tunggakan'),
-                DB::raw('COUNT(*) as jumlah_bulan'),
+                DB::raw('COUNT(DISTINCT fee_invoices.period) as jumlah_bulan'),
                 DB::raw('COUNT(DISTINCT fee_invoices.fee_type_id) as jenis_tunggakan'),
                 DB::raw('MIN(fee_invoices.period) as awal'),
                 DB::raw('MAX(fee_invoices.period) as akhir')
             )
             ->where('fee_invoices.status', 'unpaid');
 
-        /*
-        ========================
-        FILTER JENIS TAGIHAN
-        ========================
-        */
+    
         if ($jenis && $jenis != 'all') {
             $query->where('fee_types.name', $jenis);
         }
 
-        /*
-        ========================
-        FILTER PERIODE
-        ========================
-        */
+    
         if ($tahun == 'all' && $bulanAwal && $bulanAkhir) {
 
             $query->whereMonth('fee_invoices.period', '>=', $bulanAwal)
@@ -68,11 +60,7 @@ class PrioritasTunggakanController extends Controller
             return view('admin.prioritas-tunggakan', ['data' => []]);
         }
 
-        /*
-        ========================
-        MAX NILAI NORMALISASI
-        ========================
-        */
+  
         $maxTotal = $rows->max('total_tunggakan');
         $maxBulan = $rows->max('jumlah_bulan');
         $maxJenis = $rows->max('jenis_tunggakan');
@@ -85,11 +73,7 @@ class PrioritasTunggakanController extends Controller
             $n2 = $maxBulan > 0 ? $row->jumlah_bulan / $maxBulan : 0;
             $n3 = $maxJenis > 0 ? $row->jenis_tunggakan / $maxJenis : 0;
 
-            /*
-            ========================
-            BOBOT SAW
-            ========================
-            */
+            
             $skor = ($n1 * 0.50) + ($n2 * 0.35) + ($n3 * 0.15);
 
             if ($skor >= 0.80) {

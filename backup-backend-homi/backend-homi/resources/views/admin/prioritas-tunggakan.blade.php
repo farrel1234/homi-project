@@ -220,6 +220,7 @@ style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                 <th style="padding:14px;">Nama</th>
                 <th style="padding:14px;">Total Tunggakan</th>
                 <th style="padding:14px;">Periode</th>
+                <th style="padding:14px;">Jumlah Jenis Tunggakan</th>
                 <th style="padding:14px;">Skor</th>
                 <th style="padding:14px;">Prioritas</th>
             </tr>
@@ -231,6 +232,7 @@ style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                 <td style="padding:14px;">{{ $item['nama'] }}</td>
                 <td style="padding:14px;">Rp {{ number_format($item['tunggakan'],0,',','.') }}</td>
                 <td style="padding:14px;">{{ $item['bulan'] }}</td>
+                <td style="padding:14px;">{{ $item['jenis'] }}</td>
                 <td style="padding:14px;">{{ $item['skor'] }}</td>
 
                 <td style="padding:14px;">
@@ -254,7 +256,7 @@ style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             </tr>
             @empty
             <tr>
-                <td colspan="6" style="padding:20px;color:#6b7280;">
+                <td colspan="7" style="padding:20px;color:#6b7280;">
                     Tidak ada data tunggakan.
                 </td>
             </tr>
