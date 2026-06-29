@@ -1,0 +1,77 @@
+﻿newman
+
+HOMI API Testing Collection
+
+□ Auth
+└ Login Warga Hawaii Garden
+  POST http://127.0.0.1:8000/api/login [200 OK, 997B, 558ms]
+  √  Status code is 200
+  √  Response has token
+
+□ Profile
+└ Get Profile Me
+  GET http://127.0.0.1:8000/api/me [200 OK, 562B, 307ms]
+  √  Status code is 200
+  √  Response is valid user profile
+
+□ Residents
+└ Get Residents (Admin Only)
+  GET http://127.0.0.1:8000/api/admin/residents [403 Forbidden, 18.08kB, 268ms]
+  √  Status code is 403 or 200 depending on roles
+
+□ Fees & Invoices
+└ Get Invoices Warga
+  GET http://127.0.0.1:8000/api/fees/invoices [200 OK, 5.58kB, 241ms]
+  √  Status code is 200
+
+└ Get Payment History
+  GET http://127.0.0.1:8000/api/fees/history [200 OK, 3.45kB, 287ms]
+  √  Status code is 200
+
+□ Announcements
+└ Get Announcements
+  GET http://127.0.0.1:8000/api/announcements [200 OK, 1.02kB, 263ms]
+  √  Status code is 200
+
+□ Complaints
+└ Get Complaints
+  GET http://127.0.0.1:8000/api/complaints [200 OK, 716B, 267ms]
+  √  Status code is 200
+
+□ Non-existent APIs (Checking Redirect/404)
+└ Get Dashboard Summary (Web Route)
+  GET http://127.0.0.1:8000/api/dashboard/summary [404 Not Found, 11.66kB, 224ms]
+  √  Expect 401 Unauthorized or 302 Redirect
+
+└ Get SAW Priority Results (Web Route)
+  GET http://127.0.0.1:8000/api/saw-priority [404 Not Found, 11.66kB, 189ms]
+  √  Expect 404 Not Found since it only exists in Web admin
+
+□ Tenancy Protection Validation
+└ Request Tanpa Tenant Header
+  GET http://127.0.0.1:8000/api/me [422 Unprocessable Content, 537B, 215ms]
+  √  Expect failure due to missing Tenant Code
+
+└ Request Dengan Tenant Code Salah
+  GET http://127.0.0.1:8000/api/me [404 Not Found, 488B, 218ms]
+  √  Expect 404 Tenant Not Found or equivalent error
+
+┌─────────────────────────┬────────────────────┬────────────────────┐
+│                         │           executed │             failed │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              iterations │                  1 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│                requests │                 11 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│            test-scripts │                 11 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│      prerequest-scripts │                  0 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              assertions │                 13 │                  0 │
+├─────────────────────────┴────────────────────┴────────────────────┤
+│ total run duration: 3.9s                                          │
+├───────────────────────────────────────────────────────────────────┤
+│ total data received: 50.33kB (approx)                             │
+├───────────────────────────────────────────────────────────────────┤
+│ average response time: 276ms [min: 189ms, max: 558ms, s.d.: 95ms] │
+└───────────────────────────────────────────────────────────────────┘

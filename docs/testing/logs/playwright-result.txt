@@ -1,0 +1,7 @@
+﻿
+Running 2 tests using 1 worker
+
+  ok 1 [chromium] › tests\e2e\admin.spec.js:17:3 › HOMI Web Admin E2E Tests › TC002 - Login gagal jika password salah (5.2s)
+  ok 2 [chromium] › tests\e2e\admin.spec.js:34:3 › HOMI Web Admin E2E Tests › TC001 & TC003 s/d TC010 - Flow Admin Hawaii Garden & Multi-Tenant Check (10.9s)
+
+  2 passed (16.9s)

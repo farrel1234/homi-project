@@ -141,15 +141,18 @@ class AccountRepository(private val api: ApiService) {
             val profBody = profileRes.body()?.string()
             if (!profBody.isNullOrBlank()) {
                 val profJson = JsonParser.parseString(profBody).asJsonObject
-                val profData = profJson.getAsJsonObject("data") ?: profJson
-                val residentPart = gson.fromJson(profData, ResidentProfileDto::class.java)
-                
-                // Sanitize dates
-                val cleanedResident = residentPart.copy(
-                    tanggalLahir = sanitizeDate(residentPart.tanggalLahir)
-                )
+                val dataElement = profJson.get("data")
+                if (dataElement != null && dataElement.isJsonObject) {
+                    val profData = dataElement.asJsonObject
+                    val residentPart = gson.fromJson(profData, ResidentProfileDto::class.java)
+                    
+                    // Sanitize dates
+                    val cleanedResident = residentPart.copy(
+                        tanggalLahir = sanitizeDate(residentPart.tanggalLahir)
+                    )
 
-                return user.copy(residentProfile = cleanedResident)
+                    return user.copy(residentProfile = cleanedResident)
+                }
             }
         }
         

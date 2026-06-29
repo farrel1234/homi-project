@@ -91,6 +91,13 @@ class AnnouncementController extends Controller
     }
 
     // FORM EDIT
+    public function show(Announcement $announcement)
+    {
+        $announcement->load('author');
+        return view('announcements.show', compact('announcement'));
+    }
+
+    // FORM EDIT
     public function edit(Announcement $announcement)
     {
         return view('announcements.edit', compact('announcement'));
