@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Admin - HOMI</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+     <script src="https://cdn.tailwindcss.com"></script>
+  
 </head>
 <body class="min-h-screen overflow-x-hidden">
     <div class="relative min-h-screen bg-[radial-gradient(circle_at_12%_10%,rgba(240,138,93,0.26),transparent_36%),radial-gradient(circle_at_88%_20%,rgba(31,111,139,0.2),transparent_34%),linear-gradient(180deg,#f8fbfd_0%,#edf4f9_100%)]">

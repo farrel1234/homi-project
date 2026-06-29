@@ -1,4 +1,3 @@
-version: '3.8'
 services:
 
   # PHP-FPM App Service
@@ -12,16 +11,9 @@ services:
     image: homi-app
     container_name: homi-app
     restart: unless-stopped
-    tty: true
-    environment:
-      SERVICE_NAME: homi-app
-      SERVICE_TAGS: prod
     working_dir: /var/www
     volumes:
       - ./:/var/www
-      # Trik rahasia: Biarkan vendor/ di-handle Linux native biar super ngebut di lokal!
-      - /var/www/vendor
-      - ./storage:/var/www/storage
     networks:
       - homi-network
     depends_on:
@@ -32,52 +24,43 @@ services:
     image: nginx:alpine
     container_name: homi-webserver
     restart: unless-stopped
-    tty: true
     ports:
-      # Port 8001 dipakai agar tidak bentrok dengan project lain di VPS
-      # Nginx reverse proxy di host akan forward dari domain ke port ini
       - "8001:80"
     volumes:
       - ./:/var/www
-      - /var/www/vendor
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - homi-network
     depends_on:
       - app
 
-  # Queue Worker Service (untuk job Laravel — notifikasi, dll.)
-  queue:
-    image: homi-app
-    container_name: homi-queue
-    restart: unless-stopped
-    working_dir: /var/www
-    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
-    volumes:
-      - ./:/var/www
-      - /var/www/vendor
-    networks:
-      - homi-network
-    depends_on:
-      - app
-      - db
+  # Queue Worker Service
+  # queue:
+  #   image: homi-app
+  #   container_name: homi-queue
+  #   restart: unless-stopped
+  #   working_dir: /var/www
+  #   command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+  #   volumes:
+  #     - ./:/var/www
+  #   networks:
+  #     - homi-network
+  #   depends_on:
+  #     - app
+  #     - db
 
   # MySQL Service
   db:
     image: mysql:8.0
     container_name: homi-db
     restart: unless-stopped
-    tty: true
     ports:
-      # Port 33066 agar tidak bentrok dengan MySQL host (port 3306)
       - "33066:3306"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
-      SERVICE_TAGS: prod
-      SERVICE_NAME: mysql
     volumes:
       - homi-db-data:/var/lib/mysql
     networks:
@@ -90,4 +73,3 @@ networks:
 volumes:
   homi-db-data:
     driver: local
-
