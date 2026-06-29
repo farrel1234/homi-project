@@ -28,8 +28,8 @@
 
     {{-- 2. QUICK ACTIONS --}}
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <a href="{{ route('announcements.create') }}" class="group p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[var(--homi-blue)] transition-all duration-300 flex flex-col gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-[var(--homi-blue)] flex items-center justify-center group-hover:bg-[var(--homi-blue)] group-hover:text-white transition-colors shadow-inner">
+        <a href="{{ route('announcements.create') }}" class="group p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#1f6f8b] transition-all duration-300 flex flex-col gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-[#1f6f8b] flex items-center justify-center group-hover:bg-[#1f6f8b] group-hover:text-white transition-colors shadow-inner">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
             </div>
             <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Pengumuman</span>
@@ -67,7 +67,7 @@
         <div class="relative overflow-hidden bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8 group hover:shadow-2xl transition-all duration-500">
             <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-sky-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
             <div class="flex flex-col gap-4 relative">
-                <div class="w-14 h-14 rounded-2xl bg-sky-100 text-[var(--homi-blue)] flex items-center justify-center shadow-lg shadow-sky-100">
+                <div class="w-14 h-14 rounded-2xl bg-sky-100 text-[#1f6f8b] flex items-center justify-center shadow-lg shadow-sky-100">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 </div>
                 <div>
@@ -171,10 +171,10 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                    <span class="w-2 h-6 bg-[var(--homi-blue)] rounded-full"></span>
+                    <span class="w-2 h-6 bg-[#1f6f8b] rounded-full"></span>
                     Pengumuman Utama
                 </h2>
-                <a href="{{ route('announcements.index') }}" class="text-sm font-bold text-[var(--homi-blue)] hover:underline">Lihat Semua</a>
+                <a href="{{ route('announcements.index') }}" class="text-sm font-bold text-[#1f6f8b] hover:underline">Lihat Semua</a>
             </div>
 
             @if(!empty($mainAnnouncement))
@@ -191,10 +191,10 @@
                             @endif
                         </div>
                         <div class="md:col-span-3 p-6 flex flex-col justify-center">
-                            <span class="px-2 py-1 bg-sky-50 text-[var(--homi-blue)] text-[10px] font-black uppercase rounded-lg mb-2 inline-block w-fit tracking-wider">
+                            <span class="px-2 py-1 bg-sky-50 text-[#1f6f8b] text-[10px] font-black uppercase rounded-lg mb-2 inline-block w-fit tracking-wider">
                                 Terbaru • {{ $mainAnnouncement->created_at?->format('d M Y') }}
                             </span>
-                            <h3 class="text-xl font-bold text-slate-800 mb-3 leading-tight group-hover:text-[var(--homi-blue)] transition-colors">
+                            <h3 class="text-xl font-bold text-slate-800 mb-3 leading-tight group-hover:text-[#1f6f8b] transition-colors">
                                 {{ $mainAnnouncement->title }}
                             </h3>
                             <p class="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed">
@@ -202,7 +202,7 @@
                             </p>
                             <a href="{{ route('announcements.show', $mainAnnouncement->id) }}" class="flex items-center gap-2 text-sm font-bold text-slate-900 group-hover:gap-3 transition-all">
                                 Baca Selengkapnya
-                                <svg class="w-4 h-4 text-[var(--homi-orange)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                <svg class="w-4 h-4 text-[#f08a5d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </a>
                         </div>
                     </div>
@@ -241,7 +241,7 @@
             <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 overflow-hidden relative">
                 <div class="flex items-center justify-between mb-5">
                     <h2 class="text-lg font-bold text-slate-800 tracking-tight">Pembayaran Baru</h2>
-                    <a href="{{ route('payments.index') }}" class="text-xs font-bold text-[var(--homi-blue)] hover:underline">Semua</a>
+                    <a href="{{ route('payments.index') }}" class="text-xs font-bold text-[#1f6f8b] hover:underline">Semua</a>
                 </div>
 
                 <div class="space-y-4">
@@ -389,11 +389,11 @@
             </div>
             <div class="flex gap-4">
                 <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-[var(--homi-blue)] opacity-50"></span>
+                    <span class="w-3 h-3 rounded-full bg-[#1f6f8b] opacity-50"></span>
                     <span class="text-xs font-bold text-slate-600">Penerimaan Lunas</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-[var(--homi-orange)]"></span>
+                    <span class="w-3 h-3 rounded-full bg-[#f08a5d]"></span>
                     <span class="text-xs font-bold text-slate-600">Proyeksi Pending</span>
                 </div>
             </div>

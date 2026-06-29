@@ -14,13 +14,13 @@
         <div class="flex flex-col sm:flex-row items-center gap-3">
             <form action="{{ route('admin.notifications.index') }}" method="GET" class="relative group w-full sm:w-auto">
                 <input type="text" name="q" value="{{ $q ?? request('q') }}" placeholder="CARI WARGA / JUDUL..." 
-                       class="w-full sm:w-64 pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all placeholder:text-slate-300">
-                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[var(--homi-blue)] transition-colors">
+                       class="w-full sm:w-64 pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[#1f6f8b] focus:ring-0 transition-all placeholder:text-slate-300">
+                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[#1f6f8b] transition-colors">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
             </form>
             <a href="{{ route('admin.notifications.create') }}" 
-               class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
+               class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
                 + Kirim Pesan
             </a>
         </div>
@@ -48,7 +48,7 @@
                         <tr class="hover:bg-slate-50/50 transition-colors group">
                             <td class="px-8 py-6">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-[var(--homi-blue)]/10 text-[var(--homi-blue)] flex items-center justify-center font-black text-xs">
+                                    <div class="w-10 h-10 rounded-full bg-[#1f6f8b]/10 text-[#1f6f8b] flex items-center justify-center font-black text-xs">
                                         {{ strtoupper(substr($name, 0, 1)) }}
                                     </div>
                                     <div>

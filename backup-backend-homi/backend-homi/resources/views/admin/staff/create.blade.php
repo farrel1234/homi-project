@@ -90,7 +90,7 @@
                 <a href="{{ route('admin.staff.index') }}" class="w-full sm:w-auto text-center px-10 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
                     Batalkan
                 </a>
-                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[var(--homi-blue-light)] hover:bg-[var(--homi-blue)] transition-all">
+                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[rgba(31,111,139,0.15)] hover:bg-[#1f6f8b] transition-all">
                     Simpan Data Staff
                 </button>
             </div>

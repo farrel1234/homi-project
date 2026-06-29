@@ -74,7 +74,7 @@
                         </div>
 
                         <button type="submit"
-                                class="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[var(--homi-orange)] to-[#e57949] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_26px_rgba(240,138,93,0.32)] hover:opacity-95">
+                                class="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#f08a5d] to-[#e57949] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_26px_rgba(240,138,93,0.32)] hover:opacity-95">
                             Login Admin
                         </button>
                     </form>

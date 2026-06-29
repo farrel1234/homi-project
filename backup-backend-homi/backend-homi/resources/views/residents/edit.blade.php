@@ -85,7 +85,7 @@
 
                 <div class="md:col-span-2">
                     <label class="flex items-start gap-4 rounded-2xl border border-gray-200 p-4 hover:bg-slate-50 transition cursor-pointer">
-                        <input type="checkbox" name="is_public" value="1" class="mt-1 h-4 w-4 rounded border-gray-300 text-[var(--homi-blue)] focus:ring-[var(--homi-blue)]"
+                        <input type="checkbox" name="is_public" value="1" class="mt-1 h-4 w-4 rounded border-gray-300 text-[#1f6f8b] focus:ring-[#1f6f8b]"
                                @checked(old('is_public', (bool)($item->is_public ?? false)))>
                         <div>
                             <div class="text-sm font-bold text-gray-900">

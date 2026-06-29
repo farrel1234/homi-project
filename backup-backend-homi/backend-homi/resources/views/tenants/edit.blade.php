@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-2xl mx-auto">
     <div class="mb-6">
-        <a href="{{ route('tenants.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[var(--homi-blue)] transition-colors">
+        <a href="{{ route('tenants.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#1f6f8b] transition-colors">
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Kembali ke Daftar
         </a>
@@ -26,14 +26,14 @@
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Nama Tenant <span class="text-red-500">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $tenant->name) }}" required
-                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm">
                     @error('name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
                 
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Kode Tenant (Unique) <span class="text-red-500">*</span></label>
                     <input type="text" name="code" value="{{ old('code', $tenant->code) }}" required
-                           class="w-full rounded-xl border border-slate-200 text-sm font-mono focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                           class="w-full rounded-xl border border-slate-200 text-sm font-mono focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm">
                     @error('code') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
@@ -50,13 +50,13 @@
             <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700">Domain (Optional)</label>
                 <input type="text" name="domain" value="{{ old('domain', $tenant->domain) }}"
-                       class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                       class="w-full rounded-xl border border-slate-200 text-sm focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm">
                 @error('domain') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700">Paket Layanan (Plan) <span class="text-red-500">*</span></label>
-                <select name="plan" required class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                <select name="plan" required class="w-full rounded-xl border border-slate-200 text-sm focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm">
                     <option value="trial" {{ old('plan', $tenant->plan) == 'trial' ? 'selected' : '' }}>TRIAL (Free 30 Days)</option>
                     <option value="starter" {{ old('plan', $tenant->plan) == 'starter' ? 'selected' : '' }}>STARTER</option>
                     <option value="professional" {{ old('plan', $tenant->plan) == 'professional' ? 'selected' : '' }}>PROFESSIONAL</option>
@@ -75,7 +75,7 @@
             <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700">Nama Database <span class="text-red-500">*</span></label>
                 <input type="text" name="db_database" value="{{ old('db_database', $tenant->db_database) }}" required
-                       class="w-full rounded-xl border border-slate-200 text-sm font-mono focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                       class="w-full rounded-xl border border-slate-200 text-sm font-mono focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm">
                 @error('db_database') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -83,21 +83,21 @@
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Username DB <span class="text-red-500">*</span></label>
                     <input type="text" name="db_username" value="{{ old('db_username', $tenant->db_username) }}" required
-                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm">
+                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm">
                     @error('db_username') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
                 
                 <div class="space-y-1.5">
                     <label class="text-sm font-bold text-slate-700">Password DB (Kosongkan jika tetap)</label>
                     <input type="password" name="db_password"
-                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[var(--homi-blue)] focus:ring-[var(--homi-blue)] shadow-sm"
+                           class="w-full rounded-xl border border-slate-200 text-sm focus:border-[#1f6f8b] focus:ring-[#1f6f8b] shadow-sm"
                            placeholder="••••••••">
                     @error('db_password') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             <div class="pt-4 flex justify-end">
-                <button type="submit" class="rounded-xl bg-[var(--homi-blue)] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-sky-900/10 hover:bg-sky-700 transition-all">
+                <button type="submit" class="rounded-xl bg-[#1f6f8b] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-sky-900/10 hover:bg-sky-700 transition-all">
                     Simpan Perubahan
                 </button>
             </div>

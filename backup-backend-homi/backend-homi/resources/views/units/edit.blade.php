@@ -58,7 +58,7 @@
                     Kembali
                 </a>
                 <button type="submit"
-                        class="inline-flex items-center justify-center rounded-lg bg-[var(--homi-orange)] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e67949]">
+                        class="inline-flex items-center justify-center rounded-lg bg-[#f08a5d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e67949]">
                     Update Unit
                 </button>
             </div>

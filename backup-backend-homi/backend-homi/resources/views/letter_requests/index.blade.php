@@ -12,7 +12,7 @@
         </div>
         
         <form action="{{ route('letter-requests.index') }}" method="GET" class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-            <select name="status" class="w-full sm:w-auto pl-5 pr-10 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all">
+            <select name="status" class="w-full sm:w-auto pl-5 pr-10 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[#1f6f8b] focus:ring-0 transition-all">
                 <option value="">SEMUA STATUS</option>
                 <option value="submitted" @selected($status=='submitted')>DIAJUKAN</option>
                 <option value="processed" @selected($status=='processed')>DIPROSES</option>
@@ -22,8 +22,8 @@
             
             <div class="relative group w-full sm:w-64">
                 <input type="text" name="q" value="{{ $q }}" placeholder="CARI WARGA / JENIS..." 
-                       class="w-full pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all placeholder:text-slate-300">
-                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[var(--homi-blue)] transition-colors">
+                       class="w-full pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[#1f6f8b] focus:ring-0 transition-all placeholder:text-slate-300">
+                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[#1f6f8b] transition-colors">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
             </div>
@@ -52,7 +52,7 @@
                         <tr class="hover:bg-slate-50/50 transition-colors group">
                             <td class="px-8 py-6">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-[var(--homi-blue)]/10 text-[var(--homi-blue)] flex items-center justify-center font-black text-xs">
+                                    <div class="w-10 h-10 rounded-full bg-[#1f6f8b]/10 text-[#1f6f8b] flex items-center justify-center font-black text-xs">
                                         {{ strtoupper(substr($name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -76,7 +76,7 @@
                             </td>
                             <td class="px-8 py-6 text-right">
                                 <a href="{{ route('letter-requests.show', $req->id) }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
+                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] transition-all">
                                     Detail
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                                 </a>

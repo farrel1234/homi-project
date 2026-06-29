@@ -112,7 +112,7 @@
                     <a href="{{ route('admin.fees.invoices.index') }}" class="flex-1 sm:flex-none text-center px-8 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
                         Batal
                     </a>
-                    <button type="submit" class="flex-1 sm:flex-none px-12 py-4 rounded-[1.5rem] bg-[var(--homi-orange)] text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-100 hover:shadow-orange-200 hover:bg-orange-600 transition-all">
+                    <button type="submit" class="flex-1 sm:flex-none px-12 py-4 rounded-[1.5rem] bg-[#f08a5d] text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-100 hover:shadow-orange-200 hover:bg-orange-600 transition-all">
                         Generate Invoice
                     </button>
                 </div>

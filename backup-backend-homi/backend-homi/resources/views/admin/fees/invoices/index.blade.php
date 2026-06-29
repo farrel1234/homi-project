@@ -13,11 +13,11 @@
         
         <div class="flex items-center gap-3">
             <a href="{{ route('admin.fees.qr.index') }}" 
-               class="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-widest hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all">
+               class="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-widest hover:border-[#1f6f8b] hover:text-[#1f6f8b] transition-all">
                 Kelola QRIS
             </a>
             <a href="{{ route('admin.fees.invoices.create') }}" 
-               class="px-6 py-3 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all">
+               class="px-6 py-3 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] hover:shadow-xl hover:shadow-blue-500/20 transition-all">
                 + Buat Tagihan
             </a>
         </div>
@@ -67,13 +67,13 @@
     <div class="homi-card p-4 border-none shadow-lg shadow-slate-100/50 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-4 z-10 bg-white/90 backdrop-blur-md">
         <label class="flex items-center gap-3 cursor-pointer group">
             <div class="relative flex items-center">
-                <input type="checkbox" id="select-all-invoices" class="w-5 h-5 rounded-lg border-2 border-slate-200 text-[var(--homi-blue)] focus:ring-[var(--homi-blue)] focus:ring-offset-0 transition-all cursor-pointer">
+                <input type="checkbox" id="select-all-invoices" class="w-5 h-5 rounded-lg border-2 border-slate-200 text-[#1f6f8b] focus:ring-[#1f6f8b] focus:ring-offset-0 transition-all cursor-pointer">
             </div>
             <span class="text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Pilih Semua di Halaman Ini</span>
         </label>
 
         <div class="flex items-center gap-4">
-            <span id="selected-count" class="text-[10px] font-black text-[var(--homi-blue)] bg-blue-50 px-4 py-2 rounded-full uppercase tracking-widest">0 Terpilih</span>
+            <span id="selected-count" class="text-[10px] font-black text-[#1f6f8b] bg-blue-50 px-4 py-2 rounded-full uppercase tracking-widest">0 Terpilih</span>
             <button type="button" id="bulk-delete-btn" class="px-6 py-2.5 rounded-xl bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest border border-rose-100 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all shadow-sm">
                 Hapus Terpilih
             </button>
@@ -101,7 +101,7 @@
                     <h3 class="text-lg font-black text-slate-900 uppercase italic tracking-tight">{{ $label }}</h3>
                     <div class="h-px flex-1 bg-slate-100"></div>
                     <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" class="w-4 h-4 rounded border-slate-200 text-[var(--homi-blue)] focus:ring-0 transition-all select-group" data-group="{{ $groupKey }}">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-200 text-[#1f6f8b] focus:ring-0 transition-all select-group" data-group="{{ $groupKey }}">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600">Pilih Bulan Ini</span>
                     </label>
                 </div>
@@ -133,7 +133,7 @@
                                     @endphp
                                     <tr class="hover:bg-slate-50/30 transition-colors group">
                                         <td class="px-8 py-5">
-                                            <input type="checkbox" class="w-5 h-5 rounded-lg border-2 border-slate-200 text-[var(--homi-blue)] focus:ring-0 transition-all cursor-pointer invoice-check" 
+                                            <input type="checkbox" class="w-5 h-5 rounded-lg border-2 border-slate-200 text-[#1f6f8b] focus:ring-0 transition-all cursor-pointer invoice-check" 
                                                    data-group="{{ $groupKey }}" value="{{ $it->id }}">
                                         </td>
                                         <td class="px-8 py-5">

@@ -19,7 +19,7 @@
                 <span class="text-lg font-black text-slate-900">{{ $units->total() }}</span>
             </div>
             <a href="{{ route('units.create') }}" 
-               class="px-6 py-3.5 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all">
+               class="px-6 py-3.5 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] hover:shadow-xl hover:shadow-blue-500/20 transition-all">
                 + Tambah Unit
             </a>
         </div>
@@ -45,7 +45,7 @@
                                 {{ str_pad(($units->currentPage() - 1) * $units->perPage() + $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-8 py-6 uppercase">
-                                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-900 font-black text-xs tracking-widest border border-slate-100 group-hover:bg-white group-hover:border-[var(--homi-blue)] transition-all">
+                                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-900 font-black text-xs tracking-widest border border-slate-100 group-hover:bg-white group-hover:border-[#1f6f8b] transition-all">
                                     {{ $unit->code }}
                                 </span>
                             </td>
@@ -61,7 +61,7 @@
                             <td class="px-8 py-6 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('units.edit', $unit->id) }}" 
-                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all">
+                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[#1f6f8b] hover:text-[#1f6f8b] transition-all">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </a>
                                     <form action="{{ route('units.destroy', $unit->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus unit {{ $unit->code }}?')">

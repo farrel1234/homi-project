@@ -14,14 +14,14 @@
         <div class="flex flex-col sm:flex-row items-center gap-3">
             <form action="{{ route('residents.index') }}" method="GET" class="relative group w-full sm:w-auto">
                 <input type="text" name="q" value="{{ request('q') }}" placeholder="CARI NAMA / BLOK..." 
-                       class="w-full sm:w-80 pl-6 pr-14 py-4 rounded-[2rem] bg-white border-2 border-slate-100 text-[11px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all placeholder:text-slate-300 shadow-sm shadow-slate-100/50">
-                <button type="submit" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[var(--homi-blue)] transition-colors">
+                       class="w-full sm:w-80 pl-6 pr-14 py-4 rounded-[2rem] bg-white border-2 border-slate-100 text-[11px] font-black uppercase tracking-widest focus:border-[#1f6f8b] focus:ring-0 transition-all placeholder:text-slate-300 shadow-sm shadow-slate-100/50">
+                <button type="submit" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[#1f6f8b] transition-colors">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
             </form>
             
             <a href="{{ route('residents.create') }}" 
-               class="w-full sm:w-auto px-8 py-4 rounded-[2rem] bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[var(--homi-blue)] hover:shadow-2xl hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 active:scale-95 text-center">
+               class="w-full sm:w-auto px-8 py-4 rounded-[2rem] bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#1f6f8b] hover:shadow-2xl hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 active:scale-95 text-center">
                 + Tambah Warga
             </a>
         </div>
@@ -37,12 +37,12 @@
             @if(session('plain_password'))
                 <div class="p-6 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-blue-500/20 border border-slate-800 relative overflow-hidden group">
                     {{-- Decorative --}}
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-[var(--homi-blue)] rounded-full opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-[#1f6f8b] rounded-full opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
                     
                     <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div class="space-y-4">
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-full bg-[var(--homi-blue)] flex items-center justify-center">
+                                <div class="h-8 w-8 rounded-full bg-[#1f6f8b] flex items-center justify-center">
                                     <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                                 </div>
                                 <h4 class="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Login Access Generated</h4>
@@ -55,7 +55,7 @@
                                 <div class="space-y-1">
                                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Temporary Password</p>
                                     <div class="flex items-center gap-3">
-                                        <p class="text-sm font-black tracking-tight text-[var(--homi-orange)] font-mono">{{ session('plain_password') }}</p>
+                                        <p class="text-sm font-black tracking-tight text-[#f08a5d] font-mono">{{ session('plain_password') }}</p>
                                         <button onclick="navigator.clipboard.writeText('{{ session('plain_password') }}')" class="p-1 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors">
                                             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                         </button>
@@ -107,7 +107,7 @@
 
                     {{-- Info --}}
                     <div class="space-y-1">
-                        <h3 class="font-black text-slate-900 group-hover:text-[var(--homi-blue)] transition-colors">{{ $nama }}</h3>
+                        <h3 class="font-black text-slate-900 group-hover:text-[#1f6f8b] transition-colors">{{ $nama }}</h3>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic truncate max-w-[180px]">{{ $email }}</p>
                     </div>
 
@@ -116,7 +116,7 @@
                         <div class="px-3 py-1.5 rounded-xl bg-slate-50 text-slate-600 border border-slate-100 text-[10px] font-black tracking-widest leading-none group-hover:bg-slate-900 group-hover:text-white transition-all">
                             BLOK {{ $r->block ?? $r->blok ?? '-' }}
                         </div>
-                        <div class="px-3 py-1.5 rounded-xl bg-slate-50 text-slate-600 border border-slate-100 text-[10px] font-black tracking-widest leading-none group-hover:bg-[var(--homi-orange)] group-hover:text-white transition-all">
+                        <div class="px-3 py-1.5 rounded-xl bg-slate-50 text-slate-600 border border-slate-100 text-[10px] font-black tracking-widest leading-none group-hover:bg-[#f08a5d] group-hover:text-white transition-all">
                             NO {{ $r->house_number ?? $r->no_rumah ?? '-' }}
                         </div>
                     </div>
@@ -132,7 +132,7 @@
                     {{-- Controls --}}
                     <div class="flex items-center gap-2 pt-2 w-full">
                         <a href="{{ route('residents.edit', $r->id) }}" 
-                           class="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-transparent hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] hover:bg-white transition-all text-decoration-none">
+                           class="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-transparent hover:border-[#1f6f8b] hover:text-[#1f6f8b] hover:bg-white transition-all text-decoration-none">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M11 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             Edit
                         </a>

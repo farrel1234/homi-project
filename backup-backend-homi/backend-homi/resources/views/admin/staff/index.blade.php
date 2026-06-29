@@ -14,14 +14,14 @@
         <div class="flex flex-col sm:flex-row items-center gap-3">
             <form action="{{ route('admin.staff.index') }}" method="GET" class="relative group w-full sm:w-auto">
                 <input type="text" name="q" value="{{ $q }}" placeholder="CARI NAMA / EMAIL..." 
-                       class="w-full sm:w-64 pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[var(--homi-blue)] focus:ring-0 transition-all placeholder:text-slate-300">
-                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[var(--homi-blue)] transition-colors">
+                       class="w-full sm:w-64 pl-5 pr-12 py-3.5 rounded-2xl bg-white border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest focus:border-[#1f6f8b] focus:ring-0 transition-all placeholder:text-slate-300">
+                <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-[#1f6f8b] transition-colors">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
             </form>
 
             <a href="{{ route('admin.staff.create') }}" 
-               class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
+               class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
                 + Tambah Staff
             </a>
         </div>
@@ -51,7 +51,7 @@
                         <tr class="hover:bg-slate-50/50 transition-colors group">
                             <td class="px-8 py-6 border-r border-slate-100">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-black text-xs group-hover:bg-[var(--homi-blue)] group-hover:text-white transition-all">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-black text-xs group-hover:bg-[#1f6f8b] group-hover:text-white transition-all">
                                         {{ strtoupper(substr($item->full_name ?? $item->name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -80,13 +80,13 @@
                                 @if($item->isSuperAdmin())
                                     <span class="text-slate-300 italic">Semua Perumahan</span>
                                 @else
-                                    <span class="text-[var(--homi-blue)]">{{ $item->tenant->name ?? 'Belum Di-Set' }}</span>
+                                    <span class="text-[#1f6f8b]">{{ $item->tenant->name ?? 'Belum Di-Set' }}</span>
                                 @endif
                             </td>
                             <td class="px-8 py-6 text-right">
                                 <div class="flex items-center justify-end gap-2 text-decoration-none">
                                     <a href="{{ route('admin.staff.edit', $item->id) }}" 
-                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all">
+                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[#1f6f8b] hover:text-[#1f6f8b] transition-all">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </a>
                                     @if($item->id !== auth()->id())

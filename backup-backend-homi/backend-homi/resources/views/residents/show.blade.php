@@ -73,7 +73,7 @@
 
                 <div class="flex flex-col gap-2">
                     <a href="{{ route('residents.edit', $item->id) }}"
-                       class="px-4 py-2 rounded-xl bg-[var(--homi-blue)] text-white text-sm font-semibold text-center hover:bg-sky-800">
+                       class="px-4 py-2 rounded-xl bg-[#1f6f8b] text-white text-sm font-semibold text-center hover:bg-sky-800">
                         Edit
                     </a>
 

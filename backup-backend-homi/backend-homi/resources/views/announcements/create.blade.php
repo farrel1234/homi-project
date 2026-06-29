@@ -49,7 +49,7 @@
             <div class="flex flex-wrap items-center gap-4 bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
                 <label class="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" name="is_pinned" value="1" @checked(old('is_pinned')) 
-                           class="h-5 w-5 rounded-lg border-slate-300 text-[var(--homi-blue)] focus:ring-[var(--homi-blue)]">
+                           class="h-5 w-5 rounded-lg border-slate-300 text-[#1f6f8b] focus:ring-[#1f6f8b]">
                     <div class="flex flex-col">
                         <span class="text-sm font-black text-slate-700 uppercase tracking-widest leading-none">Sematkan</span>
                         <span class="text-[10px] text-slate-400 font-bold uppercase mt-1">Pin di bagian atas daftar</span>
@@ -80,10 +80,10 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div class="relative group">
                         <input type="file" id="image-input" name="image" accept="image/*" class="hidden">
-                        <label for="image-input" class="flex flex-col items-center justify-center w-full h-48 border-4 border-dashed border-slate-200 rounded-[2.5rem] cursor-pointer bg-slate-50 hover:bg-white hover:border-[var(--homi-blue)] transition-all group-hover:shadow-[0_20px_40px_rgba(31,111,139,0.1)]">
+                        <label for="image-input" class="flex flex-col items-center justify-center w-full h-48 border-4 border-dashed border-slate-200 rounded-[2.5rem] cursor-pointer bg-slate-50 hover:bg-white hover:border-[#1f6f8b] transition-all group-hover:shadow-[0_20px_40px_rgba(31,111,139,0.1)]">
                             <div class="flex flex-col items-center justify-center p-6 text-center">
                                 <div class="w-16 h-16 rounded-3xl bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-transform">
-                                    <svg class="w-8 h-8 text-[var(--homi-blue)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <svg class="w-8 h-8 text-[#1f6f8b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </div>
                                 <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Klik atau seret gambar</p>
                                 <p class="text-[10px] text-slate-400 mt-2">Format JPEG, PNG, WEBP (Maks 2MB)</p>
@@ -112,7 +112,7 @@
                 <a href="{{ route('announcements.index') }}" class="w-full sm:w-auto text-center px-10 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
                     Batal
                 </a>
-                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[var(--homi-blue-light)] hover:bg-[var(--homi-blue)] transition-all">
+                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[rgba(31,111,139,0.15)] hover:bg-[#1f6f8b] transition-all">
                     Publikasikan Pengumuman
                 </button>
             </div>

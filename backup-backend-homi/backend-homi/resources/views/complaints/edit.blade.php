@@ -130,7 +130,7 @@
                 @if($item->foto_url)
                     <div>
                         <div class="text-xs text-gray-500 mb-2">Foto Bukti</div>
-                        <div class="border border-[var(--homi-border)] rounded-xl overflow-hidden bg-gray-50">
+                        <div class="border border-[#dde5ef] rounded-xl overflow-hidden bg-gray-50">
                             <img src="{{ $item->foto_url }}"
                                  alt="Foto bukti"
                                  class="w-full max-h-[420px] object-contain bg-white">
@@ -160,7 +160,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Ubah Status</label>
                         <select name="status"
-                                class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
+                                class="w-full border border-[#dde5ef] rounded-lg px-3 py-2 text-sm
                                        focus:outline-none focus:ring-2 focus:ring-sky-200">
                             <option value="baru"     @selected($item->status=='baru')>Baru</option>
                             <option value="diproses" @selected($item->status=='diproses')>Diproses</option>
@@ -171,7 +171,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Ditugaskan ke</label>
                         <select name="assigned_to"
-                                class="w-full border border-[var(--homi-border)] rounded-lg px-3 py-2 text-sm
+                                class="w-full border border-[#dde5ef] rounded-lg px-3 py-2 text-sm
                                        focus:outline-none focus:ring-2 focus:ring-sky-200">
                             <option value="">- Tidak ada -</option>
                             @foreach($admins as $a)
@@ -204,12 +204,12 @@
 
                     <div class="flex flex-wrap gap-2 pt-1">
                         <button type="submit"
-                                class="px-4 py-2 rounded-lg bg-[var(--homi-orange)] text-white text-sm font-semibold hover:bg-orange-500">
+                                class="px-4 py-2 rounded-lg bg-[#f08a5d] text-white text-sm font-semibold hover:bg-orange-500">
                             Simpan
                         </button>
 
                         <a href="{{ route('complaints.index') }}"
-                           class="px-4 py-2 rounded-lg border border-[var(--homi-border)] text-sm text-gray-700 hover:bg-gray-50">
+                           class="px-4 py-2 rounded-lg border border-[#dde5ef] text-sm text-gray-700 hover:bg-gray-50">
                             Kembali
                         </a>
                     </div>

@@ -186,7 +186,7 @@
 
                     @if($item->status === 'approved')
                     <a href="{{ route('letter-requests.download', $item->id) }}"
-                    class="w-full inline-flex justify-center items-center px-3 py-2 rounded-xl bg-[var(--homi-blue)] text-white text-sm font-semibold hover:bg-sky-800 mt-1">
+                    class="w-full inline-flex justify-center items-center px-3 py-2 rounded-xl bg-[#1f6f8b] text-white text-sm font-semibold hover:bg-sky-800 mt-1">
                         Download PDF
                     </a>
                 @endif

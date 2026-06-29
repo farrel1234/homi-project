@@ -28,7 +28,7 @@
         </div>
         
         <a href="{{ route('tenants.create') }}" 
-           class="px-6 py-3.5 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
+           class="px-6 py-3.5 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] hover:shadow-xl hover:shadow-blue-500/20 transition-all text-center">
             + Tambah Tenant
         </a>
     </div>
@@ -54,7 +54,7 @@
                                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">KODE: {{ $item->code }}</div>
                             </td>
                             <td class="px-8 py-6 border-r border-slate-100">
-                                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-black text-[10px] tracking-widest border border-slate-100 group-hover:bg-white group-hover:border-[var(--homi-blue)] transition-all">
+                                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-black text-[10px] tracking-widest border border-slate-100 group-hover:bg-white group-hover:border-[#1f6f8b] transition-all">
                                     {{ $item->registration_code ?? '---' }}
                                 </span>
                             </td>
@@ -65,7 +65,7 @@
                                     </span>
                                     <form action="{{ route('tenants.migrate', $item->id) }}" method="POST" onsubmit="return confirm('Jalankan migrasi pada database {{ $item->db_database }}?')">
                                         @csrf
-                                        <button type="submit" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
+                                        <button type="submit" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] transition-all">
                                             Setup DB
                                         </button>
                                     </form>
@@ -82,7 +82,7 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
                                     </a>
                                     <a href="{{ route('tenants.edit', $item->id) }}" 
-                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] transition-all no-underline">
+                                       class="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:border-[#1f6f8b] hover:text-[#1f6f8b] transition-all no-underline">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </a>
                                     <form action="{{ route('tenants.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tenant {{ $item->name }}?')">

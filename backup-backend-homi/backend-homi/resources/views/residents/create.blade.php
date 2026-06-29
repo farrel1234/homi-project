@@ -61,7 +61,7 @@
                 <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
                     <label class="flex items-start gap-4 cursor-pointer group">
                         <input type="checkbox" name="is_public" value="1" @checked(old('is_public', true)) 
-                               class="mt-1 h-6 w-6 rounded-lg border-slate-300 text-[var(--homi-blue)] focus:ring-[var(--homi-blue)] transition-all">
+                               class="mt-1 h-6 w-6 rounded-lg border-slate-300 text-[#1f6f8b] focus:ring-[#1f6f8b] transition-all">
                         <div class="flex flex-col">
                             <span class="text-sm font-black text-slate-700 uppercase tracking-widest leading-none mb-1">Tampilkan di Direktori</span>
                             <span class="text-[11px] text-slate-400 font-bold uppercase">Warga lain dapat melihat data rumah ini di aplikasi</span>
@@ -75,7 +75,7 @@
                 <a href="{{ route('residents.index') }}" class="w-full sm:w-auto text-center px-10 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
                     Batalkan
                 </a>
-                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[var(--homi-blue-light)] hover:bg-[var(--homi-blue)] transition-all">
+                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[rgba(31,111,139,0.15)] hover:bg-[#1f6f8b] transition-all">
                     Simpan Data Warga
                 </button>
             </div>

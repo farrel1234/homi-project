@@ -89,7 +89,7 @@
                             <input type="text" name="period" value="{{ old('period') }}" placeholder="YYYY-MM" 
                                    class="homi-input font-mono">
                             @if($periodLabel)
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--homi-blue)] uppercase">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#1f6f8b] uppercase">
                                     {{ $periodLabel }}
                                 </span>
                             @endif
@@ -108,7 +108,7 @@
                 <a href="{{ route('admin.notifications.index') }}" class="w-full sm:w-auto text-center px-10 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">
                     Kembali
                 </a>
-                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[var(--homi-blue-light)] hover:bg-[var(--homi-blue)] transition-all">
+                <button type="submit" class="w-full sm:w-auto px-12 py-4 rounded-[1.5rem] bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:shadow-[rgba(31,111,139,0.15)] hover:bg-[#1f6f8b] transition-all">
                     Kirim Sekarang
                 </button>
             </div>

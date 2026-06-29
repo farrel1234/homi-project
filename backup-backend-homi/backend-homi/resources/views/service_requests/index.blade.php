@@ -25,7 +25,7 @@
     <div class="homi-card p-4 sm:p-6 overflow-visible border-none shadow-xl shadow-slate-200/50">
         <form action="{{ route('service-requests.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-center">
             <div class="relative w-full md:w-72 group">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--homi-blue)] transition-colors">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#1f6f8b] transition-colors">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </span>
                 <input type="text" name="q" value="{{ $q }}" placeholder="Cari nama atau jenis..." 
@@ -43,7 +43,7 @@
             </div>
 
             <div class="flex items-center gap-2 w-full md:w-auto">
-                <button type="submit" class="flex-1 md:flex-none px-8 py-3.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
+                <button type="submit" class="flex-1 md:flex-none px-8 py-3.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-[#1f6f8b] transition-all">
                     Filter
                 </button>
                 @if($status || $q)
@@ -74,7 +74,7 @@
                         <tr class="hover:bg-slate-50/50 transition-colors group">
                             <td class="px-4 sm:px-5 py-6">
                                 <div class="flex items-center gap-4">
-                                    <div class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-100 items-center justify-center font-black text-slate-400 group-hover:bg-white group-hover:text-[var(--homi-blue)] transition-colors">
+                                    <div class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-100 items-center justify-center font-black text-slate-400 group-hover:bg-white group-hover:text-[#1f6f8b] transition-colors">
                                         {{ strtoupper(substr($req->user?->full_name ?? $req->user?->name ?? '?', 0, 2)) }}
                                     </div>
                                     <div>
@@ -111,7 +111,7 @@
                             </td>
                             <td class="px-4 sm:px-5 py-6 text-right">
                                 <a href="{{ route('service-requests.show', $req->id) }}" 
-                                   class="inline-flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-widest hover:border-[var(--homi-blue)] hover:text-[var(--homi-blue)] hover:shadow-lg hover:shadow-slate-100 transition-all">
+                                   class="inline-flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-widest hover:border-[#1f6f8b] hover:text-[#1f6f8b] hover:shadow-lg hover:shadow-slate-100 transition-all">
                                     <span class="hidden lg:inline">Detail</span>
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                                 </a>

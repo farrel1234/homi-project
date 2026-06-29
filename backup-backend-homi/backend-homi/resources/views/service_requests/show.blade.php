@@ -45,7 +45,7 @@
             {{-- Summary Card --}}
             <div class="homi-card">
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="h-8 w-1 bg-[var(--homi-blue)] rounded-full"></div>
+                    <div class="h-8 w-1 bg-[#1f6f8b] rounded-full"></div>
                     <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Informasi Pengajuan</h2>
                 </div>
                 
@@ -53,7 +53,7 @@
                     <dl class="homi-dl">
                         <dt>Pemohon (Warga)</dt>
                         <dd class="flex items-center gap-2">
-                            <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-[var(--homi-blue)]">
+                            <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-[#1f6f8b]">
                                 {{ strtoupper(substr($item->user?->name ?? 'W', 0, 1)) }}
                             </div>
                             <div>
@@ -100,7 +100,7 @@
             {{-- Data Input Card (Sleek List) --}}
             <div class="homi-card">
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="h-8 w-1 bg-[var(--homi-orange)] rounded-full"></div>
+                    <div class="h-8 w-1 bg-[#f08a5d] rounded-full"></div>
                     <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Spesifikasi Data (Data Input)</h2>
                 </div>
 
@@ -126,7 +126,7 @@
         <div class="space-y-6">
             
             {{-- Status & Quick Action --}}
-            <div class="homi-card border-l-4 border-l-[var(--homi-blue)]">
+            <div class="homi-card border-l-4 border-l-[#1f6f8b]">
                 <div class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Manajemen Status</div>
                 
                 <div class="flex items-center justify-between mb-6">

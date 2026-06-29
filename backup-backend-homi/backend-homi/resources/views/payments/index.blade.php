@@ -68,7 +68,7 @@
         </div>
         <div class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
             <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Data:</span>
-            <span class="text-sm font-black text-[var(--homi-blue)]">{{ $payments->total() }}</span>
+            <span class="text-sm font-black text-[#1f6f8b]">{{ $payments->total() }}</span>
         </div>
     </div>
 
@@ -96,7 +96,7 @@
                     <label class="homi-label">Cari Warga / Keterangan</label>
                     <div class="relative group">
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Masukkan nama warga atau ID transaksi..." class="homi-input pr-10">
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--homi-blue)] transition-colors">
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#1f6f8b] transition-colors">
                             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                         </div>
                     </div>
@@ -118,7 +118,7 @@
         <div class="bg-slate-900 rounded-3xl p-5 shadow-xl border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sticky top-4 z-20">
             <div class="flex items-center gap-4">
                 <div class="checkbox-wrapper bg-white/10 p-2 rounded-xl border border-white/10">
-                    <input type="checkbox" class="select-all h-5 w-5 rounded border-white/20 bg-white/5 text-[var(--homi-blue)] focus:ring-offset-slate-900">
+                    <input type="checkbox" class="select-all h-5 w-5 rounded border-white/20 bg-white/5 text-[#1f6f8b] focus:ring-offset-slate-900">
                 </div>
                 <div>
                     <div class="text-white font-bold text-sm tracking-wide">Aksi Massal</div>
@@ -128,7 +128,7 @@
 
             <div class="flex-1 max-w-2xl flex flex-col sm:flex-row gap-3">
                 <input type="text" name="reason" placeholder="Berikan catatan singkat (opsional)..." 
-                       class="w-full bg-white/5 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-[var(--homi-blue)] focus:border-transparent">
+                       class="w-full bg-white/5 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-[#1f6f8b] focus:border-transparent">
                 
                 <div class="flex gap-2">
                     <button type="submit" name="action" value="approve" 
@@ -154,7 +154,7 @@
                 <div class="space-y-4">
                     <div class="flex items-center justify-between px-2">
                         <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-2xl bg-[var(--homi-blue)] flex items-center justify-center text-white shadow-lg shadow-sky-200">
+                            <div class="h-10 w-10 rounded-2xl bg-[#1f6f8b] flex items-center justify-center text-white shadow-lg shadow-sky-200">
                                 <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current stroke-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                             </div>
                             <div>
@@ -164,7 +164,7 @@
                         </div>
                         
                         <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer group">
-                            <input type="checkbox" class="select-month h-4 w-4 rounded border-slate-300 text-[var(--homi-blue)]" data-month="{{ $pKey }}">
+                            <input type="checkbox" class="select-month h-4 w-4 rounded border-slate-300 text-[#1f6f8b]" data-month="{{ $pKey }}">
                             <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest group-hover:text-slate-900">Pilih Semua</span>
                         </label>
                     </div>
@@ -199,7 +199,7 @@
                                         <tr class="hover:bg-slate-50/50 transition-colors">
                                             <td class="text-center">
                                                 <input type="checkbox" name="selected[]" value="{{ $payment->id }}" 
-                                                       class="row-checkbox h-4 w-4 rounded border-slate-300 text-[var(--homi-blue)]" 
+                                                       class="row-checkbox h-4 w-4 rounded border-slate-300 text-[#1f6f8b]" 
                                                        data-month="{{ $monthKeyRow }}">
                                             </td>
                                             <td>
@@ -251,7 +251,7 @@
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-center gap-3">
                                             <input type="checkbox" name="selected[]" value="{{ $payment->id }}" 
-                                                   class="row-checkbox h-5 w-5 rounded border-slate-300 text-[var(--homi-blue)]" 
+                                                   class="row-checkbox h-5 w-5 rounded border-slate-300 text-[#1f6f8b]" 
                                                    data-month="{{ $monthKeyRow }}">
                                             <div class="min-w-0">
                                                 <div class="font-bold text-slate-800 truncate">{{ $name }}</div>
@@ -270,7 +270,7 @@
                                         </span>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <div class="text-lg font-black text-[var(--homi-blue)]">{{ money_idr($amount) }}</div>
+                                        <div class="text-lg font-black text-[#1f6f8b]">{{ money_idr($amount) }}</div>
                                         <a href="{{ route('payments.show', $payment->id) }}" class="text-xs font-bold text-sky-600 underline">Lihat Detail &rarr;</a>
                                     </div>
                                 </div>

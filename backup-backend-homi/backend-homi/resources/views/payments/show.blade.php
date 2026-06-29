@@ -46,7 +46,7 @@
             <div class="homi-card">
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-2">
-                        <div class="h-8 w-1 bg-[var(--homi-blue)] rounded-full"></div>
+                        <div class="h-8 w-1 bg-[#1f6f8b] rounded-full"></div>
                         <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Informasi Transaksi</h2>
                     </div>
                     <span class="homi-badge {{ 
@@ -78,7 +78,7 @@
 
                     <dl class="homi-dl">
                         <dt>Jumlah Nominal</dt>
-                        <dd class="text-xl font-extrabold text-[var(--homi-blue)]">
+                        <dd class="text-xl font-extrabold text-[#1f6f8b]">
                             {{ !is_null($amount) ? 'Rp ' . number_format($amount, 0, ',', '.') : '-' }}
                         </dd>
                     </dl>
@@ -120,7 +120,7 @@
             <div class="homi-card">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
-                        <div class="h-8 w-1 bg-[var(--homi-orange)] rounded-full"></div>
+                        <div class="h-8 w-1 bg-[#f08a5d] rounded-full"></div>
                         <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Bukti Transfer</h2>
                     </div>
                     
@@ -208,7 +208,7 @@
             <div class="homi-card bg-slate-50/50 shadow-none border-slate-100">
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Profil Pembayar</div>
                 <div class="flex items-center gap-3">
-                    <div class="h-12 w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-lg font-bold text-[var(--homi-blue)] shadow-sm">
+                    <div class="h-12 w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-lg font-bold text-[#1f6f8b] shadow-sm">
                         {{ strtoupper(substr($name, 0, 1)) }}
                     </div>
                     <div class="min-w-0">
@@ -225,7 +225,7 @@
             </div>
 
             {{-- Formulir Approval --}}
-            <div class="homi-card border-t-4 border-t-[var(--homi-blue)]">
+            <div class="homi-card border-t-4 border-t-[#1f6f8b]">
                 <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Tindakan Admin</h3>
 
                 <form method="POST" action="{{ route('payments.approve', $payment) }}" class="space-y-4">

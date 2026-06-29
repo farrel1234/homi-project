@@ -51,7 +51,7 @@
                         @php $srcActive = $active ? qr_src_bust($active) : null; @endphp
                         @if($active && $srcActive)
                             <div class="relative group">
-                                <div class="absolute -inset-4 bg-[var(--homi-blue)] rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                                <div class="absolute -inset-4 bg-[#1f6f8b] rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
                                 <div class="relative bg-white p-4 rounded-[2rem] shadow-2xl border-4 border-slate-800">
                                     <img src="{{ $srcActive }}" alt="QR Aktif" class="w-64 h-64 object-contain rounded-xl">
                                 </div>
@@ -80,7 +80,7 @@
                             @csrf
                             <div class="relative group">
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Pilih File Gambar (Maks 5MB)</label>
-                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 group-hover:border-[var(--homi-blue)] transition-colors">
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 group-hover:border-[#1f6f8b] transition-colors">
                                     <input type="file" name="qr_image" class="absolute inset-0 opacity-0 cursor-pointer" required>
                                     <span class="text-xs font-bold text-slate-400 italic">Drag & drop atau klik untuk cari...</span>
                                     <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400">
@@ -89,7 +89,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] hover:bg-[var(--homi-blue)] hover:shadow-xl hover:shadow-blue-500/20 transition-all active:scale-[0.98]">
+                            <button type="submit" class="w-full py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] hover:bg-[#1f6f8b] hover:shadow-xl hover:shadow-blue-500/20 transition-all active:scale-[0.98]">
                                 Simpan & Aktifkan QR
                             </button>
                         </form>
@@ -124,7 +124,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                 </div>
                             @endif
-                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 group-hover:border-[var(--homi-blue)] transition-colors">
+                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 group-hover:border-[#1f6f8b] transition-colors">
                                 <img src="{{ $src }}" class="w-32 h-32 object-contain rounded-lg opacity-80 group-hover:opacity-100 transition-opacity" />
                             </div>
                         </div>
@@ -139,7 +139,7 @@
                                 @if(!$isActive)
                                     <form action="{{ route('admin.fees.qr.activate', $it->id) }}" method="POST">
                                         @csrf
-                                        <button class="w-full py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--homi-blue)] transition-all">
+                                        <button class="w-full py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1f6f8b] transition-all">
                                             Aktifkan
                                         </button>
                                     </form>

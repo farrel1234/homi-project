@@ -54,7 +54,7 @@
             </div>
 
             <button
-                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-[var(--homi-blue)] text-white text-sm font-semibold hover:opacity-95">
+                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-[#1f6f8b] text-white text-sm font-semibold hover:opacity-95">
                 Import
             </button>
         </form>

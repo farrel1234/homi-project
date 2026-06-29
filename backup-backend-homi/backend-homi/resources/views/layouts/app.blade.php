@@ -242,7 +242,7 @@
                 Batal
             </button>
             <button id="logout-confirm"
-                    class="rounded-lg bg-[var(--homi-orange)] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#e67949]">
+                    class="rounded-lg bg-[#f08a5d] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#e67949]">
                 Ya, logout
             </button>
         </div>
