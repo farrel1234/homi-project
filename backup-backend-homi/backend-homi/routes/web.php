@@ -37,6 +37,32 @@ Route::get('/download', function () {
     return view('download');
 })->name('download.app');
 
+Route::get('/debug-symlink', function () {
+    $symlink = public_path('storage');
+    $target = storage_path('app/public');
+    
+    $results = [
+        'public_path_storage' => $symlink,
+        'storage_path_app_public' => $target,
+        'public_path_storage_exists' => file_exists($symlink),
+        'is_link' => is_link($symlink),
+        'target_exists' => file_exists($target),
+        'link_target' => is_link($symlink) ? readlink($symlink) : null,
+        'permissions_public_storage' => file_exists($symlink) ? substr(sprintf('%o', fileperms($symlink)), -4) : null,
+        'permissions_target' => file_exists($target) ? substr(sprintf('%o', fileperms($target)), -4) : null,
+    ];
+    
+    $testFileTarget = $target . '/test.txt';
+    $testFilePublic = $symlink . '/test.txt';
+    
+    @file_put_contents($testFileTarget, 'hello world');
+    $results['write_test_to_target'] = file_exists($testFileTarget);
+    $results['read_test_from_public'] = file_exists($testFilePublic) ? file_get_contents($testFilePublic) : null;
+    @unlink($testFileTarget);
+    
+    return response()->json($results);
+});
+
 Route::get('/admin', function () {
     if (auth()->check()) {
         return redirect()->route('admin.dashboard');
