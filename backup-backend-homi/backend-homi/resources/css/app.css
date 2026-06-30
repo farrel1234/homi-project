@@ -27,59 +27,56 @@
     --homi-glass-border: rgba(255, 255, 255, 0.5);
     --homi-sidebar: #1f6f8b;
     --homi-sidebar-dark: #0d5f84;
-    --homi-border: #dde5ef;
-    --homi-bg: #f4f7f9;
 }
 
-@layer base {
-    html,
-    body {
-        min-height: 100%;
-    }
-
-    body {
-        color: var(--homi-ink);
-        background:
-            radial-gradient(circle at 12% 8%, rgba(240, 138, 93, 0.22), transparent 42%),
-            radial-gradient(circle at 90% 18%, rgba(31, 111, 139, 0.18), transparent 36%),
-            linear-gradient(180deg, #f8fbfd 0%, var(--homi-bg) 100%);
-        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    }
-
-    h1, h2, h3, h4 {
-        font-family: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-        letter-spacing: -0.01em;
-    }
-
-    a {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Selection Color */
-    ::selection {
-        background: var(--homi-blue);
-        color: white;
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: rgba(31, 111, 139, 0.2);
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(31, 111, 139, 0.4);
-    }
+/* === BASE STYLES === */
+html,
+body {
+    min-height: 100%;
 }
 
-@layer components {
-    .homi-title {
+body {
+    color: var(--homi-ink);
+    background:
+        radial-gradient(circle at 12% 8%, rgba(240, 138, 93, 0.22), transparent 42%),
+        radial-gradient(circle at 90% 18%, rgba(31, 111, 139, 0.18), transparent 36%),
+        linear-gradient(180deg, #f8fbfd 0%, var(--homi-bg) 100%);
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+}
+
+a {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Selection Color */
+::selection {
+    background: var(--homi-blue);
+    color: white;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(31, 111, 139, 0.2);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(31, 111, 139, 0.4);
+}
+
+/* === COMPONENT STYLES === */
+.homi-title {
         color: var(--homi-ink);
         font-size: 1.35rem;
         font-weight: 700;
@@ -374,10 +371,9 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
     }
 
-    .nav-active span {
-        background-color: rgba(13, 95, 132, 0.1) !important;
-        color: var(--homi-sidebar-dark) !important;
-    }
+.nav-active span {
+    background-color: rgba(13, 95, 132, 0.1) !important;
+    color: var(--homi-sidebar-dark) !important;
 }
 
 @media (max-width: 768px) {
