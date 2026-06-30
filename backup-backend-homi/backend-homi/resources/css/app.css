@@ -27,6 +27,8 @@
     --homi-glass-border: rgba(255, 255, 255, 0.5);
     --homi-sidebar: #1f6f8b;
     --homi-sidebar-dark: #0d5f84;
+    --homi-border: #dde5ef;
+    --homi-bg: #f4f7f9;
 }
 
 @layer base {
