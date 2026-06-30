@@ -18,4 +18,9 @@
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep model classes from being obfuscated by R8/Proguard to prevent API serialization issues
+-keep class com.example.homi.data.model.** { *; }
+
+# Keep retrofit and okhttp components if needed (usually handled by default, but safe to keep models)
+-keepattributes Signature, InnerClasses, AnnotationDefault
+-keepattributes *Annotation*
