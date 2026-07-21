@@ -479,13 +479,14 @@ fun AppNavHostAnimated(tokenStore: TokenStore) {
                     ?.trim()
                     ?.takeIf { it.isNotBlank() }
                     ?.let { raw ->
-                        var fixed = fixLocalhostUrl(raw) ?: raw
-                        fixed = fixed
-                            .replace("http://localhost", "http://10.0.2.2")
-                            .replace("https://localhost", "http://10.0.2.2")
-                            .replace("http://127.0.0.1", "http://10.0.2.2")
-                            .replace("https://127.0.0.1", "http://10.0.2.2")
-                        fixed
+                        // Jika URL dari server sudah berupa URL lengkap production, gunakan langsung
+                        // Hanya replace localhost jika sedang development/emulator
+                        if (raw.startsWith("http://localhost") || raw.startsWith("https://localhost") ||
+                            raw.startsWith("http://127.0.0.1") || raw.startsWith("https://127.0.0.1")) {
+                            fixLocalhostUrl(raw) ?: raw
+                        } else {
+                            raw // URL production sudah benar, gunakan langsung
+                        }
                     }
             }
 

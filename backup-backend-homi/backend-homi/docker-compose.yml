@@ -42,6 +42,12 @@ services:
       - ./:/var/www
       - /var/www/vendor
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+      # =====================================================
+      # FIX KRITIS 403: Mount storage langsung ke Nginx
+      # Tanpa ini, symlink public/storage tidak terbaca oleh
+      # container Nginx karena path-nya hanya valid di container app
+      # =====================================================
+      - ./storage/app/public:/var/www/public/storage
     networks:
       - homi-network
     depends_on:
@@ -93,4 +99,5 @@ networks:
 volumes:
   homi-db-data:
     driver: local
+
 

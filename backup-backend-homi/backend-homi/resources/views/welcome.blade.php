@@ -32,50 +32,18 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        homi: {
-                            blue: '#2F7FA3',
-                            dark: '#0F172A',
-                            accent: '#F97316',
-                            soft: '#D7EAF3',
-                            surface: '#F8FAFC',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-                        outfit: ['Outfit', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
-                        'blob': 'blob 7s infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
-                    }
-                }
-            }
+    <!-- Tailwind CSS via Vite (production-safe) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Custom token aliases untuk welcome.blade.php (kompatibel tanpa CDN) */
+        :root {
+            --color-homi-blue: #2F7FA3;
+            --color-homi-dark: #0F172A;
+            --color-homi-accent: #F97316;
+            --color-homi-soft: #D7EAF3;
+            --color-homi-surface: #F8FAFC;
         }
-    </script>
+    </style>
 
     <style>
         .glass-header {
